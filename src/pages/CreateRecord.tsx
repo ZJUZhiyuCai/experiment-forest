@@ -50,10 +50,10 @@ export default function CreateRecord() {
   
   const handleSubmit = () => {
     setIsSubmitting(false);
-    // 延迟导航以确保用户看到成功提示
+    // 延迟导航以确保用户看到成功提示和动画
     setTimeout(() => {
       navigate('/records');
-    }, 1000);
+    }, 3000); // 增加到3秒，让用户有充足时间看到成功动画
   };
   
   const handleCancel = () => {

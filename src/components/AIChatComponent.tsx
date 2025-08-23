@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChatSession, ChatMessage, ChatContext, ExperimentCategory } from '@/types';
 import { aiChatService } from '@/lib/aiChatService';
@@ -11,7 +11,7 @@ interface AIChatComponentProps {
   onSessionChange?: (session: ChatSession) => void;
 }
 
-export const AIChatComponent: React.FC<AIChatComponentProps> = ({
+export const AIChatComponent: React.FC<AIChatComponentProps> = React.memo(({
   projectId,
   experimentType,
   className = '',
@@ -25,17 +25,8 @@ export const AIChatComponent: React.FC<AIChatComponentProps> = ({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
-  // 加载会话列表
-  useEffect(() => {
-    loadSessions();
-  }, []);
-
-  // 自动滚动到底部
-  useEffect(() => {
-    scrollToBottom();
-  }, [currentSession?.messages]);
-
-  const loadSessions = () => {
+  // 使用useCallback优化函数引用稳定性
+  const loadSessions = useCallback(() => {
     const allSessions = aiChatService.getAllSessions();
     setSessions(allSessions);
     
@@ -46,9 +37,9 @@ export const AIChatComponent: React.FC<AIChatComponentProps> = ({
       setCurrentSession(allSessions[0]);
       onSessionChange?.(allSessions[0]);
     }
-  };
+  }, [currentSession, onSessionChange]);
 
-  const createNewSession = () => {
+  const createNewSession = useCallback(() => {
     const title = experimentType ? 
       `${getExperimentTypeName(experimentType)}咨询` : 
       `AI助手对话 - ${new Date().toLocaleDateString()}`;
@@ -58,9 +49,9 @@ export const AIChatComponent: React.FC<AIChatComponentProps> = ({
     setSessions(prev => [newSession, ...prev]);
     onSessionChange?.(newSession);
     setShowSessionList(false);
-  };
+  }, [experimentType, projectId, onSessionChange]);
 
-  const sendMessage = async () => {
+  const sendMessage = useCallback(async () => {
     if (!inputMessage.trim() || !currentSession || isLoading) return;
 
     const message = inputMessage.trim();
@@ -92,38 +83,65 @@ export const AIChatComponent: React.FC<AIChatComponentProps> = ({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [inputMessage, currentSession, isLoading, experimentType, projectId, onSessionChange]);
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       sendMessage();
     }
-  };
+  }, [sendMessage]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  const getExperimentTypeName = (type: ExperimentCategory): string => {
-    const names = {
-      'cell_culture': '细胞培养',
-      'pcr': 'PCR扩增',
-      'western_blot': 'Western Blot',
-      'elisa': 'ELISA检测',
-      'animal_dosing': '动物给药',
-      'other': '通用实验'
+  // 使用useMemo缓存实验类型名称映射
+  const getExperimentTypeName = useMemo(() => {
+    return (type: ExperimentCategory): string => {
+      const names: Record<ExperimentCategory, string> = {
+        // 细胞生物学实验
+        'cell_culture': '细胞培养',
+        'cell_viability': '细胞活力检测',
+        'flow_cytometry': '流式细胞术',
+        'cell_transfection': '细胞转染',
+        // 分子生物学实验
+        'pcr': 'PCR扩增',
+        'western_blot': 'Western Blot',
+        'gene_cloning': '基因克隆',
+        'dna_sequencing': 'DNA测序',
+        'rna_extraction': 'RNA提取',
+        'protein_purification': '蛋白质纯化',
+        // 动物实验
+        'animal_behavior': '动物行为学',
+        'animal_surgery': '动物手术',
+        'animal_dosing': '动物给药',
+        'tissue_sampling': '组织取样',
+        // 药物研发
+        'drug_screening': '药物筛选',
+        'compound_synthesis': '化合物合成',
+        'pharmacokinetics': '药代动力学',
+        'toxicology': '毒理学研究',
+        'dose_response': '剂量-反应研究',
+        // 生化分析
+        'elisa': 'ELISA检测',
+        'chromatography': '色谱分析',
+        'mass_spectrometry': '质谱分析',
+        'immunohistochemistry': '免疫组化',
+        // 微生物学
+        'bacterial_culture': '细菌培养',
+        'antimicrobial_test': '抗菌试验',
+        'sterility_test': '无菌检验',
+        // 其他
+        'other': '通用实验'
+      };
+      return names[type] || type;
     };
-    return names[type] || type;
-  };
+  }, []);
 
-  const selectSession = (session: ChatSession) => {
+  const selectSession = useCallback((session: ChatSession) => {
     setCurrentSession(session);
     onSessionChange?.(session);
     setShowSessionList(false);
-  };
+  }, [onSessionChange]);
 
-  const deleteSession = (sessionId: string, e: React.MouseEvent) => {
+  const deleteSession = useCallback((sessionId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (window.confirm('确定要删除这个对话吗？')) {
       aiChatService.deleteSession(sessionId);
@@ -140,7 +158,22 @@ export const AIChatComponent: React.FC<AIChatComponentProps> = ({
       }
       toast.success('对话已删除');
     }
-  };
+  }, [currentSession, sessions, onSessionChange, createNewSession]);
+
+  // 自动滚动到底部
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, []);
+
+  // 加载会话列表
+  useEffect(() => {
+    loadSessions();
+  }, [loadSessions]);
+
+  // 自动滚动到底部
+  useEffect(() => {
+    scrollToBottom();
+  }, [currentSession?.messages, scrollToBottom]);
 
   return (
     <div className={`flex flex-col h-full bg-white rounded-xl shadow-sm border border-gray-200 ${className}`}>
@@ -284,10 +317,10 @@ export const AIChatComponent: React.FC<AIChatComponentProps> = ({
       </div>
     </div>
   );
-};
+});
 
 // 消息气泡组件
-const MessageBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
+const MessageBubble: React.FC<{ message: ChatMessage }> = React.memo(({ message }) => {
   const isUser = message.role === 'user';
   const isError = !!message.error;
 
@@ -347,4 +380,8 @@ const MessageBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
       </div>
     </motion.div>
   );
-};
+});
+
+// 添加显示名称用于调试
+AIChatComponent.displayName = 'AIChatComponent';
+MessageBubble.displayName = 'MessageBubble';

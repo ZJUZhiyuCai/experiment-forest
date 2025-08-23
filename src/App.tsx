@@ -23,9 +23,9 @@ const Calendar = lazy(() => import("@/pages/Calendar"));
 const Settings = lazy(() => import("@/pages/Settings"));
 const MyForest = lazy(() => import("@/pages/MyForest"));
 
-// 新增AI聊天和思维导图功能
-const AIChat = lazy(() => import("@/pages/AIChat"));
-const MindMaps = lazy(() => import("@/pages/MindMaps"));
+// 新增课题相关AI功能
+const TopicAI = lazy(() => import("@/pages/TopicAI"));
+const TopicMindMap = lazy(() => import("@/pages/TopicMindMap"));
 
 // 懒加载的fallback组件
 const LazyFallback = () => (
@@ -70,11 +70,9 @@ export default function App() {
             <Route path="/samples" element={<SampleManagement />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/settings" element={<Settings />} />
-            {/* AI聊天功能路由 */}
-            <Route path="/ai-chat" element={<AIChat />} />
-            {/* 思维导图功能路由 */}
-            <Route path="/mindmaps" element={<MindMaps />} />
-            <Route path="/mindmaps/:id" element={<MindMaps />} />
+            {/* 课题相关AI功能路由 */}
+            <Route path="/topics/:id/ai" element={<TopicAI />} />
+            <Route path="/topics/:id/mindmap" element={<TopicMindMap />} />
             <Route path="*" element={<div className="text-center text-xl">页面未找到</div>} />
           </Routes>
         </Suspense>

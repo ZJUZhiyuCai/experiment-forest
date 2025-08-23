@@ -220,19 +220,25 @@ export default function Notes() {
                 exit={{ opacity: 0, y: -20 }}
                 className="mb-6"
               >
-                <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6">
-                  <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold text-gray-800">
+              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl shadow-lg border border-emerald-200 p-6 mb-6">
+                <div className="flex justify-between items-center mb-6">
+                  <div>
+                    <h3 className="text-xl font-bold text-[#4A7C59] mb-2 flex items-center">
+                      <i className="fa-solid fa-seedling mr-3 text-emerald-500"></i>
                       {currentNote ? '编辑实验笔记' : '创建新笔记'}
                     </h3>
-                    <button 
-                      onClick={closeForm}
-                      className="text-gray-500 hover:text-gray-700 transition-colors"
-                      disabled={isSubmitting}
-                    >
-                      <i className="fa-solid fa-times text-xl"></i>
-                    </button>
+                    <p className="text-gray-600">
+                      {currentNote ? '修改笔记的详细信息' : '记录您的实验观察和想法'}
+                    </p>
                   </div>
+                  <button 
+                    onClick={closeForm}
+                    className="p-3 text-gray-500 hover:text-gray-700 hover:bg-white/50 rounded-lg transition-all duration-200"
+                    disabled={isSubmitting}
+                  >
+                    <i className="fa-solid fa-times text-xl"></i>
+                  </button>
+                </div>
                 
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div>

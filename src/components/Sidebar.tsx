@@ -39,13 +39,11 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       label: '课题管理',
       children: [] // 这里将动态填充课题列表
     },
-    { path: '/calendar', icon: 'fa-calendar-alt', label: '实验日历' }, // 融合日历系统
+    { path: '/calendar', icon: 'fa-calendar-alt', label: '实验日历' },
     { path: '/records', icon: 'fa-flask', label: '实验记录' },
     { path: '/notes', icon: 'fa-sticky-note', label: '实验笔记' },
     { path: '/sops', icon: 'fa-file-alt', label: 'SOP文档' },
     { path: '/samples', icon: 'fa-vials', label: '样本管理' },
-    { path: '/ai-chat', icon: 'fa-robot', label: 'AI助手' }, // 新增AI聊天功能
-    { path: '/mindmaps', icon: 'fa-project-diagram', label: '思维导图' }, // 新增思维导图功能
     { path: '/settings', icon: 'fa-cog', label: '设置' }
   ]);
   
@@ -55,33 +53,45 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
       try {
         const allProjects = projectService.getAll();
         
-        // 更新课题管理的子项为所有课题
+        // 更新课题管理的子项，包含AI助手、思维导图和所有课题
         setNavItems(prev => prev.map(item => {
           if (item.path === '/projects') {
+            const projectChildren = allProjects.map(project => ({
+              path: `/projects/${project.id}`,
+              icon: 'fa-folder',
+              label: project.title,
+              children: [
+                { 
+                  path: `/topics/${project.id}/ai`, 
+                  icon: 'fa-robot', 
+                  label: '小森博士' 
+                },
+                { 
+                  path: `/topics/${project.id}/mindmap`, 
+                  icon: 'fa-sitemap', 
+                  label: '思维导图' 
+                },
+                { 
+                  path: `/projects/${project.id}/records`, 
+                  icon: 'fa-flask', 
+                  label: '实验记录' 
+                },
+                { 
+                  path: `/projects/${project.id}/notes`, 
+                  icon: 'fa-sticky-note', 
+                  label: '实验笔记' 
+                },
+                { 
+                  path: `/projects/${project.id}/sops`, 
+                  icon: 'fa-file-alt', 
+                  label: 'SOP文档' 
+                }
+              ]
+            }));
+            
             return {
               ...item,
-              children: allProjects.map(project => ({
-                path: `/projects/${project.id}`,
-                icon: 'fa-folder',
-                label: project.title,
-                children: [
-                  { 
-                    path: `/projects/${project.id}/records`, 
-                    icon: 'fa-flask', 
-                    label: '实验记录' 
-                  },
-                  { 
-                    path: `/projects/${project.id}/notes`, 
-                    icon: 'fa-sticky-note', 
-                    label: '实验笔记' 
-                  },
-                  { 
-                    path: `/projects/${project.id}/sops`, 
-                    icon: 'fa-file-alt', 
-                    label: 'SOP文档' 
-                  }
-                ]
-              }))
+              children: projectChildren
             };
           }
           return item;

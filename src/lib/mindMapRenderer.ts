@@ -1,4 +1,7 @@
-import * as d3 from 'd3-force';
+import * as d3Force from 'd3-force';
+import * as d3Selection from 'd3-selection';
+import * as d3Zoom from 'd3-zoom';
+import * as d3Drag from 'd3-drag';
 import { MindMap, MindMapNode, MindMapEdge } from '@/types';
 
 // 力导向图仿真节点类型
@@ -31,12 +34,12 @@ export interface MindMapEvents {
 // 思维导图渲染器
 export class MindMapRenderer {
   private container: HTMLElement;
-  private svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
-  private g: d3.Selection<SVGGElement, unknown, null, undefined>;
-  private simulation: d3.Simulation<SimulationNode, SimulationLink>;
+  private svg!: d3Selection.Selection<SVGSVGElement, unknown, null, undefined>;
+  private g!: d3Selection.Selection<SVGGElement, unknown, null, undefined>;
+  private simulation!: d3Force.Simulation<SimulationNode, SimulationLink>;
   private nodes: SimulationNode[] = [];
   private links: SimulationLink[] = [];
-  private zoom: d3.ZoomBehavior<SVGSVGElement, unknown>;
+  private zoom!: d3Zoom.ZoomBehavior<SVGSVGElement, unknown>;
   private events: MindMapEvents = {};
 
   constructor(container: HTMLElement, events?: MindMapEvents) {
@@ -50,10 +53,10 @@ export class MindMapRenderer {
   // 初始化SVG容器
   private initializeSVG(): void {
     // 清空容器
-    d3.select(this.container).selectAll('*').remove();
+    d3Selection.select(this.container).selectAll('*').remove();
 
     // 创建SVG
-    this.svg = d3.select(this.container)
+    this.svg = d3Selection.select(this.container)
       .append('svg')
       .attr('width', '100%')
       .attr('height', '100%')
@@ -68,9 +71,9 @@ export class MindMapRenderer {
     this.addArrowMarkers();
 
     // 添加画布点击事件
-    this.svg.on('click', (event) => {
+    this.svg.on('click', (event: MouseEvent) => {
       if (event.target === this.svg.node()) {
-        const [x, y] = d3.pointer(event, this.g.node());
+        const [x, y] = d3Selection.pointer(event, this.g.node());
         this.events.onCanvasClick?.(x, y, event);
       }
     });
@@ -100,16 +103,16 @@ export class MindMapRenderer {
 
   // 初始化力导向仿真
   private initializeSimulation(): void {
-    this.simulation = d3.forceSimulation<SimulationNode, SimulationLink>()
-      .force('link', d3.forceLink<SimulationNode, SimulationLink>()
-        .id(d => d.id)
+    this.simulation = d3Force.forceSimulation<SimulationNode, SimulationLink>()
+      .force('link', d3Force.forceLink<SimulationNode, SimulationLink>()
+        .id((d: SimulationNode) => d.id)
         .distance(100)
         .strength(0.5))
-      .force('charge', d3.forceManyBody()
+      .force('charge', d3Force.forceManyBody()
         .strength(-300)
         .distanceMax(500))
-      .force('center', d3.forceCenter(0, 0))
-      .force('collision', d3.forceCollide()
+      .force('center', d3Force.forceCenter(0, 0))
+      .force('collision', d3Force.forceCollide()
         .radius(50)
         .strength(0.7))
       .alphaDecay(0.02)
@@ -123,11 +126,11 @@ export class MindMapRenderer {
 
   // 初始化缩放行为
   private initializeZoom(): void {
-    this.zoom = d3.zoom<SVGSVGElement, unknown>()
+    this.zoom = d3Zoom.zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.1, 4])
-      .on('zoom', (event) => {
+      .on('zoom', (event: d3Zoom.D3ZoomEvent<SVGSVGElement, unknown>) => {
         const { transform } = event;
-        this.g.attr('transform', transform);
+        this.g.attr('transform', transform.toString());
         this.events.onZoom?.(transform.k, transform.x, transform.y);
       });
 
@@ -163,7 +166,7 @@ export class MindMapRenderer {
   // 渲染连接线
   private renderLinks(): void {
     const linkSelection = this.g.selectAll<SVGLineElement, SimulationLink>('.link')
-      .data(this.links, d => d.edge.id);
+      .data(this.links, (d: SimulationLink) => d.edge.id);
 
     // 移除旧的连接线
     linkSelection.exit().remove();
@@ -176,23 +179,23 @@ export class MindMapRenderer {
 
     // 更新连接线样式
     linkEnter.merge(linkSelection)
-      .attr('stroke', d => d.edge.style.color)
-      .attr('stroke-width', d => d.edge.style.width)
-      .attr('stroke-dasharray', d => {
+      .attr('stroke', (d: SimulationLink) => d.edge.style.color)
+      .attr('stroke-width', (d: SimulationLink) => d.edge.style.width)
+      .attr('stroke-dasharray', (d: SimulationLink) => {
         switch (d.edge.style.strokeType) {
           case 'dashed': return '5,5';
           case 'dotted': return '2,2';
           default: return 'none';
         }
       })
-      .attr('marker-end', d => {
+      .attr('marker-end', (d: SimulationLink) => {
         if (d.edge.style.arrow) {
           const colorId = d.edge.style.color.replace('#', '');
           return `url(#arrow-${colorId})`;
         }
         return 'none';
       })
-      .on('click', (event, d) => {
+      .on('click', (event: MouseEvent, d: SimulationLink) => {
         event.stopPropagation();
         this.events.onEdgeClick?.(d.edge, event);
       });
@@ -201,7 +204,7 @@ export class MindMapRenderer {
   // 渲染节点
   private renderNodes(): void {
     const nodeSelection = this.g.selectAll<SVGGElement, SimulationNode>('.node')
-      .data(this.nodes, d => d.id);
+      .data(this.nodes, (d: SimulationNode) => d.id);
 
     // 移除旧节点
     nodeSelection.exit().remove();
@@ -213,8 +216,8 @@ export class MindMapRenderer {
       .style('cursor', 'pointer');
 
     // 为每个节点添加形状
-    nodeEnter.each((d, i, nodes) => {
-      const nodeGroup = d3.select(nodes[i]);
+    nodeEnter.each((d: SimulationNode, i: number, nodes: ArrayLike<SVGGElement>) => {
+      const nodeGroup = d3Selection.select(nodes[i]) as any;
       this.addNodeShape(nodeGroup, d);
       this.addNodeText(nodeGroup, d);
     });
@@ -224,19 +227,19 @@ export class MindMapRenderer {
     this.addNodeInteractions(allNodes);
 
     // 添加拖拽行为
-    allNodes.call(d3.drag<SVGGElement, SimulationNode>()
-      .on('start', (event, d) => {
+    allNodes.call(d3Drag.drag<SVGGElement, SimulationNode>()
+      .on('start', (event: d3Drag.D3DragEvent<SVGGElement, SimulationNode, SimulationNode>, d: SimulationNode) => {
         if (!event.active) this.simulation.alphaTarget(0.3).restart();
         d.fx = d.x;
         d.fy = d.y;
         this.svg.style('cursor', 'grabbing');
       })
-      .on('drag', (event, d) => {
+      .on('drag', (event: d3Drag.D3DragEvent<SVGGElement, SimulationNode, SimulationNode>, d: SimulationNode) => {
         d.fx = event.x;
         d.fy = event.y;
         this.events.onNodeDrag?.(d, event.x, event.y);
       })
-      .on('end', (event, d) => {
+      .on('end', (event: d3Drag.D3DragEvent<SVGGElement, SimulationNode, SimulationNode>, d: SimulationNode) => {
         if (!event.active) this.simulation.alphaTarget(0);
         d.fx = null;
         d.fy = null;
@@ -246,7 +249,7 @@ export class MindMapRenderer {
   }
 
   // 添加节点形状
-  private addNodeShape(nodeGroup: d3.Selection<SVGGElement, SimulationNode, SVGGElement, unknown>, node: SimulationNode): void {
+  private addNodeShape(nodeGroup: any, node: SimulationNode): void {
     const { shape, color, borderColor, borderWidth } = node.style;
     const { width, height } = node.size;
 
@@ -329,7 +332,7 @@ export class MindMapRenderer {
   }
 
   // 添加节点文本
-  private addNodeText(nodeGroup: d3.Selection<SVGGElement, SimulationNode, SVGGElement, unknown>, node: SimulationNode): void {
+  private addNodeText(nodeGroup: any, node: SimulationNode): void {
     const text = nodeGroup.append('text')
       .attr('class', 'node-text')
       .attr('text-anchor', 'middle')
@@ -346,7 +349,7 @@ export class MindMapRenderer {
 
   // 文本换行处理
   private wrapText(
-    text: d3.Selection<SVGTextElement, SimulationNode, SVGGElement, unknown>, 
+    text: any, 
     content: string, 
     maxWidth: number
   ): void {
@@ -388,25 +391,25 @@ export class MindMapRenderer {
   }
 
   // 添加节点交互
-  private addNodeInteractions(nodes: d3.Selection<SVGGElement, SimulationNode, SVGGElement, unknown>): void {
+  private addNodeInteractions(nodes: any): void {
     nodes
-      .on('click', (event, d) => {
+      .on('click', (event: MouseEvent, d: SimulationNode) => {
         event.stopPropagation();
         this.events.onNodeClick?.(d, event);
       })
-      .on('dblclick', (event, d) => {
+      .on('dblclick', (event: MouseEvent, d: SimulationNode) => {
         event.stopPropagation();
         this.events.onNodeDoubleClick?.(d, event);
       })
-      .on('mouseenter', function() {
-        d3.select(this).select('.node-shape')
+      .on('mouseenter', function(this: SVGGElement) {
+        d3Selection.select(this).select('.node-shape')
           .transition()
           .duration(200)
           .attr('stroke-width', 3)
           .style('filter', 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1))');
       })
-      .on('mouseleave', function(event, d) {
-        d3.select(this).select('.node-shape')
+      .on('mouseleave', function(this: SVGGElement, event: MouseEvent, d: SimulationNode) {
+        d3Selection.select(this).select('.node-shape')
           .transition()
           .duration(200)
           .attr('stroke-width', d.style.borderWidth || 2)
@@ -418,8 +421,8 @@ export class MindMapRenderer {
   private updateSimulation(): void {
     this.simulation
       .nodes(this.nodes)
-      .force('link', d3.forceLink<SimulationNode, SimulationLink>(this.links)
-        .id(d => d.id)
+      .force('link', d3Force.forceLink<SimulationNode, SimulationLink>(this.links)
+        .id((d: SimulationNode) => d.id)
         .distance(100)
         .strength(0.5));
 
@@ -430,14 +433,14 @@ export class MindMapRenderer {
   private updateVisualElements(): void {
     // 更新连接线位置
     this.g.selectAll<SVGLineElement, SimulationLink>('.link')
-      .attr('x1', d => (d.source as SimulationNode).x || 0)
-      .attr('y1', d => (d.source as SimulationNode).y || 0)
-      .attr('x2', d => (d.target as SimulationNode).x || 0)
-      .attr('y2', d => (d.target as SimulationNode).y || 0);
+      .attr('x1', (d: SimulationLink) => (d.source as SimulationNode).x || 0)
+      .attr('y1', (d: SimulationLink) => (d.source as SimulationNode).y || 0)
+      .attr('x2', (d: SimulationLink) => (d.target as SimulationNode).x || 0)
+      .attr('y2', (d: SimulationLink) => (d.target as SimulationNode).y || 0);
 
     // 更新节点位置
     this.g.selectAll<SVGGElement, SimulationNode>('.node')
-      .attr('transform', d => `translate(${d.x || 0}, ${d.y || 0})`);
+      .attr('transform', (d: SimulationNode) => `translate(${d.x || 0}, ${d.y || 0})`);
   }
 
   // 居中视图
@@ -459,7 +462,7 @@ export class MindMapRenderer {
 
     this.svg.transition()
       .duration(750)
-      .call(this.zoom.transform, d3.zoomIdentity.translate(centerX, centerY).scale(scale));
+      .call(this.zoom.transform, d3Zoom.zoomIdentity.translate(centerX, centerY).scale(scale));
   }
 
   // 获取节点边界
@@ -517,6 +520,6 @@ export class MindMapRenderer {
   // 销毁渲染器
   destroy(): void {
     this.simulation.stop();
-    d3.select(this.container).selectAll('*').remove();
+    d3Selection.select(this.container).selectAll('*').remove();
   }
 }

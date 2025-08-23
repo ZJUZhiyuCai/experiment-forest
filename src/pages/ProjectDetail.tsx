@@ -232,6 +232,40 @@ export default function ProjectDetail() {
               {/* 概览标签页 */}
               {activeTab === 'overview' && (
                 <div>
+                  {/* AI和思维导图功能快捷入口 */}
+                  <div className="mb-6 p-4 bg-gradient-to-r from-emerald-50 to-blue-50 border border-emerald-200 rounded-lg">
+                    <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
+                      <i className="fa-solid fa-magic mr-2 text-emerald-600"></i>
+                      智能化功能
+                    </h3>
+                    <div className="flex flex-wrap gap-3">
+                      <Link 
+                        to={`/topics/${project.id}/ai`}
+                        className="flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 shadow-md hover:shadow-lg"
+                      >
+                        <i className="fa-solid fa-robot mr-2"></i>
+                        小森博士
+                      </Link>
+                      <Link 
+                        to={`/topics/${project.id}/mindmap`}
+                        className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 shadow-md hover:shadow-lg"
+                      >
+                        <i className="fa-solid fa-project-diagram mr-2"></i>
+                        思维导图
+                      </Link>
+                      <Link 
+                        to={`/settings#ai-api-settings`}
+                        className="flex items-center px-3 py-2 border border-gray-300 text-gray-600 hover:text-gray-800 hover:border-gray-400 rounded-lg transition-colors text-sm"
+                      >
+                        <i className="fa-solid fa-cog mr-2"></i>
+                        AI设置
+                      </Link>
+                    </div>
+                    <p className="text-sm text-gray-600 mt-2">
+                      💡 使用AI助手获得专业建议，通过思维导图可视化课题结构
+                    </p>
+                  </div>
+                  
                   <h3 className="text-lg font-semibold text-gray-800 mb-4">最近活动</h3>
                   <div className="space-y-3">
                     {[...records, ...notes, ...sops]

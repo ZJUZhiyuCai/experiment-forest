@@ -116,12 +116,40 @@ export class AIChatService {
     let welcomeText = "您好！我是您的AI实验助手，很高兴为您服务。";
     
     if (experimentType) {
-      const typeNames = {
+      const typeNames: Record<ExperimentCategory, string> = {
+        // 细胞生物学实验
         'cell_culture': '细胞培养',
+        'cell_viability': '细胞活力检测',
+        'flow_cytometry': '流式细胞术',
+        'cell_transfection': '细胞转染',
+        // 分子生物学实验
         'pcr': 'PCR扩增',
         'western_blot': 'Western Blot',
-        'elisa': 'ELISA检测',
+        'gene_cloning': '基因克隆',
+        'dna_sequencing': 'DNA测序',
+        'rna_extraction': 'RNA提取',
+        'protein_purification': '蛋白质纯化',
+        // 动物实验
+        'animal_behavior': '动物行为学',
+        'animal_surgery': '动物手术',
         'animal_dosing': '动物给药',
+        'tissue_sampling': '组织取样',
+        // 药物研发
+        'drug_screening': '药物筛选',
+        'compound_synthesis': '化合物合成',
+        'pharmacokinetics': '药代动力学',
+        'toxicology': '毒理学研究',
+        'dose_response': '剂量-反应研究',
+        // 生化分析
+        'elisa': 'ELISA检测',
+        'chromatography': '色谱分析',
+        'mass_spectrometry': '质谱分析',
+        'immunohistochemistry': '免疫组化',
+        // 微生物学
+        'bacterial_culture': '细菌培养',
+        'antimicrobial_test': '抗菌试验',
+        'sterility_test': '无菌检验',
+        // 其他
         'other': '通用实验'
       };
       welcomeText += `\n\n我注意到您正在进行${typeNames[experimentType] || experimentType}相关的实验。我可以为您提供：\n\n`;
