@@ -1,0 +1,137 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+  :root {
+  font-family: 'You She Biao Ti Hei', 'Xia Wu Wen Kai Light', system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+  font-weight: 300;
+  background-color: #F9F6F2;
+  
+  color-scheme: light dark;
+  color: #555555;
+  background-color: #F9F6F2;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: #f7fafc;
+  color: #2d3748;
+}
+
+/* 夜晚森林主题 - 深色模式 */
+.dark body {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f1a2e 100%);
+  color: #e2e8f0;
+}
+
+/* 深色模式下的森林色调变量 */
+.dark {
+  --forest-dark-primary: #0f172a;    /* 深夜蓝 */
+  --forest-dark-secondary: #1e293b;  /* 森林深绿 */
+  --forest-dark-accent: #0f1a2e;     /* 夜空蓝 */
+  --forest-moonlight: #e2e8f0;       /* 月光银 */
+  --forest-mist: #64748b;             /* 森林雾气 */
+  --forest-shadow: #334155;           /* 树影灰 */
+}
+
+/* 自定义滚动条样式 */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #10b981, #059669);
+  border-radius: 10px;
+  transition: all 0.3s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #059669, #047857);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Firefox 滚动条样式 */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #10b981 #f1f5f9;
+}
+
+/* 文本截断样式 */
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 1;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+/* 渐变文字效果 */
+.gradient-text {
+  background: linear-gradient(135deg, #10b981, #3b82f6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 毛玻璃效果 */
+.glassmorphism {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* 动画效果 */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.float-animation {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* 时间线样式 */
+.timeline-marker {
+  position: relative;
+}
+
+.timeline-marker::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, transparent, #e5e7eb, transparent);
+  transform: translateX(-50%);
+}
+
+/* 响应式优化 */
+@media (max-width: 768px) {
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+}
