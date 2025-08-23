@@ -81,13 +81,13 @@ export default function Calendar() {
     { emoji: '🤔', name: '思考' }
   ];
   
-  const tags = [
-    { id: 'work', name: '工作', color: 'emerald' },
-    { id: 'study', name: '学习', color: 'blue' },
-    { id: 'life', name: '生活', color: 'green' },
-    { id: 'exercise', name: '运动', color: 'yellow' },
-    { id: 'rest', name: '休息', color: 'indigo' }
-  ];
+  // const tags = [
+  //   { id: 'work', name: '工作', color: 'emerald' },
+  //   { id: 'study', name: '学习', color: 'blue' },
+  //   { id: 'life', name: '生活', color: 'green' },
+  //   { id: 'exercise', name: '运动', color: 'yellow' },
+  //   { id: 'rest', name: '休息', color: 'indigo' }
+  // ];
 
   // 工具函数
   const getCurrentTimePosition = useCallback(() => {
@@ -257,7 +257,7 @@ export default function Calendar() {
     if (!isDragging || !draggedEvent || !originalEvent) return;
     
     const deltaY = e.clientY - dragStartY;
-    const timeSlotHeight = 64; // 每小时的像素高度
+    // const timeSlotHeight = 64; // 每小时的像素高度
     // 降低灵敏度：需要移动更多像素才能改变时间
     const pixelsPerSlot = 32; // 需要移动32像素才改变30分钟
     const deltaSlots = Math.round(deltaY / pixelsPerSlot);

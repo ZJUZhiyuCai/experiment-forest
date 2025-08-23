@@ -5,13 +5,14 @@ import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
 import { Button } from '@/components/Button';
 import { SOPCard } from '@/components/SOPCard';
+import { Project, SOP } from '@/types';
 
 export default function TopicSOPs() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [topic, setTopic] = useState(null);
-  const [relatedSOPs, setRelatedSOPs] = useState([]);
+  const [topic, setTopic] = useState<Project | null>(null);
+  const [relatedSOPs, setRelatedSOPs] = useState<SOP[]>([]);
   const [loading, setLoading] = useState(true);
   
   useEffect(() => {
@@ -22,7 +23,7 @@ export default function TopicSOPs() {
       
       // 获取关联的SOP文档
       const allSOPs = sopService.getAll();
-      const sops = allSOPs.filter(sop => sop.topicId === id);
+      const sops = allSOPs.filter(sop => sop.projectId === id);
       setRelatedSOPs(sops);
       console.log('关联的SOP数量:', sops.length);
     }
@@ -51,7 +52,7 @@ export default function TopicSOPs() {
           actions={
             <div className="flex space-x-2">
                <Button asChild variant="outline" size="sm">
-                 <Link to={`/sops/new?topicId=${id}`}>
+                 <Link to={`/sops/new?projectId=${id}`}>
                    <i className="fa-solid fa-plus mr-1"></i>添加课题SOP
                  </Link>
                </Button>

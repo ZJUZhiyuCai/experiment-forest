@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { topicService } from '@/lib/cachedStorage';
+import { projectService } from '@/lib/storage';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
 import { Button } from '@/components/Button';
@@ -58,16 +58,25 @@ export default function CreateTopic() {
       setIsSubmitting(true);
       
       // 创建新课题
-      const newTopic = topicService.create({
+      projectService.create({
         title: formData.title,
-        description: formData.description
+        description: formData.description,
+        status: 'planning',
+        priority: 'medium',
+        progress: 0,
+        tags: [],
+        leader: '系统管理员',
+        members: [],
+        objectives: [],
+        milestones: [],
+        startDate: new Date().toISOString().split('T')[0]
       });
       
       toast.success('课题创建成功');
       
       // 延迟导航以确保用户看到成功提示
       setTimeout(() => {
-        navigate('/topics');
+        navigate('/projects');
       }, 1000);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : '创建课题失败，请重试');
@@ -84,7 +93,7 @@ export default function CreateTopic() {
           title="创建课题" 
           sidebarCollapsed={sidebarCollapsed}
           actions={
-            <Button onClick={() => navigate('/topics')}>
+            <Button onClick={() => navigate('/projects')}>
               <i className="fa-solid fa-arrow-left mr-2"></i>
               <span className="hidden sm:inline">返回列表</span>
             </Button>
@@ -137,7 +146,7 @@ export default function CreateTopic() {
                 <Button 
                   type="button" 
                   variant="outline"
-                  onClick={() => navigate('/topics')}
+                  onClick={() => navigate('/projects')}
                   disabled={isSubmitting}
                 >
                   取消

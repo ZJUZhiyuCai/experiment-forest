@@ -3,7 +3,6 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import { projectService } from '@/lib/cachedStorage';
-import { Project } from '@/types';
 
 interface MenuItem {
   path: string;
@@ -29,7 +28,6 @@ interface SidebarProps {
 export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const location = useLocation();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]);
   
   // 基础导航项，设置始终可见，融合日历功能
   const [navItems, setNavItems] = useState<MenuItem[]>([
@@ -45,6 +43,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     { path: '/records', icon: 'fa-flask', label: '实验记录' },
     { path: '/notes', icon: 'fa-sticky-note', label: '实验笔记' },
     { path: '/sops', icon: 'fa-file-alt', label: 'SOP文档' },
+    { path: '/samples', icon: 'fa-vials', label: '样本管理' },
     { path: '/settings', icon: 'fa-cog', label: '设置' }
   ]);
   
@@ -53,7 +52,6 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     const updateNavItems = () => {
       try {
         const allProjects = projectService.getAll();
-        setProjects(allProjects);
         
         // 更新课题管理的子项为所有课题
         setNavItems(prev => prev.map(item => {

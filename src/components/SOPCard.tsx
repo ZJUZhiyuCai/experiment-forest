@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion';
 import { memo } from 'react';
 import { SOP } from '@/types';
-import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 import { topicService } from '@/lib/cachedStorage';
 
@@ -13,13 +12,13 @@ interface SOPCardProps {
 
 export const SOPCard = memo(function SOPCard({ sop, onEdit, onDelete }: SOPCardProps) {
   // 格式化日期
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+  const formatDate = (date: Date | string) => {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
     return new Intl.DateTimeFormat('zh-CN', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit'
-    }).format(date);
+    }).format(dateObj);
   };
   
   // 截断长文本
@@ -29,8 +28,8 @@ export const SOPCard = memo(function SOPCard({ sop, onEdit, onDelete }: SOPCardP
   };
   
    // 获取课题名称
-   const getTopicName = (topicId: string) => {
-     const topic = topicService.getById(topicId);
+   const getTopicName = (projectId: string) => {
+     const topic = topicService.getById(projectId);
      return topic ? topic.title : '未知课题';
    };
    
@@ -97,9 +96,9 @@ export const SOPCard = memo(function SOPCard({ sop, onEdit, onDelete }: SOPCardP
               </span>
              </div>
              
-             {sop.topicId && (
+             {sop.projectId && (
                <span className="text-xs bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 px-2 py-0.5 rounded-full inline-block mt-1 w-fit">
-                 {getTopicName(sop.topicId)}
+                 {getTopicName(sop.projectId)}
                </span>
              )}
            </div>

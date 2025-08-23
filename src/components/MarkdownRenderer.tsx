@@ -28,7 +28,6 @@ export function MarkdownRenderer({ content, className = '' }: MarkdownRendererPr
         if (tableLines.length >= 2) {
           // 渲染表格
           const headerRow = tableLines[0];
-          const separatorRow = tableLines[1];
           const dataRows = tableLines.slice(2);
           
           // 解析表头

@@ -18,6 +18,7 @@ const NoteDetail = lazy(() => import("@/pages/NoteDetail"));
 const SOPs = lazy(() => import("@/pages/SOPs"));
 const CreateSOP = lazy(() => import("@/pages/CreateSOP"));
 const SOPDetail = lazy(() => import("@/pages/SOPDetail"));
+const SampleManagement = lazy(() => import("@/pages/SampleManagement"));
 const Calendar = lazy(() => import("@/pages/Calendar"));
 const Settings = lazy(() => import("@/pages/Settings"));
 const MyForest = lazy(() => import("@/pages/MyForest"));
@@ -57,10 +58,12 @@ export default function App() {
             <Route path="/records/:id" element={<RecordDetail />} />
             <Route path="/notes" element={<Notes />} />
             <Route path="/notes/new" element={<CreateNote />} />
+            <Route path="/notes/edit/:id" element={<CreateNote />} />
             <Route path="/notes/:id" element={<NoteDetail />} />
             <Route path="/sops" element={<SOPs />} />
             <Route path="/sops/new" element={<CreateSOP />} />
             <Route path="/sops/:id" element={<SOPDetail />} />
+            <Route path="/samples" element={<SampleManagement />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<div className="text-center text-xl">页面未找到</div>} />

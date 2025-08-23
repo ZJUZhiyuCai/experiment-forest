@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { topicService } from '@/lib/cachedStorage';
+import { Project } from '@/types';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
 import { Button } from '@/components/Button';
@@ -18,7 +19,7 @@ interface ChatMessage {
 export default function TopicAI() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { id } = useParams<{ id: string }>();
-  const [topic, setTopic] = useState(null);
+  const [topic, setTopic] = useState<Project | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);

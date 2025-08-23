@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useTheme } from '@/hooks/useTheme';
 import { AISettings } from '@/types';
@@ -11,7 +10,7 @@ import { Header } from '@/components/Header';
 
 export default function Settings() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const { theme, toggleTheme, isDark } = useTheme();
+  const { toggleTheme, isDark } = useTheme();
   const [userProfile, setUserProfile] = useState({
     name: '实验管理员',
     email: 'admin@example.com',

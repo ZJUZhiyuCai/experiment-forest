@@ -2,16 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-  :root {
+:root {
   font-family: 'You She Biao Ti Hei', 'Xia Wu Wen Kai Light', system-ui, -apple-system, sans-serif;
   line-height: 1.5;
   font-weight: 300;
-  background-color: #F9F6F2;
-  
-  color-scheme: light dark;
+  background-color: #f9f6f2;
   color: #555555;
-  background-color: #F9F6F2;
-
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -19,24 +15,8 @@
 }
 
 body {
-  background-color: #f7fafc;
-  color: #2d3748;
-}
-
-/* 夜晚森林主题 - 深色模式 */
-.dark body {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f1a2e 100%);
-  color: #e2e8f0;
-}
-
-/* 深色模式下的森林色调变量 */
-.dark {
-  --forest-dark-primary: #0f172a;    /* 深夜蓝 */
-  --forest-dark-secondary: #1e293b;  /* 森林深绿 */
-  --forest-dark-accent: #0f1a2e;     /* 夜空蓝 */
-  --forest-moonlight: #e2e8f0;       /* 月光银 */
-  --forest-mist: #64748b;             /* 森林雾气 */
-  --forest-shadow: #334155;           /* 树影灰 */
+  background-color: #f9f6f2;
+  color: #555555;
 }
 
 /* 自定义滚动条样式 */
@@ -73,6 +53,8 @@ body {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 1;
+  /* 现代浏览器支持 */
+  line-clamp: 1;
 }
 
 .line-clamp-2 {
@@ -80,21 +62,25 @@ body {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+  /* 现代浏览器支持 */
+  line-clamp: 2;
 }
 
 /* 渐变文字效果 */
 .gradient-text {
   background: linear-gradient(135deg, #10b981, #3b82f6);
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
   background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 /* 毛玻璃效果 */
 .glassmorphism {
   background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(10px);
+  /* Safari 支持 */
   -webkit-backdrop-filter: blur(10px);
+  /* 现代浏览器支持 */
+  backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 

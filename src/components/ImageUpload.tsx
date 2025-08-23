@@ -22,7 +22,6 @@ export function ImageUpload({ visible, onClose, onInsert }: ImageUploadProps) {
   const [imageCaption, setImageCaption] = useState<string>('');
   const [imageWidth, setImageWidth] = useState<number>(400);
   const [uploadMethod, setUploadMethod] = useState<'file' | 'url'>('file');
-  const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {

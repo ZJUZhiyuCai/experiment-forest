@@ -133,16 +133,16 @@ export default function RecordDetail() {
                      {record.status === 'draft' ? '草稿' : record.status === 'completed' ? '已完成' : '已归档'}
                    </span>
                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                     record.category === 'cell' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' :
-                     record.category === 'animal' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
-                     record.category === 'chemical' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' :
-                     record.category === 'microbiology' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
+                     record.category === 'cell_culture' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' :
+                     record.category === 'animal_dosing' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
+                     record.category === 'compound_synthesis' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' :
+                     record.category === 'bacterial_culture' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
                      'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
                    }`}>
-                     {record.category === 'cell' ? '细胞实验' :
-                      record.category === 'animal' ? '动物实验' :
-                      record.category === 'chemical' ? '化学实验' :
-                      record.category === 'microbiology' ? '微生物实验' : '其他实验'}
+                     {record.category === 'cell_culture' ? '细胞培养' :
+                      record.category === 'animal_dosing' ? '动物给药' :
+                      record.category === 'compound_synthesis' ? '化合物合成' :
+                      record.category === 'bacterial_culture' ? '细菌培养' : '其他实验'}
                    </span>
                 </div>
               </div>

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { projectService, experimentRecordService, experimentNoteService, sopService } from '@/lib/cachedStorage';
 import { Project, ExperimentRecord, ExperimentNote, SOP, ProjectStats } from '@/types';

@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion';
 import { memo } from 'react';
 import { ExperimentNote } from '@/types';
-import { cn } from '@/lib/utils';
 import { Link } from 'react-router-dom';
 
 interface NoteCardProps {
@@ -12,13 +11,13 @@ interface NoteCardProps {
 
 export const NoteCard = memo(function NoteCard({ note, onEdit, onDelete }: NoteCardProps) {
   // 格式化日期
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+  const formatDate = (date: Date | string) => {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
     return new Intl.DateTimeFormat('zh-CN', {
       year: 'numeric',
       month: '2-digit',
       day: '2-digit'
-    }).format(date);
+    }).format(dateObj);
   };
   
   // 截断长文本

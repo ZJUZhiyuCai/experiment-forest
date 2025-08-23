@@ -2,8 +2,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { Button } from './Button';
-import { fixJson } from '@/lib/utils';
-import { MindMapNode } from '@/lib/mockAI';
 import { analyzeTopic } from '@/lib/mockAI';
 
 interface AIAnalysisModalProps {

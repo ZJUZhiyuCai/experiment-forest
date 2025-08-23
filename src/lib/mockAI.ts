@@ -414,16 +414,16 @@ const generateMockChatResponse = (message: string, topic: string): string => {
   
   switch(questionType) {
     case 'experimental_design':
-      return generateExperimentalDesignResponse(topic || "实验课题", message);
+      return generateExperimentalDesignResponse();
     case 'data_analysis':
-      return generateDataAnalysisResponse(message);
+      return generateDataAnalysisResponse();
     case 'literature':
       return generateLiteratureResponse(topic || "实验课题");
     case 'methodology':
-      return generateMethodologyResponse(message);
+      return generateMethodologyResponse();
     case 'general':
     default:
-      return generateGeneralResponse(topic || "实验课题", message);
+      return generateGeneralResponse();
   }
 };
 
@@ -445,7 +445,7 @@ const determineQuestionType = (message: string): string => {
 };
 
 // 生成实验设计回答
-const generateExperimentalDesignResponse = (topic: string, question: string): string => {
+const generateExperimentalDesignResponse = (): string => {
   const designs = ["基于您的问题，我建议采用随机对照实验设计，具体步骤如下：\n1. 样本分组：将实验对象随机分为对照组和实验组\n2. 变量控制：确保只有一个自变量，其他条件保持一致\n3. 重复实验：每组至少进行3次独立重复\n4. 盲法操作：采用单盲或双盲法减少主观偏差\n\n这种设计可以有效验证您的假设，并提高结果的可靠性。"
   ];
   
@@ -453,7 +453,7 @@ const generateExperimentalDesignResponse = (topic: string, question: string): st
 };
 
 // 生成数据分析回答
-const generateDataAnalysisResponse = (question: string): string => {
+const generateDataAnalysisResponse = (): string => {
   const analyses = [
     "针对您的数据类型，推荐以下分析方法：\n1. 描述性统计：计算均值、标准差和标准误\n2. 推断性统计：根据实验设计选择t检验、方差分析或卡方检验\n3. 数据可视化：使用折线图、柱状图和散点图展示结果\n4. 高级分析：如需探索变量关系，可考虑相关性分析或回归模型\n\n建议使用R或Python进行统计分析，使用GraphPad Prism或Origin进行可视化。"
   ];
@@ -471,7 +471,7 @@ const generateLiteratureResponse = (topic: string): string => {
 };
 
 // 生成方法学回答
-const generateMethodologyResponse = (question: string): string => {
+const generateMethodologyResponse = (): string => {
   const methodologies = [
     "根据您的需求，推荐以下实验方法：\n1. 主要方法：根据实验目的选择最合适的技术\n2. 操作步骤：详细描述实验流程，注意关键步骤的操作要点\n3. 优化建议：温度、时间和浓度等参数的优化范围\n4. 注意事项：安全防护和质量控制措施\n\n建议参考相关领域的标准操作流程(SOP)，并在预实验中验证方法的可行性。"
   ];
@@ -480,9 +480,9 @@ const generateMethodologyResponse = (question: string): string => {
 };
 
 // 生成一般回答
-const generateGeneralResponse = (topic: string, question: string): string => {
+const generateGeneralResponse = (): string => {
   const generals = [
-    `关于${topic}的问题，我的建议如下：\n1. 明确研究目标和假设\n2. 设计合理的实验方案\n3. 严格控制实验条件\n4. 系统收集和分析数据\n5. 客观解读实验结果\n\n如果您能提供更多具体信息，我可以给出更针对性的建议。`,
+    `关于实验课题的问题，我的建议如下：\n1. 明确研究目标和假设\n2. 设计合理的实验方案\n3. 严格控制实验条件\n4. 系统收集和分析数据\n5. 客观解读实验结果\n\n如果您能提供更多具体信息，我可以给出更针对性的建议。`,
     `针对您的问题，我建议从以下几个方面考虑：\n1. 文献调研：了解该领域的研究现状\n2. 实验设计：选择合适的模型和方法\n3. 数据分析：采用适当的统计方法\n4. 结果解释：结合现有知识进行讨论\n\n科学研究是一个迭代过程，建议先进行小规模预实验验证关键步骤。`
   ];
   

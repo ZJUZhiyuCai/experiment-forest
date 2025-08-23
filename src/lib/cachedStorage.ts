@@ -1,13 +1,15 @@
 // 带缓存功能的存储服务包装器
 // 在现有存储服务基础上添加缓存层，提升数据访问性能
 
-import { ExperimentRecord, ExperimentNote, SOP, Project, ProjectStats, ExperimentPlan } from '@/types';
+import { ExperimentRecord, ExperimentNote, SOP, Project, ProjectStats, ExperimentPlan, Sample, SampleHistory, SampleStats } from '@/types';
 import { 
   experimentRecordService as originalRecordService,
   experimentNoteService as originalNoteService,
   sopService as originalSOPService,
   projectService as originalProjectService,
-  experimentPlanService as originalPlanService
+  experimentPlanService as originalPlanService,
+  sampleService as originalSampleService,
+  sampleHistoryService as originalSampleHistoryService
 } from './storage';
 import { cacheService, CacheKeys, CacheInvalidation } from './cacheService';
 
@@ -486,12 +488,208 @@ export const cachedExperimentPlanService = {
   }
 };
 
+// 带缓存的样本管理服务
+export const cachedSampleService = {
+  getAll: (): Sample[] => {
+    const cacheKey = 'samples_all';
+    let cached = cacheService.get<Sample[]>(cacheKey);
+    
+    if (cached) {
+      console.log('[Cache] 样本数据命中缓存:', cached.length, '个');
+      return cached;
+    }
+
+    console.log('[Cache] 样本数据未命中缓存，从数据源获取');
+    const samples = originalSampleService.getAll();
+    console.log('[Cache] 从数据源获取样本:', samples.length, '个');
+    cacheService.set(cacheKey, samples, CACHE_TTL.MEDIUM);
+    return samples;
+  },
+
+  getById: (id: string): Sample | null => {
+    const cacheKey = `sample_${id}`;
+    let cached = cacheService.get<Sample>(cacheKey);
+    
+    if (cached) {
+      return cached;
+    }
+
+    const sample = originalSampleService.getById(id);
+    if (sample) {
+      cacheService.set(cacheKey, sample, CACHE_TTL.MEDIUM);
+    }
+    return sample;
+  },
+
+  getBySampleId: (sampleId: string): Sample | null => {
+    return originalSampleService.getBySampleId(sampleId);
+  },
+
+  getByProjectId: (projectId: string): Sample[] => {
+    const cacheKey = `samples_project_${projectId}`;
+    let cached = cacheService.get<Sample[]>(cacheKey);
+    
+    if (cached) {
+      return cached;
+    }
+
+    const allSamples = cachedSampleService.getAll();
+    const projectSamples = allSamples.filter(sample => sample.projectId === projectId);
+    cacheService.set(cacheKey, projectSamples, CACHE_TTL.MEDIUM);
+    return projectSamples;
+  },
+
+  getByStatus: (status: string): Sample[] => {
+    return originalSampleService.getByStatus(status);
+  },
+
+  getByType: (type: string): Sample[] => {
+    return originalSampleService.getByType(type);
+  },
+
+  getExpiringSoon: (): Sample[] => {
+    return originalSampleService.getExpiringSoon();
+  },
+
+  getLowVolume: (threshold?: number): Sample[] => {
+    return originalSampleService.getLowVolume(threshold);
+  },
+
+  create: (sample: Omit<Sample, 'id' | 'createdAt' | 'updatedAt'>): Sample => {
+    const newSample = originalSampleService.create(sample);
+    
+    // 失效相关缓存
+    cacheService.delete('samples_all');
+    if (newSample.projectId) {
+      cacheService.delete(`samples_project_${newSample.projectId}`);
+    }
+    
+    // 缓存新创建的样本
+    cacheService.set(`sample_${newSample.id}`, newSample, CACHE_TTL.MEDIUM);
+    
+    return newSample;
+  },
+
+  update: (id: string, updates: Partial<Sample>): Sample | null => {
+    const existingSample = originalSampleService.getById(id);
+    const updatedSample = originalSampleService.update(id, updates);
+    
+    if (updatedSample) {
+      // 失效相关缓存
+      cacheService.delete('samples_all');
+      cacheService.delete(`sample_${id}`);
+      if (updatedSample.projectId) {
+        cacheService.delete(`samples_project_${updatedSample.projectId}`);
+      }
+      if (existingSample && existingSample.projectId !== updatedSample.projectId) {
+        cacheService.delete(`samples_project_${existingSample.projectId}`);
+      }
+      
+      // 缓存更新后的样本
+      cacheService.set(`sample_${id}`, updatedSample, CACHE_TTL.MEDIUM);
+    }
+    
+    return updatedSample;
+  },
+
+  delete: (id: string): boolean => {
+    const existingSample = originalSampleService.getById(id);
+    const success = originalSampleService.delete(id);
+    
+    if (success && existingSample) {
+      // 失效相关缓存
+      cacheService.delete('samples_all');
+      cacheService.delete(`sample_${id}`);
+      if (existingSample.projectId) {
+        cacheService.delete(`samples_project_${existingSample.projectId}`);
+      }
+    }
+    
+    return success;
+  },
+
+  useSample: (sampleId: string, experimentId: string, usedVolume?: number): boolean => {
+    const success = originalSampleService.useSample(sampleId, experimentId, usedVolume);
+    
+    if (success) {
+      // 失效相关缓存
+      const sample = originalSampleService.getById(sampleId);
+      if (sample) {
+        cacheService.delete('samples_all');
+        cacheService.delete(`sample_${sampleId}`);
+        if (sample.projectId) {
+          cacheService.delete(`samples_project_${sample.projectId}`);
+        }
+      }
+    }
+    
+    return success;
+  },
+
+  getStats: (): SampleStats => {
+    const cacheKey = 'sample_stats';
+    let cached = cacheService.get<SampleStats>(cacheKey);
+    
+    if (cached) {
+      return cached;
+    }
+
+    const stats = originalSampleService.getStats();
+    cacheService.set(cacheKey, stats, CACHE_TTL.SHORT); // 统计数据变化较频繁，使用短缓存
+    return stats;
+  }
+};
+
+// 带缓存的样本历史服务
+export const cachedSampleHistoryService = {
+  getAll: (): SampleHistory[] => {
+    return originalSampleHistoryService.getAll();
+  },
+
+  getBySampleId: (sampleId: string): SampleHistory[] => {
+    const cacheKey = `sample_history_${sampleId}`;
+    let cached = cacheService.get<SampleHistory[]>(cacheKey);
+    
+    if (cached) {
+      return cached;
+    }
+
+    const history = originalSampleHistoryService.getBySampleId(sampleId);
+    cacheService.set(cacheKey, history, CACHE_TTL.MEDIUM);
+    return history;
+  },
+
+  create: (record: Omit<SampleHistory, 'id' | 'timestamp'>): SampleHistory => {
+    const newRecord = originalSampleHistoryService.create({
+      ...record,
+      timestamp: new Date().toISOString()
+    });
+    
+    // 失效相关缓存
+    cacheService.delete(`sample_history_${record.sampleId}`);
+    
+    return newRecord;
+  },
+
+  deleteForSample: (sampleId: string): boolean => {
+    const success = originalSampleHistoryService.deleteForSample(sampleId);
+    
+    if (success) {
+      cacheService.delete(`sample_history_${sampleId}`);
+    }
+    
+    return success;
+  }
+};
+
 // 导出带缓存的服务（向后兼容）
 export const experimentRecordService = cachedExperimentRecordService;
 export const experimentNoteService = cachedExperimentNoteService;
 export const sopService = cachedSOPService;
 export const projectService = cachedProjectService;
 export const experimentPlanService = cachedExperimentPlanService;
+export const sampleService = cachedSampleService;
+export const sampleHistoryService = cachedSampleHistoryService;
 
 // 兼容性别名，保持向后兼容
 export const topicService = cachedProjectService;

@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { toast } from 'sonner';
-import { topicService, experimentRecordService, sopService } from '@/lib/cachedStorage';
+import { projectService, experimentRecordService, sopService } from '@/lib/storage';
+import { Project, ExperimentRecord, SOP } from '@/types';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
 import { Button } from '@/components/Button';
@@ -10,11 +11,11 @@ import { SOPCard } from '@/components/SOPCard';
 
 export default function TopicDetail() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [topic, setTopic] = useState(null);
+  const [topic, setTopic] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [relatedRecords, setRelatedRecords] = useState([]);
-  const [relatedSOPs, setRelatedSOPs] = useState([]);
+  const [relatedRecords, setRelatedRecords] = useState<ExperimentRecord[]>([]);
+  const [relatedSOPs, setRelatedSOPs] = useState<SOP[]>([]);
   const { id } = useParams();
   const navigate = useNavigate();
   
@@ -27,18 +28,18 @@ export default function TopicDetail() {
     
     try {
       // 获取课题详情
-      const foundTopic = topicService.getById(id);
+      const foundTopic = projectService.getById(id);
       if (foundTopic) {
         setTopic(foundTopic);
         
         // 获取关联的实验记录
         const allRecords = experimentRecordService.getAll();
-        const records = allRecords.filter(record => record.topicId === id);
+        const records = allRecords.filter(record => record.projectId === id);
         setRelatedRecords(records);
         
         // 获取关联的SOP
         const allSOPs = sopService.getAll();
-        const sops = allSOPs.filter(sop => sop.topicId === id);
+        const sops = allSOPs.filter(sop => sop.projectId === id);
         setRelatedSOPs(sops);
       } else {
         setError('未找到该课题');
@@ -53,17 +54,17 @@ export default function TopicDetail() {
   
   const handleEdit = () => {
     if (topic) {
-      navigate(`/topics/edit/${topic.id}`);
+      navigate(`/projects/edit/${topic.id}`);
     }
   };
   
   const handleDelete = () => {
     if (window.confirm('确定要删除这个课题吗？此操作不可撤销。')) {
       try {
-        const success = topicService.delete(topic.id);
+        const success = topic && projectService.delete(topic.id);
         if (success) {
           toast.success('课题已删除');
-          navigate('/topics');
+          navigate('/projects');
         } else {
           toast.error('删除失败，请重试');
         }
@@ -92,8 +93,8 @@ export default function TopicDetail() {
             <i className="fa-solid fa-exclamation-circle mr-2"></i>错误
           </h2>
           <p className="text-gray-600 dark:text-gray-300 mb-6">{error || '课题不存在'}</p>
-          <Button onClick={() => navigate('/topics')}>
-            <i className="fa-solid fa-arrow-left mr-2"></i>返回课题列表
+          <Button onClick={() => navigate('/projects')}>
+            <i className="fa-solid fa-arrow-left mr-2"></i>返回列表
           </Button>
         </div>
       </div>
@@ -116,7 +117,7 @@ export default function TopicDetail() {
               <Button onClick={handleDelete} variant="danger">
                 <i className="fa-solid fa-trash mr-2"></i>删除
               </Button>
-              <Button onClick={() => navigate('/topics')}>
+              <Button onClick={() => navigate('/projects')}>
                 <i className="fa-solid fa-arrow-left mr-2"></i>返回列表
               </Button>
             </div>
@@ -153,7 +154,7 @@ export default function TopicDetail() {
              
               <div className="mt-6 flex flex-wrap gap-3">
                 <Button asChild size="sm" className="bg-blue-600 hover:bg-blue-700">
-                  <Link to={`/topics/${topic.id}/ai`}>
+                  <Link to={`/projects/${topic.id}/ai`}>
                     <i className="fa-solid fa-lightbulb mr-2"></i>
                     <span>AI课题助手</span>
                   </Link>

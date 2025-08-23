@@ -48,7 +48,7 @@ export default function CreateRecord() {
     return dateParam || new Date().toISOString().split('T')[0];
   };
   
-  const handleSubmit = (record: ExperimentRecord) => {
+  const handleSubmit = () => {
     setIsSubmitting(false);
     // 延迟导航以确保用户看到成功提示
     setTimeout(() => {

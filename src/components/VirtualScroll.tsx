@@ -1,7 +1,7 @@
 // 虚拟滚动组件
 // 用于优化大数据量列表的渲染性能，只渲染可见区域的元素
 
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
 
 interface VirtualScrollProps<T> {
   items: T[];
@@ -53,27 +53,6 @@ export function VirtualScroll<T>({
     setScrollTop(newScrollTop);
     onScroll?.(newScrollTop);
   }, [onScroll]);
-
-  // 滚动到指定项目
-  const scrollToItem = useCallback((index: number, alignment: 'start' | 'center' | 'end' = 'start') => {
-    if (!scrollElementRef.current) return;
-
-    let scrollTop: number;
-    const itemTop = index * itemHeight;
-
-    switch (alignment) {
-      case 'center':
-        scrollTop = itemTop - (containerHeight - itemHeight) / 2;
-        break;
-      case 'end':
-        scrollTop = itemTop - containerHeight + itemHeight;
-        break;
-      default:
-        scrollTop = itemTop;
-    }
-
-    scrollElementRef.current.scrollTop = Math.max(0, Math.min(scrollTop, totalHeight - containerHeight));
-  }, [itemHeight, containerHeight, totalHeight]);
 
   // 获取项目键值
   const getKey = useCallback((item: T, index: number) => {

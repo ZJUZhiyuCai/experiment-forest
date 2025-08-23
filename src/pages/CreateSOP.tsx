@@ -9,6 +9,8 @@ import { Sidebar } from '@/components/Sidebar';
 import { Button } from '@/components/Button';
 import { useLocation } from 'react-router-dom';
 import { TreePlantingCelebration } from '@/components/TreePlantingCelebration';
+import { sopTemplates, getSOPTemplateById } from '@/utils/sopTemplates';
+import { getExperimentCategoriesByGroup } from '@/utils/dataStandardization';
 
 export default function CreateSOP() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -54,6 +56,10 @@ export default function CreateSOP() {
     projectId: ''
   });
   
+  // 模板选择状态
+  const [selectedTemplate, setSelectedTemplate] = useState('');
+  const [showTemplates, setShowTemplates] = useState(false);
+  
   const [errors, setErrors] = useState({
     title: '',
     author: '',
@@ -63,13 +69,15 @@ export default function CreateSOP() {
     content: ''
   });
   
-  // SOP分类选项
+  // 获取实验类型分组
+  const experimentCategories = getExperimentCategoriesByGroup();
+  
+  // SOP分类选项（更新为新的分类系统）
   const categories = [
     { id: '', name: '请选择分类' },
-    { id: 'chemical', name: '化学实验' },
-    { id: 'biological', name: '生物实验' },
-    { id: 'equipment', name: '设备操作' },
-    { id: 'safety', name: '安全规范' },
+    ...Object.entries(experimentCategories).flatMap(([group, cats]) => 
+      cats.map(({ category, name }) => ({ id: category, name: `${group} - ${name}` }))
+    ),
     { id: 'other', name: '其他' }
   ];
   
@@ -136,6 +144,46 @@ export default function CreateSOP() {
     if (errors[name as keyof typeof errors]) {
       setErrors(prev => ({ ...prev, [name as keyof typeof errors]: '' }));
     }
+  };
+  
+  // 应用SOP模板
+  const applyTemplate = (templateId: string) => {
+    const template = getSOPTemplateById(templateId);
+    if (template) {
+      setFormData(prev => ({
+        ...prev,
+        title: template.title,
+        category: template.category,
+        author: template.author,
+        department: template.department,
+        purpose: template.purpose,
+        scope: template.scope,
+        content: template.content,
+        version: template.version
+      }));
+      setSelectedTemplate(templateId);
+      setShowTemplates(false);
+      toast.success(`已应用模板：${template.title}`);
+    }
+  };
+  
+  // 清除模板选择
+  const clearTemplate = () => {
+    setFormData({
+      title: '',
+      version: '1.0',
+      author: '实验管理员',
+      department: '研发部',
+      category: '',
+      purpose: '',
+      scope: '',
+      content: '',
+      approvalStatus: 'draft',
+      references: '',
+      projectId: topicId
+    });
+    setSelectedTemplate('');
+    toast.info('已清除模板内容');
   };
   
   // 处理步骤导航
@@ -237,6 +285,73 @@ export default function CreateSOP() {
       case 1:
         return (
           <div className="space-y-6 animate-fadeIn">
+            {/* SOP模板选择区域 */}
+            <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+              <div className="flex justify-between items-center mb-3">
+                <h4 className="text-sm font-medium text-blue-800 dark:text-blue-300 flex items-center">
+                  <i className="fa-solid fa-magic mr-2"></i>
+                  使用SOP模板（可选）
+                </h4>
+                <button
+                  type="button"
+                  onClick={() => setShowTemplates(!showTemplates)}
+                  className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-200 text-sm"
+                >
+                  {showTemplates ? '隐藏模板' : '显示模板'}
+                </button>
+              </div>
+              
+              {showTemplates && (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-60 overflow-y-auto">
+                    {sopTemplates.map(template => (
+                      <div
+                        key={template.id}
+                        className={`p-3 border rounded-lg cursor-pointer transition-all ${
+                          selectedTemplate === template.id
+                            ? 'border-blue-500 bg-blue-100 dark:bg-blue-900/40'
+                            : 'border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-500'
+                        }`}
+                        onClick={() => applyTemplate(template.id)}
+                      >
+                        <h5 className="font-medium text-sm text-gray-800 dark:text-gray-200 mb-1">
+                          {template.title}
+                        </h5>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                          {template.purpose.substring(0, 80)}...
+                        </p>
+                        <div className="flex flex-wrap gap-1">
+                          {template.templateTags.slice(0, 3).map((tag, index) => (
+                            <span
+                              key={index}
+                              className="px-2 py-1 bg-gray-200 dark:bg-gray-700 text-xs text-gray-600 dark:text-gray-300 rounded"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {selectedTemplate && (
+                    <div className="flex justify-between items-center pt-3 border-t border-blue-200 dark:border-blue-700">
+                      <span className="text-sm text-blue-700 dark:text-blue-300">
+                        已选择模板：{getSOPTemplateById(selectedTemplate)?.title}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={clearTemplate}
+                        className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 text-sm"
+                      >
+                        清除模板
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 文档标题 <span className="text-red-500">*</span>

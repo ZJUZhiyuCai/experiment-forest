@@ -39,7 +39,7 @@ export default function Projects() {
     endDate: '',
     estimatedDuration: 0,
     budget: 0,
-    leader: '实验管理员',
+    leader: '',
     members: [] as string[],
     tags: [] as string[],
     objectives: [] as string[]
@@ -53,9 +53,10 @@ export default function Projects() {
   });
   
   // 输入状态
-  const [memberInput, setMemberInput] = useState('');
-  const [tagInput, setTagInput] = useState('');
-  const [objectiveInput, setObjectiveInput] = useState('');
+  // 未来功能的输入状态，暂不使用
+  // const [memberInput, setMemberInput] = useState('');
+  // const [tagInput, setTagInput] = useState('');
+  // const [objectiveInput, setObjectiveInput] = useState('');
   
   useEffect(() => {
     const loadProjects = async () => {
@@ -104,21 +105,21 @@ export default function Projects() {
     setFormData({
       title: '',
       description: '',
-      status: 'planning',
-      priority: 'medium',
+      status: 'planning' as ProjectStatus,
+      priority: 'medium' as ProjectPriority,
       startDate: new Date().toISOString().split('T')[0],
       endDate: '',
       estimatedDuration: 0,
       budget: 0,
-      leader: '实验管理员',
+      leader: '',
       members: [],
       tags: [],
       objectives: []
     });
     setErrors({ title: '', description: '', leader: '' });
-    setMemberInput('');
-    setTagInput('');
-    setObjectiveInput('');
+    // setMemberInput('');
+    // setTagInput('');
+    // setObjectiveInput('');
     setIsFormOpen(true);
   };
   
@@ -140,9 +141,9 @@ export default function Projects() {
       objectives: [...project.objectives]
     });
     setErrors({ title: '', description: '', leader: '' });
-    setMemberInput('');
-    setTagInput('');
-    setObjectiveInput('');
+    // setMemberInput('');
+    // setTagInput('');
+    // setObjectiveInput('');
     setIsFormOpen(true);
   };
   
@@ -175,56 +176,60 @@ export default function Projects() {
     }
   };
   
-  // 添加成员
-  const addMember = () => {
-    const member = memberInput.trim();
-    if (member && !formData.members.includes(member)) {
-      setFormData(prev => ({ ...prev, members: [...prev.members, member] }));
-      setMemberInput('');
-    }
-  };
-  
-  // 移除成员
-  const removeMember = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      members: prev.members.filter((_, i) => i !== index)
-    }));
-  };
-  
-  // 添加标签
-  const addTag = () => {
-    const tag = tagInput.trim();
-    if (tag && !formData.tags.includes(tag)) {
-      setFormData(prev => ({ ...prev, tags: [...prev.tags, tag] }));
-      setTagInput('');
-    }
-  };
-  
-  // 移除标签
-  const removeTag = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      tags: prev.tags.filter((_, i) => i !== index)
-    }));
-  };
-  
-  // 添加目标
-  const addObjective = () => {
-    const objective = objectiveInput.trim();
-    if (objective && !formData.objectives.includes(objective)) {
-      setFormData(prev => ({ ...prev, objectives: [...prev.objectives, objective] }));
-      setObjectiveInput('');
-    }
-  };
-  
-  // 移除目标
-  const removeObjective = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      objectives: prev.objectives.filter((_, i) => i !== index)
-    }));
-  };
+  // 以下函数留作未来功能扩展，目前暂不使用
+  // const addMember = () => {
+  //   if (newMember.trim()) {
+  //     setFormData({
+  //       ...formData,
+  //       members: [...formData.members, newMember.trim()]
+  //     });
+  //     setNewMember('');
+  //   }
+  // };
+
+  // const removeMember = (index: number) => {
+  //   const newMembers = formData.members.filter((_, i) => i !== index);
+  //   setFormData({
+  //     ...formData,
+  //     members: newMembers
+  //   });
+  // };
+
+  // const addTag = () => {
+  //   if (newTag.trim()) {
+  //     setFormData({
+  //       ...formData,
+  //       tags: [...formData.tags, newTag.trim()]
+  //     });
+  //     setNewTag('');
+  //   }
+  // };
+
+  // const removeTag = (index: number) => {
+  //   const newTags = formData.tags.filter((_, i) => i !== index);
+  //   setFormData({
+  //     ...formData,
+  //     tags: newTags
+  //   });
+  // };
+
+  // const addObjective = () => {
+  //   if (newObjective.trim()) {
+  //     setFormData({
+  //       ...formData,
+  //       objectives: [...formData.objectives, newObjective.trim()]
+  //     });
+  //     setNewObjective('');
+  //   }
+  // };
+
+  // const removeObjective = (index: number) => {
+  //   const newObjectives = formData.objectives.filter((_, i) => i !== index);
+  //   setFormData({
+  //     ...formData,
+  //     objectives: newObjectives
+  //   });
+  // };
   
   // 提交表单
   const handleSubmit = async (e: React.FormEvent) => {

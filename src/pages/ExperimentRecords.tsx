@@ -3,12 +3,15 @@ import { Link, useParams, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { experimentRecordService, projectService } from '@/lib/cachedStorage';
-import { ExperimentRecord, Project } from '@/types';
+import { ExperimentRecord, Project, ExperimentCategory } from '@/types';
 import { Sidebar } from '@/components/Sidebar';
 import { Header } from '@/components/Header';
 import { ExperimentRecordForm } from '@/components/ExperimentRecordForm';
-import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 import { LoadingSkeleton } from '@/components/LoadingSkeleton';
+import { 
+  getExperimentCategoriesByGroup, 
+  getExperimentCategoryDisplayName 
+} from '@/utils/dataStandardization';
 
 export default function ExperimentRecords() {
   const { id: routeProjectId } = useParams<{ id: string }>();
@@ -31,9 +34,13 @@ export default function ExperimentRecords() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [dateFilter, setDateFilter] = useState<string>('all');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [selectedRecords, setSelectedRecords] = useState<Set<string>>(new Set());
   const [showBulkActions, setShowBulkActions] = useState(false);
   const [loading, setLoading] = useState(true);
+  
+  // 获取实验类型分组
+  const experimentCategories = getExperimentCategoriesByGroup();
   
   useEffect(() => {
     setLoading(true);
@@ -70,6 +77,8 @@ export default function ExperimentRecords() {
     
     const matchesStatus = statusFilter === 'all' || record.status === statusFilter;
     
+    const matchesCategory = categoryFilter === 'all' || record.category === categoryFilter;
+    
     const matchesDate = (() => {
       if (dateFilter === 'all') return true;
       const recordDate = new Date(record.date);
@@ -89,7 +98,7 @@ export default function ExperimentRecords() {
       }
     })();
     
-    return matchesSearch && matchesStatus && matchesDate;
+    return matchesSearch && matchesStatus && matchesCategory && matchesDate;
   });
   
   // 打开创建表单
@@ -238,7 +247,7 @@ export default function ExperimentRecords() {
           
           {/* 高级筛选区域 */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">搜索实验记录</label>
                 <div className="relative">
@@ -251,6 +260,24 @@ export default function ExperimentRecords() {
                   />
                   <i className="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
                 </div>
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">实验类型</label>
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => setCategoryFilter(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                >
+                  <option value="all">所有类型</option>
+                  {Object.entries(experimentCategories).map(([group, categories]) => (
+                    <optgroup key={group} label={group}>
+                      {categories.map(({ category, name }) => (
+                        <option key={category} value={category}>{name}</option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </select>
               </div>
               
               <div>
@@ -287,6 +314,7 @@ export default function ExperimentRecords() {
                     setSearchQuery('');
                     setStatusFilter('all');
                     setDateFilter('all');
+                    setCategoryFilter('all');
                   }}
                   className="w-full border border-gray-300 text-gray-700 hover:bg-gray-50 px-4 py-2 rounded-lg transition-colors"
                 >
@@ -367,12 +395,12 @@ export default function ExperimentRecords() {
                 <i className="fa-solid fa-flask text-3xl text-gray-400"></i>
               </div>
               <h3 className="text-xl font-semibold text-gray-600 mb-2">
-                {searchQuery || statusFilter !== 'all' || dateFilter !== 'all' ? '未找到相关记录' : '还没有实验记录'}
+                {searchQuery || statusFilter !== 'all' || dateFilter !== 'all' || categoryFilter !== 'all' ? '未找到相关记录' : '还没有实验记录'}
               </h3>
               <p className="text-gray-500 mb-6">
-                {searchQuery || statusFilter !== 'all' || dateFilter !== 'all' ? '请尝试修改筛选条件' : '开始您的第一个实验记录吧！'}
+                {searchQuery || statusFilter !== 'all' || dateFilter !== 'all' || categoryFilter !== 'all' ? '请尝试修改筛选条件' : '开始您的第一个实验记录吧！'}
               </p>
-              {!(searchQuery || statusFilter !== 'all' || dateFilter !== 'all') && (
+              {!(searchQuery || statusFilter !== 'all' || dateFilter !== 'all' || categoryFilter !== 'all') && (
                 <button 
                   onClick={openCreateForm}
                   className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-300"
@@ -424,13 +452,17 @@ export default function ExperimentRecords() {
                             </p>
                           ) : null;
                         })()}
-                        <span className={`inline-block px-2 py-1 text-xs rounded-full ${
+                        <span className={`inline-block px-2 py-1 text-xs rounded-full mr-2 ${
                           record.status === 'completed' ? 'bg-green-100 text-green-600' :
                           record.status === 'draft' ? 'bg-yellow-100 text-yellow-600' :
                           'bg-gray-100 text-gray-600'
                         }`}>
                           {record.status === 'completed' ? '已完成' :
                            record.status === 'draft' ? '草稿' : '已归档'}
+                        </span>
+                        <span className="inline-block px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-600">
+                          <i className="fa-solid fa-microscope mr-1"></i>
+                          {getExperimentCategoryDisplayName(record.category as ExperimentCategory)}
                         </span>
                       </div>
                     </div>

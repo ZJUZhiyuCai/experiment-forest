@@ -1,5 +1,3 @@
-import React from 'react';
-
 interface LoadingSkeletonProps {
   type?: 'card' | 'list' | 'table';
   count?: number;

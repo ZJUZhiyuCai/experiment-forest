@@ -64,7 +64,7 @@ export default function MyForest() {
   }, []);
 
   const generateForestLayout = () => {
-    const trees = [];
+    // const trees = [];
     const allItems = [
       ...records.map(r => ({ ...r, type: 'record', icon: 'fa-seedling', color: '#7FB069' })),
       ...notes.map(n => ({ ...n, type: 'note', icon: 'fa-leaf', color: '#A8D5BA' })),
@@ -159,7 +159,7 @@ export default function MyForest() {
                 { name: '森林守护者', icon: 'fa-tree', condition: sops.length >= 3, description: '创建3个SOP文档' },
                 { name: '森林之主', icon: 'fa-crown', condition: forestStats.totalTrees >= 20, description: '拥有20棵树木' },
                 { name: '生态建设师', icon: 'fa-city', condition: projects.length >= 3, description: '管理3个课题项目' }
-              ].map((achievement, index) => (
+              ].map((achievement) => (
                 <div 
                   key={achievement.name}
                   className={`p-4 rounded-lg text-center transition-all duration-300 ${
@@ -245,7 +245,7 @@ export default function MyForest() {
                     </div>
                   </div>
                 ) : (
-                  forestTrees.map((tree, index) => (
+                  forestTrees.map((tree) => (
                     <motion.div
                       key={tree.id}
                       className="absolute cursor-pointer transform -translate-x-1/2 -translate-y-1/2 group"

@@ -1,4 +1,4 @@
-import { ExperimentRecord, ExperimentNote, SOP, Project, ExperimentPlan, ProjectStats } from '@/types';
+import { ExperimentRecord, ExperimentNote, SOP, Project, ExperimentPlan, ProjectStats, Sample, SampleHistory, SampleStats } from '@/types';
 
 // 生成唯一ID
 export const generateId = (): string => {
@@ -11,7 +11,9 @@ const STORAGE_KEYS = {
   EXPERIMENT_NOTES: 'experiment_notes',
   SOPS: 'sops',
   PROJECTS: 'projects', // 更改为Projects
-  EXPERIMENT_PLANS: 'experiment_plans' // 新增实验计划
+  EXPERIMENT_PLANS: 'experiment_plans', // 新增实验计划
+  SAMPLES: 'samples', // 样本管理
+  SAMPLE_HISTORY: 'sample_history' // 样本历史
 };
 
 // 实验记录存储服务
@@ -594,6 +596,319 @@ export const experimentPlanService = {
 
 // 兼容性别名，保持向后兼容
 export const topicService = projectService;
+
+// 样本管理服务
+export const sampleService = {
+  getAll: (): Sample[] => {
+    const samples = localStorage.getItem(STORAGE_KEYS.SAMPLES);
+    if (!samples) return [];
+    
+    try {
+      const parsedSamples = JSON.parse(samples);
+      return parsedSamples.map((sample: any) => ({
+        ...sample
+      }));
+    } catch (error) {
+      console.error('解析样本数据失败:', error);
+      localStorage.removeItem(STORAGE_KEYS.SAMPLES);
+      return [];
+    }
+  },
+  
+  getById: (id: string): Sample | null => {
+    const samples = sampleService.getAll();
+    return samples.find(sample => sample.id === id) || null;
+  },
+  
+  getBySampleId: (sampleId: string): Sample | null => {
+    const samples = sampleService.getAll();
+    return samples.find(sample => sample.sampleId === sampleId) || null;
+  },
+  
+  getByProjectId: (projectId: string): Sample[] => {
+    const samples = sampleService.getAll();
+    return samples.filter(sample => sample.projectId === projectId);
+  },
+  
+  getByStatus: (status: string): Sample[] => {
+    const samples = sampleService.getAll();
+    return samples.filter(sample => sample.status === status);
+  },
+  
+  getByType: (type: string): Sample[] => {
+    const samples = sampleService.getAll();
+    return samples.filter(sample => sample.type === type);
+  },
+  
+  // 获取即将过期的样本（30天内）
+  getExpiringSoon: (): Sample[] => {
+    const samples = sampleService.getAll();
+    const thirtyDaysFromNow = new Date();
+    thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+    
+    return samples.filter(sample => 
+      sample.dates?.expiryDate && 
+      new Date(sample.dates.expiryDate) <= thirtyDaysFromNow &&
+      sample.status === 'available'
+    );
+  },
+  
+  // 获取低存量样本
+  getLowVolume: (threshold: number = 1): Sample[] => {
+    const samples = sampleService.getAll();
+    return samples.filter(sample => 
+      sample.quantity?.volume !== undefined && 
+      parseFloat(sample.quantity.volume) <= threshold &&
+      sample.status === 'available'
+    );
+  },
+  
+  create: (sample: Omit<Sample, 'id' | 'createdAt' | 'updatedAt'>): Sample => {
+    if (!sample.name || !sample.sampleId || !sample.type) {
+      throw new Error('样本名称、样本编号和类型不能为空');
+    }
+    
+    // 检查样本编号是否已存在
+    const existingSample = sampleService.getBySampleId(sample.sampleId);
+    if (existingSample) {
+      throw new Error(`样本编号 ${sample.sampleId} 已存在`);
+    }
+    
+    const now = new Date().toISOString();
+    const newSample: Sample = {
+      ...sample,
+      id: generateId(),
+      tags: sample.tags || [],
+      createdAt: now,
+      updatedAt: now
+    };
+    
+    try {
+      const samples = sampleService.getAll();
+      samples.push(newSample);
+      
+      localStorage.setItem(STORAGE_KEYS.SAMPLES, JSON.stringify(samples));
+      
+      // 记录创建历史
+      sampleHistoryService.create({
+        sampleId: newSample.id,
+        actionType: 'created',
+        description: `创建样本：${newSample.name}`,
+        userId: '系统',
+        timestamp: now
+      });
+      
+      return newSample;
+    } catch (error) {
+      console.error('创建样本失败:', error);
+      throw new Error('创建样本失败，请重试');
+    }
+  },
+  
+  update: (id: string, updates: Partial<Sample>): Sample | null => {
+    const samples = sampleService.getAll();
+    const index = samples.findIndex(sample => sample.id === id);
+    
+    if (index === -1) return null;
+    
+    const originalSample = samples[index];
+    
+    // 检查样本编号是否与其他样本冲突
+    if (updates.sampleId && updates.sampleId !== originalSample.sampleId) {
+      const existingSample = sampleService.getBySampleId(updates.sampleId);
+      if (existingSample && existingSample.id !== id) {
+        throw new Error(`样本编号 ${updates.sampleId} 已存在`);
+      }
+    }
+    
+    const updatedSample = {
+      ...originalSample,
+      ...updates,
+      updatedAt: new Date().toISOString()
+    };
+    
+    samples[index] = updatedSample;
+    
+    try {
+      localStorage.setItem(STORAGE_KEYS.SAMPLES, JSON.stringify(samples));
+      
+      // 记录更新历史
+      const changedFields = Object.keys(updates).filter(key => 
+        JSON.stringify(originalSample[key as keyof Sample]) !== JSON.stringify(updates[key as keyof Sample])
+      );
+      
+      if (changedFields.length > 0) {
+        sampleHistoryService.create({
+          sampleId: id,
+          actionType: 'updated',
+          description: `更新样本信息：${changedFields.join(', ')}`,
+          userId: '系统',
+          changes: {
+            previous: Object.fromEntries(changedFields.map(field => [field, originalSample[field as keyof Sample]])),
+            new: Object.fromEntries(changedFields.map(field => [field, updates[field as keyof Sample]]))
+          },
+          timestamp: updatedSample.updatedAt
+        });
+      }
+      
+      return updatedSample;
+    } catch (error) {
+      console.error('更新样本失败:', error);
+      throw new Error('更新样本失败，请重试');
+    }
+  },
+  
+  delete: (id: string): boolean => {
+    const samples = sampleService.getAll();
+    const sampleToDelete = samples.find(s => s.id === id);
+    
+    if (!sampleToDelete) return false;
+    
+    const newSamples = samples.filter(sample => sample.id !== id);
+    
+    try {
+      localStorage.setItem(STORAGE_KEYS.SAMPLES, JSON.stringify(newSamples));
+      
+      // 记录删除历史
+      sampleHistoryService.create({
+        sampleId: id,
+        actionType: 'moved',
+        description: `删除样本：${sampleToDelete.name}`,
+        userId: '系统',
+        timestamp: new Date().toISOString()
+      });
+      
+      return true;
+    } catch (error) {
+      console.error('删除样本失败:', error);
+      throw new Error('删除样本失败，请重试');
+    }
+  },
+  
+  // 样本使用（在实验中使用）
+  useSample: (sampleId: string, experimentId: string, usedVolume?: number): boolean => {
+    const sample = sampleService.getById(sampleId);
+    if (!sample) return false;
+    
+    const currentVolume = sample.quantity?.volume ? parseFloat(sample.quantity.volume) : 0;
+    const updates: Partial<Sample> = {
+      status: usedVolume && currentVolume && usedVolume >= currentVolume ? 'exhausted' : 'in_use'
+    };
+    
+    if (usedVolume && sample.quantity?.volume) {
+      const newVolume = currentVolume - usedVolume;
+      updates.quantity = {
+        ...sample.quantity,
+        volume: newVolume.toString()
+      };
+    }
+    
+    const updatedSample = sampleService.update(sampleId, updates);
+    
+    if (updatedSample) {
+      // 记录使用历史
+      sampleHistoryService.create({
+        sampleId,
+        actionType: 'used',
+        description: `在实验中使用${usedVolume ? `，用量：${usedVolume}mL` : ''}`,
+        experimentId,
+        userId: '系统',
+        timestamp: new Date().toISOString()
+      });
+      
+      return true;
+    }
+    
+    return false;
+  },
+  
+  // 获取统计信息
+  getStats: (): SampleStats => {
+    const samples = sampleService.getAll();
+    const expiringSoon = sampleService.getExpiringSoon();
+    const lowVolume = sampleService.getLowVolume();
+    
+    const byType: { [key: string]: number } = {};
+    const byStatus: { [key: string]: number } = {};
+    const byStorageCondition: { [key: string]: number } = {};
+    
+    samples.forEach(sample => {
+      byType[sample.type] = (byType[sample.type] || 0) + 1;
+      byStatus[sample.status] = (byStatus[sample.status] || 0) + 1;
+      if (sample.storage?.condition) {
+        byStorageCondition[sample.storage.condition] = (byStorageCondition[sample.storage.condition] || 0) + 1;
+      }
+    });
+    
+    return {
+      totalSamples: samples.length,
+      availableSamples: samples.filter(s => s.status === 'available').length,
+      expiringSoon: expiringSoon.length,
+      lowVolume: lowVolume.length,
+      byType,
+      byStatus,
+      byStorageCondition
+    };
+  }
+};
+
+// 样本历史管理服务
+export const sampleHistoryService = {
+  getAll: (): SampleHistory[] => {
+    const history = localStorage.getItem(STORAGE_KEYS.SAMPLE_HISTORY);
+    if (!history) return [];
+    
+    try {
+      const parsedHistory = JSON.parse(history);
+      return parsedHistory.map((record: any) => ({
+        ...record
+      }));
+    } catch (error) {
+      console.error('解析样本历史失败:', error);
+      localStorage.removeItem(STORAGE_KEYS.SAMPLE_HISTORY);
+      return [];
+    }
+  },
+  
+  getBySampleId: (sampleId: string): SampleHistory[] => {
+    const history = sampleHistoryService.getAll();
+    return history.filter(record => record.sampleId === sampleId)
+                 .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  },
+  
+  create: (record: Omit<SampleHistory, 'id'>): SampleHistory => {
+    const newRecord: SampleHistory = {
+      ...record,
+      id: generateId()
+    };
+    
+    try {
+      const history = sampleHistoryService.getAll();
+      history.push(newRecord);
+      
+      localStorage.setItem(STORAGE_KEYS.SAMPLE_HISTORY, JSON.stringify(history));
+      return newRecord;
+    } catch (error) {
+      console.error('创建样本历史失败:', error);
+      throw new Error('创建样本历史失败');
+    }
+  },
+  
+  deleteForSample: (sampleId: string): boolean => {
+    const history = sampleHistoryService.getAll();
+    const newHistory = history.filter(record => record.sampleId !== sampleId);
+    
+    if (history.length === newHistory.length) return false;
+    
+    try {
+      localStorage.setItem(STORAGE_KEYS.SAMPLE_HISTORY, JSON.stringify(newHistory));
+      return true;
+    } catch (error) {
+      console.error('删除样本历史失败:', error);
+      return false;
+    }
+  }
+};
 
 
 

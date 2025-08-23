@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { ButtonHTMLAttributes, ReactNode } from 'react';
+import React, { ButtonHTMLAttributes, ReactNode } from 'react';
 
 type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'danger';
 type ButtonSize = 'sm' | 'md' | 'lg';
@@ -37,11 +37,11 @@ export function Button({
     lg: 'px-6 py-3 text-lg'
   };
   
-   if (props.asChild && children) {
-    const child = React.Children.only(children);
-    return React.cloneElement(child, {
+   if (props.asChild && children && React.isValidElement(children)) {
+    return React.cloneElement(children as React.ReactElement<any>, {
+      ...children.props,
       className: cn(
-        child.props.className,
+        children.props.className,
         baseClasses,
         variantClasses[variant],
         sizeClasses[size],
