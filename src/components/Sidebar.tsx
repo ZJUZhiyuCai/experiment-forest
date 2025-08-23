@@ -44,6 +44,8 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     { path: '/notes', icon: 'fa-sticky-note', label: '实验笔记' },
     { path: '/sops', icon: 'fa-file-alt', label: 'SOP文档' },
     { path: '/samples', icon: 'fa-vials', label: '样本管理' },
+    { path: '/ai-chat', icon: 'fa-robot', label: 'AI助手' }, // 新增AI聊天功能
+    { path: '/mindmaps', icon: 'fa-project-diagram', label: '思维导图' }, // 新增思维导图功能
     { path: '/settings', icon: 'fa-cog', label: '设置' }
   ]);
   

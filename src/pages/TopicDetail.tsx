@@ -153,10 +153,22 @@ export default function TopicDetail() {
              </div>
              
               <div className="mt-6 flex flex-wrap gap-3">
+                <Button asChild size="sm" className="bg-emerald-600 hover:bg-emerald-700">
+                  <Link to={`/ai-chat?projectId=${topic.id}`}>
+                    <i className="fa-solid fa-robot mr-2"></i>
+                    <span>AI助手</span>
+                  </Link>
+                </Button>
                 <Button asChild size="sm" className="bg-blue-600 hover:bg-blue-700">
+                  <Link to={`/mindmaps?projectId=${topic.id}`}>
+                    <i className="fa-solid fa-project-diagram mr-2"></i>
+                    <span>思维导图</span>
+                  </Link>
+                </Button>
+                <Button asChild size="sm" className="bg-purple-600 hover:bg-purple-700">
                   <Link to={`/projects/${topic.id}/ai`}>
                     <i className="fa-solid fa-lightbulb mr-2"></i>
-                    <span>AI课题助手</span>
+                    <span>AI课题分析</span>
                   </Link>
                 </Button>
               </div>
