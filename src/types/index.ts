@@ -326,3 +326,278 @@ export interface SampleStats {
   byStatus: { [key in SampleStatus]?: number };
   byStorageCondition: { [key in StorageCondition]?: number };
 }
+
+// ============================================
+// AI聊天功能相关类型定义
+// ============================================
+
+// 聊天消息角色类型
+export type ChatRole = 'user' | 'assistant' | 'system';
+
+// 聊天上下文类型
+export interface ChatContext {
+  experimentType?: ExperimentCategory;  // 当前实验类型
+  projectId?: string;                   // 当前项目ID
+  recordId?: string;                    // 当前实验记录ID
+  sopId?: string;                       // 当前SOP文档ID
+  sampleId?: string;                    // 当前样本ID
+  pageContext?: string;                 // 页面上下文
+}
+
+// 聊天附件类型
+export interface ChatAttachment {
+  type: 'record' | 'sop' | 'sample' | 'project' | 'file';
+  id: string;
+  name: string;
+  url?: string;
+  size?: number;
+  previewData?: any;                    // 预览数据
+}
+
+// 聊天消息类型
+export interface ChatMessage {
+  id: string;
+  role: ChatRole;
+  content: string;
+  timestamp: Date;
+  context?: ChatContext;                // 消息上下文
+  attachments?: ChatAttachment[];       // 附件列表
+  isTyping?: boolean;                   // 是否正在输入
+  error?: string;                       // 错误信息
+  suggestions?: string[];               // AI建议回复
+}
+
+// 聊天会话类型
+export interface ChatSession {
+  id: string;
+  title: string;
+  description?: string;
+  messages: ChatMessage[];
+  projectId?: string;                   // 关联项目
+  experimentType?: ExperimentCategory;  // 主要实验类型
+  tags?: string[];                      // 会话标签
+  isActive: boolean;                    // 是否活跃
+  createdAt: Date;
+  updatedAt: Date;
+  lastMessageAt?: Date;                 // 最后消息时间
+}
+
+// AI助手配置类型
+export interface AIAssistantConfig {
+  model: string;                        // AI模型名称
+  temperature: number;                  // 创造性参数 0-1
+  maxTokens: number;                    // 最大token数
+  systemPrompt: string;                 // 系统提示词
+  experimentPrompts: {                  // 实验类型特定提示词
+    [key in ExperimentCategory]?: string;
+  };
+  features: {                           // 功能开关
+    experimentAdvice: boolean;          // 实验建议
+    literatureSearch: boolean;          // 文献搜索
+    dataAnalysis: boolean;              // 数据分析
+    sopGeneration: boolean;             // SOP生成
+    protocolOptimization: boolean;      // 协议优化
+  };
+}
+
+// AI分析结果类型
+export interface AIAnalysisResult {
+  type: 'experiment_advice' | 'data_analysis' | 'literature_recommendation' | 'sop_optimization';
+  title: string;
+  content: string;
+  confidence: number;                   // 置信度 0-1
+  suggestions: string[];                // 具体建议
+  references?: string[];                // 参考文献
+  relatedData?: any;                    // 相关数据
+  timestamp: Date;
+}
+
+// ============================================
+// 思维导图功能相关类型定义
+// ============================================
+
+// 思维导图节点类型
+export type MindMapNodeType = 
+  | 'project'           // 项目节点
+  | 'experiment'        // 实验节点
+  | 'sample'            // 样本节点
+  | 'sop'               // SOP节点
+  | 'note'              // 笔记节点
+  | 'milestone'         // 里程碑节点
+  | 'resource'          // 资源节点
+  | 'analysis'          // 分析节点
+  | 'custom';           // 自定义节点
+
+// 节点形状类型
+export type NodeShape = 'rectangle' | 'circle' | 'diamond' | 'ellipse' | 'hexagon';
+
+// 边连接类型
+export type EdgeType = 
+  | 'relation'          // 关联关系
+  | 'flow'              // 流程关系
+  | 'dependency'        // 依赖关系
+  | 'hierarchy'         // 层级关系
+  | 'temporal'          // 时间关系
+  | 'causal';           // 因果关系
+
+// 思维导图节点
+export interface MindMapNode {
+  id: string;
+  title: string;
+  content?: string;
+  type: MindMapNodeType;
+  
+  // 位置和样式
+  position: { x: number; y: number };
+  size: { width: number; height: number };
+  style: {
+    color: string;                      // 背景色
+    borderColor: string;                // 边框色
+    textColor: string;                  // 文字色
+    shape: NodeShape;                   // 节点形状
+    icon?: string;                      // 图标
+    fontSize?: number;                  // 字体大小
+    borderWidth?: number;               // 边框宽度
+  };
+  
+  // 数据关联
+  relatedId?: string;                   // 关联的实际数据ID
+  relatedType?: 'project' | 'experiment' | 'sample' | 'sop' | 'note';
+  
+  // 节点元数据
+  level?: number;                       // 层级深度
+  isCollapsed?: boolean;                // 是否折叠
+  children?: string[];                  // 子节点ID列表
+  parent?: string;                      // 父节点ID
+  
+  // 系统信息
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// 思维导图边
+export interface MindMapEdge {
+  id: string;
+  source: string;                       // 源节点ID
+  target: string;                       // 目标节点ID
+  label?: string;                       // 边标签
+  type: EdgeType;                       // 连接类型
+  
+  // 样式设置
+  style: {
+    color: string;                      // 线条颜色
+    width: number;                      // 线条粗细
+    strokeType: 'solid' | 'dashed' | 'dotted'; // 线条样式
+    arrow: boolean;                     // 是否显示箭头
+    arrowSize?: number;                 // 箭头大小
+    curved?: boolean;                   // 是否弯曲
+  };
+  
+  // 数据关联
+  relatedData?: any;                    // 关联数据
+  
+  // 系统信息
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// 思维导图
+export interface MindMap {
+  id: string;
+  title: string;
+  description?: string;
+  
+  // 图谱数据
+  nodes: MindMapNode[];
+  edges: MindMapEdge[];
+  
+  // 布局设置
+  layout: {
+    type: 'force' | 'hierarchy' | 'radial' | 'grid' | 'manual'; // 布局类型
+    direction?: 'horizontal' | 'vertical';   // 布局方向
+    spacing?: { x: number; y: number };      // 节点间距
+    centerNode?: string;                     // 中心节点ID
+  };
+  
+  // 视图设置
+  viewport: {
+    zoom: number;                            // 缩放级别
+    center: { x: number; y: number };        // 视图中心
+    bounds: {                                // 视图边界
+      minX: number; maxX: number;
+      minY: number; maxY: number;
+    };
+  };
+  
+  // 关联信息
+  projectId?: string;                        // 关联项目
+  type: 'project_overview' | 'experiment_flow' | 'data_relations' | 'custom'; // 图谱类型
+  
+  // 协作信息
+  createdBy: string;                         // 创建者
+  collaborators?: string[];                  // 协作者列表
+  isPublic: boolean;                         // 是否公开
+  
+  // 版本信息
+  version: number;                           // 版本号
+  tags?: string[];                           // 标签
+  
+  // 系统信息
+  createdAt: Date;
+  updatedAt: Date;
+  lastViewedAt?: Date;                       // 最后查看时间
+}
+
+// 思维导图模板
+export interface MindMapTemplate {
+  id: string;
+  name: string;
+  description: string;
+  category: 'project' | 'experiment' | 'analysis' | 'workflow' | 'general';
+  
+  // 模板数据
+  templateNodes: Omit<MindMapNode, 'id' | 'relatedId' | 'createdAt' | 'updatedAt'>[];
+  templateEdges: Omit<MindMapEdge, 'id' | 'source' | 'target' | 'createdAt' | 'updatedAt'>[];
+  
+  // 应用设置
+  applicableTypes?: ExperimentCategory[];    // 适用的实验类型
+  autoGenerate?: boolean;                    // 是否支持自动生成
+  
+  // 模板信息
+  author: string;
+  version: string;
+  downloadCount: number;
+  rating: number;                            // 评分 1-5
+  isBuiltIn: boolean;                        // 是否内置模板
+  
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// 思维导图操作历史
+export interface MindMapHistory {
+  id: string;
+  mindMapId: string;
+  actionType: 'create' | 'update' | 'delete' | 'move' | 'style_change' | 'layout_change';
+  targetType: 'node' | 'edge' | 'layout' | 'viewport';
+  targetId?: string;
+  oldValue?: any;
+  newValue?: any;
+  userId: string;
+  timestamp: Date;
+}
+
+// 思维导图统计信息
+export interface MindMapStats {
+  totalMaps: number;
+  totalNodes: number;
+  totalEdges: number;
+  mapsByType: { [key: string]: number };
+  averageNodesPerMap: number;
+  mostUsedNodeTypes: { type: MindMapNodeType; count: number }[];
+  recentActivity: {
+    created: number;
+    updated: number;
+    viewed: number;
+  };
+}
