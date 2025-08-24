@@ -240,7 +240,7 @@ export default function ProjectDetail() {
                     </h3>
                     <div className="flex flex-wrap gap-3">
                       <Link 
-                        to={`/topics/${project.id}/ai`}
+                        to={`/chat`}
                         className="flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 shadow-md hover:shadow-lg"
                       >
                         <i className="fa-solid fa-robot mr-2"></i>

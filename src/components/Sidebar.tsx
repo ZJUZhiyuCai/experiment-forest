@@ -62,7 +62,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
               label: project.title,
               children: [
                 { 
-                  path: `/topics/${project.id}/ai`, 
+                  path: `/chat`, 
                   icon: 'fa-robot', 
                   label: '小森博士' 
                 },

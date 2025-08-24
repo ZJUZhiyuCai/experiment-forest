@@ -174,7 +174,8 @@ export interface AISettings {
   apiEndpoint: string;
   apiKey: string;
   useCustomAPI: boolean;
-  model?: string; // 添加可选的模型字段
+  model?: string; // 可选的模型字段，留空时使用默认模型
+  systemPrompt?: string; // 可选的系统提示词，用于自定义Agent
 }
 
 // 数据标准化相关类型定义

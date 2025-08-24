@@ -54,43 +54,22 @@ export class TopicAgentService {
 
     const { project, records, notes, sops } = this.context;
     
-    return `你是小森博士（Dr. Forest），一位专业的生命医药领域科研AI助手，专门为课题"${project.title}"提供智能支持。
+    return `你是一位专业的科研AI助手，专门为课题"${project.title}"提供智能支持。
 
-课题基本信息：
+课题信息：
 - 课题名称：${project.title}
 - 研究描述：${project.description}
-- 课题状态：${project.status}
-- 优先级：${project.priority}
-- 负责人：${project.leader}
-- 团队成员：${project.members.join(', ')}
 - 当前进度：${project.progress}%
 
-课题数据统计：
-- 实验记录数量：${records.length}
-- 实验笔记数量：${notes.length}
-- SOP文档数量：${sops.length}
+课题数据：
+- 实验记录：${records.length}个
+- 实验笔记：${notes.length}个
+- SOP文档：${sops.length}个
 
 主要实验类型：
 ${this.getExperimentTypeSummary(records)}
 
-你的专业能力包括：
-1. 🧪 实验设计优化：根据课题目标提供实验方案建议
-2. 📊 数据分析指导：帮助分析实验数据，识别趋势和问题
-3. 🔬 技术问题解答：解决具体的实验技术问题
-4. 📋 SOP制定：协助制定标准化操作流程
-5. 📝 记录管理：帮助整理和分析实验记录
-6. 🎯 进度管理：提供课题进展评估和建议
-7. 💡 创新思路：启发新的研究角度和方法
-
-回答要求：
-- 基于课题具体情况提供专业建议
-- 结合已有的实验记录和数据
-- 提供实用的操作建议和解决方案
-- 推荐相关的实验方法和技术
-- 当需要时，提供具体的实验参数和条件
-- 以友好、专业、准确的语调回应
-
-请根据用户问题，结合课题背景提供专业的科研指导。`;
+请根据课题背景提供专业的科研指导。`;
   }
 
   // 获取实验类型汇总
@@ -180,7 +159,10 @@ ${this.getExperimentTypeSummary(records)}
 
   // 调用用户自定义API
   private async callCustomAPI(message: string, settings: AISettings): Promise<string> {
-    const systemPrompt = this.getSystemPrompt();
+    // 获取系统提示词，优先使用用户自定义的，否则使用默认的
+    const systemPrompt = settings.systemPrompt && settings.systemPrompt.trim()
+      ? settings.systemPrompt.trim()
+      : this.getSystemPrompt(); // 使用默认的课题专用提示词
     
     const messages = [
       { role: 'system', content: systemPrompt },
@@ -188,12 +170,29 @@ ${this.getExperimentTypeSummary(records)}
       { role: 'user', content: message }
     ];
 
-    const requestBody = {
-      model: settings.model || 'gpt-3.5-turbo',
+    // 获取模型名称
+    let modelName;
+    if (settings.model && settings.model.trim()) {
+      modelName = settings.model.trim();
+    } else {
+      // 如果没有指定模型，根据API端点选择默认模型
+      if (settings.apiEndpoint.includes('siliconflow.cn')) {
+        modelName = 'qwen2.5-72b-instruct';
+      } else if (settings.apiEndpoint.includes('openai.com')) {
+        modelName = 'gpt-3.5-turbo';
+      }
+    }
+
+    const requestBody: any = {
       messages,
       temperature: 0.7,
       max_tokens: 1500
     };
+    
+    // 只有当指定了模型时才添加模型字段
+    if (modelName) {
+      requestBody.model = modelName;
+    }
 
     console.log('AI API 请求信息:', {
       endpoint: settings.apiEndpoint,
@@ -201,8 +200,24 @@ ${this.getExperimentTypeSummary(records)}
       messageCount: messages.length
     });
 
+    // 标准化API端点
+    let apiEndpoint = settings.apiEndpoint;
+    if (!apiEndpoint.includes('/chat/completions')) {
+      if (apiEndpoint.includes('siliconflow.cn')) {
+        // 硅基流动API格式
+        if (!apiEndpoint.includes('/v1')) {
+          apiEndpoint = apiEndpoint.replace(/\/$/, '') + '/v1/chat/completions';
+        } else {
+          apiEndpoint = apiEndpoint.replace(/\/$/, '') + '/chat/completions';
+        }
+      } else {
+        // 其他API格式
+        apiEndpoint = apiEndpoint.replace(/\/$/, '') + '/chat/completions';
+      }
+    }
+
     try {
-      const response = await fetch(settings.apiEndpoint, {
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

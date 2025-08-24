@@ -24,22 +24,8 @@ export class AIChatService {
       model: 'gpt-3.5-turbo',
       temperature: 0.7,
       maxTokens: 1500,
-      systemPrompt: `你是一位专业的生命医药领域实验管理AI助手。你具备以下专业知识：
-1. 生物医学实验设计和优化
-2. 细胞培养、分子生物学、动物实验等技术
-3. 数据分析和统计方法
-4. 实验室安全和质量控制
-5. 文献检索和科研写作
-
-请用专业、准确、友好的语言回答用户问题，提供实用的建议和解决方案。`,
-      experimentPrompts: {
-        'cell_culture': '专注于细胞培养技术，包括培养基选择、传代操作、污染防控等',
-        'pcr': '专注于PCR技术优化，包括引物设计、反应条件、产物分析等',
-        'western_blot': '专注于Western Blot技术，包括蛋白提取、电泳条件、抗体选择等',
-        'elisa': '专注于ELISA检测，包括包被、封闭、检测条件优化等',
-        'animal_dosing': '专注于动物给药实验，包括给药途径、剂量计算、伦理要求等',
-        'other': '提供通用的实验设计和技术支持'
-      },
+      systemPrompt: `你是一位乐于助人的AI助手。请提供有用、准确的信息和建议。`,
+      experimentPrompts: {},
       features: {
         experimentAdvice: true,
         literatureSearch: true,
@@ -113,55 +99,7 @@ export class AIChatService {
 
   // 创建欢迎消息
   private createWelcomeMessage(experimentType?: ExperimentCategory): ChatMessage {
-    let welcomeText = "您好！我是您的AI实验助手，很高兴为您服务。";
-    
-    if (experimentType) {
-      const typeNames: Record<ExperimentCategory, string> = {
-        // 细胞生物学实验
-        'cell_culture': '细胞培养',
-        'cell_viability': '细胞活力检测',
-        'flow_cytometry': '流式细胞术',
-        'cell_transfection': '细胞转染',
-        // 分子生物学实验
-        'pcr': 'PCR扩增',
-        'western_blot': 'Western Blot',
-        'gene_cloning': '基因克隆',
-        'dna_sequencing': 'DNA测序',
-        'rna_extraction': 'RNA提取',
-        'protein_purification': '蛋白质纯化',
-        // 动物实验
-        'animal_behavior': '动物行为学',
-        'animal_surgery': '动物手术',
-        'animal_dosing': '动物给药',
-        'tissue_sampling': '组织取样',
-        // 药物研发
-        'drug_screening': '药物筛选',
-        'compound_synthesis': '化合物合成',
-        'pharmacokinetics': '药代动力学',
-        'toxicology': '毒理学研究',
-        'dose_response': '剂量-反应研究',
-        // 生化分析
-        'elisa': 'ELISA检测',
-        'chromatography': '色谱分析',
-        'mass_spectrometry': '质谱分析',
-        'immunohistochemistry': '免疫组化',
-        // 微生物学
-        'bacterial_culture': '细菌培养',
-        'antimicrobial_test': '抗菌试验',
-        'sterility_test': '无菌检验',
-        // 其他
-        'other': '通用实验'
-      };
-      welcomeText += `\n\n我注意到您正在进行${typeNames[experimentType] || experimentType}相关的实验。我可以为您提供：\n\n`;
-      welcomeText += "• 🧪 实验设计和优化建议\n";
-      welcomeText += "• 📋 标准操作流程(SOP)指导\n";
-      welcomeText += "• 📊 数据分析和统计方法\n";
-      welcomeText += "• 📚 相关文献和资源推荐\n";
-      welcomeText += "• 🛡️ 实验室安全注意事项\n\n";
-      welcomeText += "请告诉我您遇到的具体问题，我会尽力为您提供专业的解答！";
-    } else {
-      welcomeText += "\n\n我可以帮助您解决实验设计、数据分析、文献检索等方面的问题。请告诉我您需要什么帮助！";
-    }
+    const welcomeText = "您好！我是您的AI助手，很高兴为您服务。\n\n请告诉我您需要什么帮助！";
 
     return {
       id: this.generateId(),
@@ -265,45 +203,110 @@ export class AIChatService {
 
   // 调用AI API（简化版）
   private async callAIAPI(userMessage: string, settings: AISettings): Promise<{ content: string; suggestions?: string[] }> {
+    // 获取系统提示词
+    const systemPrompt = settings.systemPrompt && settings.systemPrompt.trim() 
+      ? settings.systemPrompt.trim() 
+      : '你是一个乐于助人的AI助手。请提供有用、准确的信息和建议。';
+    
     const messages = [
-      { role: 'system', content: this.config.systemPrompt },
+      { role: 'system', content: systemPrompt },
       { role: 'user', content: userMessage }
     ];
 
-    const requestBody = {
-      model: settings.model || this.config.model,
+    // 获取模型名称
+    let modelName;
+    if (settings.model && settings.model.trim()) {
+      modelName = settings.model.trim();
+    } else {
+      // 如果没有指定模型，根据API端点选择默认模型，或者不指定模型让API自己决定
+      if (settings.apiEndpoint.includes('siliconflow.cn')) {
+        modelName = 'qwen2.5-72b-instruct';
+      } else if (settings.apiEndpoint.includes('openai.com')) {
+        modelName = 'gpt-3.5-turbo';
+      }
+      // 其他情况不指定模型，让API使用默认模型
+    }
+
+    const requestBody: any = {
       messages,
       temperature: this.config.temperature,
       max_tokens: this.config.maxTokens
     };
+    
+    // 只有当指定了模型时才添加模型字段
+    if (modelName) {
+      requestBody.model = modelName;
+    }
 
+    // 标准化API端点
     let apiEndpoint = settings.apiEndpoint;
     if (!apiEndpoint.includes('/chat/completions')) {
-      apiEndpoint = apiEndpoint.replace(/\/?$/, '/chat/completions');
+      if (apiEndpoint.includes('siliconflow.cn')) {
+        // 硅基流动API格式
+        if (!apiEndpoint.includes('/v1')) {
+          apiEndpoint = apiEndpoint.replace(/\/$/, '') + '/v1/chat/completions';
+        } else {
+          apiEndpoint = apiEndpoint.replace(/\/$/, '') + '/chat/completions';
+        }
+      } else {
+        // 其他API格式
+        apiEndpoint = apiEndpoint.replace(/\/$/, '') + '/chat/completions';
+      }
     }
 
-    const response = await fetch(apiEndpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${settings.apiKey}`
-      },
-      body: JSON.stringify(requestBody)
+    console.log('AI API调用信息:', {
+      endpoint: apiEndpoint,
+      model: requestBody.model,
+      hasKey: !!settings.apiKey
     });
 
-    if (!response.ok) {
-      throw new Error(`API请求失败: ${response.status}`);
-    }
+    try {
+      const response = await fetch(apiEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${settings.apiKey}`
+        },
+        body: JSON.stringify(requestBody)
+      });
 
-    const data = await response.json();
-    
-    if (data.choices && data.choices.length > 0 && data.choices[0].message) {
-      return {
-        content: data.choices[0].message.content,
-        suggestions: ['需要更多帮助吗？', '想了解相关资源吗？']
-      };
-    } else {
-      throw new Error('API返回格式不支持');
+      if (!response.ok) {
+        let errorMessage = `API请求失败 (${response.status}): ${response.statusText}`;
+        
+        // 根据错误类型提供具体建议
+        if (response.status === 401) {
+          errorMessage = 'API密钥验证失败，请检查密钥是否正确或是否有足够权限';
+        } else if (response.status === 404) {
+          errorMessage = 'API端点不存在，请检查端点地址是否正确';
+        } else if (response.status === 429) {
+          errorMessage = 'API调用频率限制，请稍后重试';
+        } else if (response.status >= 500) {
+          errorMessage = 'API服务暂时不可用，请稍后重试';
+        }
+        
+        throw new Error(errorMessage);
+      }
+
+      const data = await response.json();
+      
+      if (data.choices && data.choices.length > 0 && data.choices[0].message) {
+        return {
+          content: data.choices[0].message.content,
+          suggestions: ['需要更多帮助吗？', '想了解相关资源吗？']
+        };
+      } else {
+        throw new Error('API返回格式异常，未找到有效响应内容');
+      }
+    } catch (error) {
+      console.error('AI API调用错误:', error);
+      
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        throw new Error('网络连接失败，请检查网络连接和API端点地址');
+      } else if (error instanceof Error) {
+        throw error;
+      } else {
+        throw new Error('API调用发生未知错误');
+      }
     }
   }
 
@@ -319,75 +322,37 @@ export class AIChatService {
 
   // 生成上下文相关的回复
   private generateContextualResponse(userMessage: string, context?: ChatContext): { content: string; suggestions?: string[] } {
-    const messageType = this.analyzeMessageType(userMessage);
+    // 简单的智能回复，不包含固定的专业能力描述
+    const responses = [
+      '我理解您的问题，让我为您提供一些建议。',
+      '这是一个很好的问题，我来帮您分析一下。',
+      '根据您的描述，我有以下想法可以分享。',
+      '我很乐意为您提供帮助，请告诉我更多细节。',
+      '让我为您详细解答这个问题。'
+    ];
     
-    let baseResponse = '';
-    let suggestions: string[] = [];
-
-    switch (messageType) {
-      case 'experimental_design':
-        baseResponse = `关于实验设计，我建议从以下几个方面考虑：
-
-🎯 **实验目标明确化**
-- 明确研究假设和预期结果
-- 确定主要和次要终点指标
-
-📊 **实验设计要素**
-- 样本量计算：确保统计功效
-- 随机化：减少选择偏倚
-- 对照组设置：阴性/阳性对照
-
-需要我详细展开某个方面吗？`;
-        suggestions = ['能否告诉我更多实验细节？', '需要帮助设计对照组吗？'];
-        break;
-
-      case 'data_analysis':
-        baseResponse = `数据分析是实验的关键环节：
-
-📊 **数据准备**
-- 数据清洗：异常值识别和处理
-- 数据转换：标准化和归一化
-
-📈 **统计方法选择**
-- 描述性统计：均值、标准差、分布特征
-- 假设检验：t检验、方差分析、卡方检验
-
-推荐工具：R、Python、GraphPad Prism、SPSS`;
-        suggestions = ['需要帮助选择统计方法吗？', '想了解数据可视化技巧吗？'];
-        break;
-
-      default:
-        baseResponse = `我很乐意为您提供帮助！
-
-🔬 **我的专业领域**
-- 实验设计与优化
-- 数据分析与统计
-- 文献检索与综述
-- 实验室安全管理
-
-请告诉我您需要什么帮助，我会根据您的具体情况提供专业建议！`;
-        suggestions = ['需要实验设计帮助吗？', '想了解数据分析方法吗？'];
-    }
-
-    return { content: baseResponse, suggestions };
+    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+    
+    return { 
+      content: randomResponse,
+      suggestions: [] // 移除所有建议
+    };
   }
 
-  // 分析消息类型
+  // 简化的消息类型分析（实际不再需要复杂分析）
   private analyzeMessageType(message: string): string {
-    const lower = message.toLowerCase();
-    
-    if (this.containsKeywords(lower, ['设计', '方案', '实验', '计划'])) {
-      return 'experimental_design';
-    } else if (this.containsKeywords(lower, ['数据', '分析', '统计', '结果'])) {
-      return 'data_analysis';
-    } else {
-      return 'general';
-    }
+    return 'general';
   }
 
   // 检查关键词
   private containsKeywords(text: string, keywords: string[]): boolean {
     return keywords.some(keyword => text.includes(keyword));
+  }
+
+  // 更新会话
+  updateSession(session: ChatSession): void {
+    this.sessions.set(session.id, session);
+    this.saveSessions();
   }
 
   // 获取所有会话

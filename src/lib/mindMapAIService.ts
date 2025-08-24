@@ -271,12 +271,29 @@ ${nodes.map(node => `- ${node.title} (${node.type})`).join('\n')}
 
   // 调用自定义API
   private async callCustomAPI(prompt: string, settings: AISettings): Promise<string> {
-    const requestBody = {
-      model: settings.model || 'gpt-3.5-turbo',
+    // 获取模型名称
+    let modelName;
+    if (settings.model && settings.model.trim()) {
+      modelName = settings.model.trim();
+    } else {
+      // 如果没有指定模型，根据API端点选择默认模型
+      if (settings.apiEndpoint.includes('siliconflow.cn')) {
+        modelName = 'qwen2.5-72b-instruct';
+      } else if (settings.apiEndpoint.includes('openai.com')) {
+        modelName = 'gpt-3.5-turbo';
+      }
+    }
+
+    // 获取系统提示词
+    const systemPrompt = settings.systemPrompt && settings.systemPrompt.trim()
+      ? settings.systemPrompt.trim()
+      : '你是一位专业的AI助手，擅长创建清晰、有逻辑的思维导图。请根据用户需求生成结构化的思维导图数据。';
+
+    const requestBody: any = {
       messages: [
         {
           role: 'system',
-          content: '你是小森博士（Dr. Forest），一位专业的生命医药领域研究专家，擅长创建清晰、有逻辑的思维导图。请根据用户需求生成结构化的思维导图数据。'
+          content: systemPrompt
         },
         {
           role: 'user',
@@ -286,14 +303,35 @@ ${nodes.map(node => `- ${node.title} (${node.type})`).join('\n')}
       temperature: 0.7,
       max_tokens: 2000
     };
+    
+    // 只有当指定了模型时才添加模型字段
+    if (modelName) {
+      requestBody.model = modelName;
+    }
 
     console.log('思维导图AI API 请求信息:', {
       endpoint: settings.apiEndpoint,
       model: requestBody.model
     });
 
+    // 标准化API端点
+    let apiEndpoint = settings.apiEndpoint;
+    if (!apiEndpoint.includes('/chat/completions')) {
+      if (apiEndpoint.includes('siliconflow.cn')) {
+        // 硅基流动API格式
+        if (!apiEndpoint.includes('/v1')) {
+          apiEndpoint = apiEndpoint.replace(/\/$/, '') + '/v1/chat/completions';
+        } else {
+          apiEndpoint = apiEndpoint.replace(/\/$/, '') + '/chat/completions';
+        }
+      } else {
+        // 其他API格式
+        apiEndpoint = apiEndpoint.replace(/\/$/, '') + '/chat/completions';
+      }
+    }
+
     try {
-      const response = await fetch(settings.apiEndpoint, {
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

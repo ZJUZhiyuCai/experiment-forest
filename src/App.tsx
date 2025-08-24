@@ -22,9 +22,12 @@ const SampleManagement = lazy(() => import("@/pages/SampleManagement"));
 const Calendar = lazy(() => import("@/pages/Calendar"));
 const Settings = lazy(() => import("@/pages/Settings"));
 const MyForest = lazy(() => import("@/pages/MyForest"));
+const AIChat = lazy(() => import("@/pages/AIChat"));
+const Topics = lazy(() => import("@/pages/Topics"));
+const TopicDetail = lazy(() => import("@/pages/TopicDetail"));
+const CreateTopic = lazy(() => import("@/pages/CreateTopic"));
 
-// 新增课题相关AI功能
-const TopicAI = lazy(() => import("@/pages/TopicAI"));
+// 新增课题相关功能
 const TopicMindMap = lazy(() => import("@/pages/TopicMindMap"));
 
 // 懒加载的fallback组件
@@ -51,6 +54,10 @@ export default function App() {
             <Route path="/" element={<Home />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/forest" element={<MyForest />} />
+            <Route path="/chat" element={<AIChat />} />
+            <Route path="/topics" element={<Topics />} />
+            <Route path="/topics/new" element={<CreateTopic />} />
+            <Route path="/topics/:id" element={<TopicDetail />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/projects/:id" element={<ProjectDetail />} />
             <Route path="/projects/:id/records" element={<ExperimentRecords />} />
@@ -70,8 +77,7 @@ export default function App() {
             <Route path="/samples" element={<SampleManagement />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/settings" element={<Settings />} />
-            {/* 课题相关AI功能路由 */}
-            <Route path="/topics/:id/ai" element={<TopicAI />} />
+            {/* 课题相关功能路由 */}
             <Route path="/topics/:id/mindmap" element={<TopicMindMap />} />
             <Route path="*" element={<div className="text-center text-xl">页面未找到</div>} />
           </Routes>
