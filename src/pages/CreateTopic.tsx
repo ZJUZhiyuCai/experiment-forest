@@ -50,7 +50,8 @@ export default function CreateTopic() {
     pathname: location.pathname,
     params,
     projectId,
-    isEditMode
+    isEditMode,
+    allProjects: projectService.getAll().map(p => ({ id: p.id, title: p.title }))
   });
   
   // 表单状态
@@ -66,24 +67,37 @@ export default function CreateTopic() {
   
   // 加载现有项目（如果是编辑模式）
   useEffect(() => {
+    console.log('useEffect triggered:', { isEditMode, projectId });
+    
     if (isEditMode && projectId) {
       setLoading(true);
       try {
+        console.log('Attempting to load project with ID:', projectId);
         const foundProject = projectService.getById(projectId);
+        console.log('Found project:', foundProject);
+        
         if (foundProject) {
           setProject(foundProject);
           setFormData({
             title: foundProject.title,
             description: foundProject.description || ''
           });
+          console.log('Project loaded successfully');
         } else {
-          toast.error('未找到该课题');
-          navigate('/projects');
+          console.error('Project not found for ID:', projectId);
+          toast.error('未找到该课题，ID: ' + projectId);
+          // 不要立即跳转，给用户时间看到错误信息
+          setTimeout(() => {
+            navigate('/projects');
+          }, 2000);
         }
       } catch (err) {
         console.error('Error loading project:', err);
-        toast.error('加载课题失败');
-        navigate('/projects');
+        toast.error('加载课题失败: ' + (err instanceof Error ? err.message : String(err)));
+        // 不要立即跳转，给用户时间看到错误信息
+        setTimeout(() => {
+          navigate('/projects');
+        }, 2000);
       } finally {
         setLoading(false);
       }
