@@ -1,154 +1,84 @@
 import { ExperimentDataStandard, DataValidationRule, ExperimentCategory, ExperimentRecord } from '@/types';
 
 /**
- * 生命医药领域实验数据标准化规范
+ * 生命医药领域实验数据标准化规范（简化版）
  */
 export const experimentDataStandards: ExperimentDataStandard[] = [
   {
     category: 'cell_culture',
-    requiredFields: ['title', 'date', 'sampleType', 'methodology'],
-    validationRules: [
-      {
-        field: 'sampleSize',
-        type: 'range',
-        value: { min: 1, max: 1000000 },
-        message: '细胞数量应在1-1000000之间'
-      },
-      {
-        field: 'experimentalConditions.temperature',
-        type: 'range',
-        value: { min: 4, max: 42 },
-        message: '培养温度应在4-42°C之间'
-      }
-    ],
+    requiredFields: ['title', 'date'],
+    validationRules: [],
     dataFormat: {
       units: {
         temperature: '°C',
         humidity: '%',
         co2: '%',
         cellDensity: 'cells/mL'
-      },
-      ranges: {
-        temperature: { min: 4, max: 42 },
-        humidity: { min: 30, max: 95 },
-        co2: { min: 0, max: 20 }
       }
     }
   },
 
   {
     category: 'pcr',
-    requiredFields: ['title', 'date', 'methodology', 'equipment'],
-    validationRules: [
-      {
-        field: 'experimentalConditions.temperature',
-        type: 'range',
-        value: { min: 4, max: 100 },
-        message: 'PCR温度应在4-100°C之间'
-      },
-      {
-        field: 'qualityControl.replicates',
-        type: 'range',
-        value: { min: 1, max: 10 },
-        message: '重复次数应在1-10次之间'
-      }
-    ],
+    requiredFields: ['title', 'date'],
+    validationRules: [],
     dataFormat: {
       units: {
         temperature: '°C',
         time: 'seconds',
         concentration: 'μM'
-      },
-      ranges: {
-        denatureTemp: { min: 94, max: 98 },
-        annealingTemp: { min: 45, max: 72 },
-        extensionTemp: { min: 68, max: 72 }
       }
     }
   },
 
   {
     category: 'western_blot',
-    requiredFields: ['title', 'date', 'sampleType', 'reagents'],
-    validationRules: [
-      {
-        field: 'sampleSize',
-        type: 'range',
-        value: { min: 1, max: 500 },
-        message: '蛋白浓度应在1-500μg之间'
-      }
-    ],
+    requiredFields: ['title', 'date'],
+    validationRules: [],
     dataFormat: {
       units: {
         concentration: 'μg/μL',
         voltage: 'V',
         time: 'minutes'
-      },
-      ranges: {
-        proteinConc: { min: 0.1, max: 10 },
-        voltage: { min: 50, max: 200 }
       }
     }
   },
 
   {
     category: 'elisa',
-    requiredFields: ['title', 'date', 'sampleType', 'methodology'],
-    validationRules: [
-      {
-        field: 'experimentalConditions.temperature',
-        type: 'range',
-        value: { min: 4, max: 37 },
-        message: 'ELISA孵育温度应在4-37°C之间'
-      },
-      {
-        field: 'qualityControl.replicates',
-        type: 'range',
-        value: { min: 2, max: 6 },
-        message: 'ELISA重复孔数应在2-6个之间'
-      }
-    ],
+    requiredFields: ['title', 'date'],
+    validationRules: [],
     dataFormat: {
       units: {
         concentration: 'pg/mL',
         temperature: '°C',
         time: 'minutes',
         od: 'OD450'
-      },
-      ranges: {
-        temperature: { min: 4, max: 37 },
-        incubationTime: { min: 15, max: 180 }
       }
     }
   },
 
   {
     category: 'animal_dosing',
-    requiredFields: ['title', 'date', 'sampleType', 'methodology', 'qualityControl'],
-    validationRules: [
-      {
-        field: 'sampleSize',
-        type: 'range',
-        value: { min: 1, max: 100 },
-        message: '动物数量应在1-100只之间'
-      },
-      {
-        field: 'qualityControl.replicates',
-        type: 'range',
-        value: { min: 3, max: 20 },
-        message: '每组动物数应在3-20只之间'
-      }
-    ],
+    requiredFields: ['title', 'date'],
+    validationRules: [],
     dataFormat: {
       units: {
         weight: 'g',
         dose: 'mg/kg',
         volume: 'mL'
-      },
-      ranges: {
-        mouseWeight: { min: 15, max: 40 },
-        ratWeight: { min: 150, max: 500 }
       }
+    }
+  },
+
+  // 为其他所有实验类型提供通用标准
+  {
+    category: 'other',
+    requiredFields: ['title', 'date'],
+    validationRules: [],
+    dataFormat: {
+      units: {},
+      ranges: {}
     }
   }
 ];
@@ -174,9 +104,19 @@ export function validateExperimentData(record: Partial<ExperimentRecord>): {
     return { isValid: false, errors };
   }
 
-  const standard = getDataStandardByCategory(record.category);
+  let standard = getDataStandardByCategory(record.category);
+  
+  // 如果找不到具体的标准，使用通用标准
   if (!standard) {
-    return { isValid: true, errors: [] }; // 没有标准则通过验证
+    standard = {
+      category: record.category,
+      requiredFields: ['title', 'date'], // 只要求最基本的字段
+      validationRules: [],
+      dataFormat: {
+        units: {},
+        ranges: {}
+      }
+    };
   }
 
   // 检查必填字段
@@ -186,7 +126,7 @@ export function validateExperimentData(record: Partial<ExperimentRecord>): {
     }
   }
 
-  // 执行验证规则
+  // 执行验证规则（现在大部分都是空的）
   for (const rule of standard.validationRules) {
     const value = getNestedValue(record, rule.field);
     if (value !== undefined && value !== null) {
