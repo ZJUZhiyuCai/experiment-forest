@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { projectService } from '@/lib/storage';
 import { Header } from '@/components/Header';
@@ -13,10 +13,45 @@ export default function CreateTopic() {
   const [loading, setLoading] = useState(false);
   const [project, setProject] = useState<Project | null>(null);
   const navigate = useNavigate();
-  const { id } = useParams<{ id: string }>();
+  const params = useParams<{ id: string }>();
+  const location = useLocation();
+  
+  // 获取项目ID，支持不同的路由格式
+  // /projects/:id/edit 或 /projects/edit/:id 或 /topics/:id/edit 或 /topics/edit/:id
+  const getProjectId = (): string | undefined => {
+    if (params.id) {
+      return params.id;
+    }
+    
+    // 从路径中解析ID
+    const pathParts = location.pathname.split('/');
+    if (pathParts.includes('edit')) {
+      const editIndex = pathParts.indexOf('edit');
+      // 如果edit后面有ID
+      if (editIndex < pathParts.length - 1) {
+        return pathParts[editIndex + 1];
+      }
+      // 如果edit前面有ID
+      if (editIndex > 0) {
+        return pathParts[editIndex - 1];
+      }
+    }
+    
+    return undefined;
+  };
+  
+  const projectId = getProjectId();
+  
+  // 调试信息
+  console.log('CreateTopic Debug:', {
+    pathname: location.pathname,
+    params,
+    projectId,
+    isEditMode
+  });
   
   // 检测是否为编辑模式
-  const isEditMode = Boolean(id);
+  const isEditMode = Boolean(projectId) && location.pathname.includes('edit');
   
   // 表单状态
   const [formData, setFormData] = useState({
@@ -31,10 +66,10 @@ export default function CreateTopic() {
   
   // 加载现有项目（如果是编辑模式）
   useEffect(() => {
-    if (isEditMode && id) {
+    if (isEditMode && projectId) {
       setLoading(true);
       try {
-        const foundProject = projectService.getById(id);
+        const foundProject = projectService.getById(projectId);
         if (foundProject) {
           setProject(foundProject);
           setFormData({
@@ -53,7 +88,7 @@ export default function CreateTopic() {
         setLoading(false);
       }
     }
-  }, [id, isEditMode, navigate]);
+  }, [projectId, isEditMode, navigate]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
