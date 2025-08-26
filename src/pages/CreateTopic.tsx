@@ -42,6 +42,9 @@ export default function CreateTopic() {
   
   const projectId = getProjectId();
   
+  // 检测是否为编辑模式
+  const isEditMode = Boolean(projectId) && location.pathname.includes('edit');
+  
   // 调试信息
   console.log('CreateTopic Debug:', {
     pathname: location.pathname,
@@ -49,9 +52,6 @@ export default function CreateTopic() {
     projectId,
     isEditMode
   });
-  
-  // 检测是否为编辑模式
-  const isEditMode = Boolean(projectId) && location.pathname.includes('edit');
   
   // 表单状态
   const [formData, setFormData] = useState({
