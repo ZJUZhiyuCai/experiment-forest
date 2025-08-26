@@ -54,12 +54,12 @@ export default function CreateRecord() {
     setIsSubmitting(false);
     // 延迟导航以确保用户看到成功提示和动画
     setTimeout(() => {
-      navigate('/records');
+      navigate('/projects');
     }, 3000); // 增加到3秒，让用户有充足时间看到成功动画
   };
   
   const handleCancel = () => {
-    navigate('/records');
+    navigate('/projects');
   };
   
   // 加载中状态
@@ -101,7 +101,7 @@ export default function CreateRecord() {
           sidebarCollapsed={sidebarCollapsed}
           actions={
             <Button 
-              onClick={() => navigate('/records')} 
+              onClick={() => navigate('/projects')} 
               variant="outline"
               disabled={isSubmitting}
             >
