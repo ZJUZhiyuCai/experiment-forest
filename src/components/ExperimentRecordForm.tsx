@@ -216,7 +216,19 @@ export function ExperimentRecordForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('Form submission started with data:', formData);
+    
     if (!validateForm()) {
+      console.log('Form validation failed. Errors:', errors);
+      
+      // 特别检查ELISA的验证问题
+      if (formData.category === 'elisa') {
+        const recordData = buildRecordData();
+        console.log('ELISA record data for validation:', recordData);
+        const validationResult = validateExperimentData(recordData);
+        console.log('ELISA validation result:', validationResult);
+      }
+      
       const firstErrorField = document.querySelector('[aria-invalid="true"]');
       firstErrorField?.scrollIntoView({ behavior: 'smooth', block: 'center' });
       return;
@@ -224,7 +236,10 @@ export function ExperimentRecordForm({
     
     try {
       const recordData = buildRecordData();
+      console.log('Built record data:', recordData);
+      
       const formattedData = formatExperimentData(recordData);
+      console.log('Formatted record data:', formattedData);
       
       let savedRecord: ExperimentRecord;
       
@@ -397,6 +412,25 @@ export function ExperimentRecordForm({
             options={Object.entries(experimentCategories).flatMap(([_, categories]) => 
               categories.map(({ category, name }) => ({ value: category, label: name }))
             )}
+          />
+        </div>
+        
+        {/* 样本类型和实验方法 - ELISA等实验的必填字段 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <EnhancedInput
+            label="样本类型"
+            value={formData.sampleType}
+            onChange={(value) => setFormData(prev => ({ ...prev, sampleType: value }))}
+            icon="fa-vial"
+            placeholder="例如: 血清, 细胞培养上清, 组织提取物"
+          />
+          
+          <EnhancedInput
+            label="实验方法"
+            value={formData.methodology}
+            onChange={(value) => setFormData(prev => ({ ...prev, methodology: value }))}
+            icon="fa-microscope"
+            placeholder="例如: 夹心ELISA, 直接ELISA, 竞争性ELISA"
           />
         </div>
         
