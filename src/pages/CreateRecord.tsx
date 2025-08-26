@@ -49,6 +49,8 @@ export default function CreateRecord() {
   };
   
   const handleSubmit = () => {
+    // 这里只是处理表单提交成功后的逻辑
+    // 实际的保存逻辑在ExperimentRecordForm中处理
     setIsSubmitting(false);
     // 延迟导航以确保用户看到成功提示和动画
     setTimeout(() => {

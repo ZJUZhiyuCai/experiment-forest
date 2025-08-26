@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>localStorage 存储测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 3px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>localStorage 存储功能测试</h1>
+    
+    <div class="test-section">
+        <h3>基础存储测试</h3>
+        <button onclick="testBasicStorage()">测试基础存储</button>
+        <button onclick="clearAllStorage()">清空所有数据</button>
+        <div id="basicTest"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>实验记录存储测试</h3>
+        <button onclick="testExperimentRecord()">创建测试记录</button>
+        <button onclick="viewExperimentRecords()">查看所有记录</button>
+        <div id="recordTest"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>课题存储测试</h3>
+        <button onclick="testProject()">创建测试课题</button>
+        <button onclick="viewProjects()">查看所有课题</button>
+        <div id="projectTest"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>当前存储内容</h3>
+        <button onclick="viewAllStorageData()">查看所有数据</button>
+        <div id="allData"></div>
+    </div>
+
+    <script>
+        // 测试基础localStorage功能
+        function testBasicStorage() {
+            const testDiv = document.getElementById('basicTest');
+            try {
+                // 测试写入
+                localStorage.setItem('test_key', 'test_value');
+                
+                // 测试读取
+                const value = localStorage.getItem('test_key');
+                
+                if (value === 'test_value') {
+                    testDiv.innerHTML = '<div class="success">✓ localStorage 基础功能正常</div>';
+                } else {
+                    testDiv.innerHTML = '<div class="error">✗ localStorage 读取失败</div>';
+                }
+                
+                // 清理测试数据
+                localStorage.removeItem('test_key');
+            } catch (error) {
+                testDiv.innerHTML = '<div class="error">✗ localStorage 不可用: ' + error.message + '</div>';
+            }
+        }
+
+        // 测试实验记录存储
+        function testExperimentRecord() {
+            const testDiv = document.getElementById('recordTest');
+            try {
+                // 生成测试记录
+                const testRecord = {
+                    id: 'test_' + Date.now(),
+                    title: '测试实验记录',
+                    date: new Date().toISOString().split('T')[0],
+                    content: '这是一个测试实验记录',
+                    status: 'draft',
+                    category: 'cell_culture',
+                    tags: ['测试'],
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+
+                // 获取现有记录
+                const existingRecords = JSON.parse(localStorage.getItem('experiment_records') || '[]');
+                
+                // 添加新记录
+                existingRecords.push(testRecord);
+                
+                // 保存回localStorage
+                localStorage.setItem('experiment_records', JSON.stringify(existingRecords));
+                
+                testDiv.innerHTML = '<div class="success">✓ 测试实验记录创建成功，ID: ' + testRecord.id + '</div>';
+            } catch (error) {
+                testDiv.innerHTML = '<div class="error">✗ 实验记录创建失败: ' + error.message + '</div>';
+            }
+        }
+
+        // 查看所有实验记录
+        function viewExperimentRecords() {
+            const testDiv = document.getElementById('recordTest');
+            try {
+                const records = JSON.parse(localStorage.getItem('experiment_records') || '[]');
+                
+                let html = '<h4>实验记录总数: ' + records.length + '</h4>';
+                if (records.length > 0) {
+                    html += '<pre>' + JSON.stringify(records.slice(-3), null, 2) + '</pre>';
+                    html += '<small>（显示最后3条记录）</small>';
+                }
+                
+                testDiv.innerHTML = html;
+            } catch (error) {
+                testDiv.innerHTML = '<div class="error">✗ 读取实验记录失败: ' + error.message + '</div>';
+            }
+        }
+
+        // 测试课题存储
+        function testProject() {
+            const testDiv = document.getElementById('projectTest');
+            try {
+                // 生成测试课题
+                const testProject = {
+                    id: 'project_test_' + Date.now(),
+                    title: '测试课题',
+                    description: '这是一个测试课题',
+                    status: 'planning',
+                    priority: 'medium',
+                    progress: 0,
+                    tags: ['测试'],
+                    leader: '测试用户',
+                    members: [],
+                    objectives: [],
+                    milestones: [],
+                    startDate: new Date().toISOString().split('T')[0],
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+
+                // 获取现有课题
+                const existingProjects = JSON.parse(localStorage.getItem('projects') || '[]');
+                
+                // 添加新课题
+                existingProjects.push(testProject);
+                
+                // 保存回localStorage
+                localStorage.setItem('projects', JSON.stringify(existingProjects));
+                
+                testDiv.innerHTML = '<div class="success">✓ 测试课题创建成功，ID: ' + testProject.id + '</div>';
+            } catch (error) {
+                testDiv.innerHTML = '<div class="error">✗ 课题创建失败: ' + error.message + '</div>';
+            }
+        }
+
+        // 查看所有课题
+        function viewProjects() {
+            const testDiv = document.getElementById('projectTest');
+            try {
+                const projects = JSON.parse(localStorage.getItem('projects') || '[]');
+                
+                let html = '<h4>课题总数: ' + projects.length + '</h4>';
+                if (projects.length > 0) {
+                    html += '<pre>' + JSON.stringify(projects.slice(-3), null, 2) + '</pre>';
+                    html += '<small>（显示最后3条课题）</small>';
+                }
+                
+                testDiv.innerHTML = html;
+            } catch (error) {
+                testDiv.innerHTML = '<div class="error">✗ 读取课题失败: ' + error.message + '</div>';
+            }
+        }
+
+        // 查看所有存储数据
+        function viewAllStorageData() {
+            const testDiv = document.getElementById('allData');
+            try {
+                const storageKeys = [
+                    'experiment_records',
+                    'experiment_notes', 
+                    'sops',
+                    'projects',
+                    'experiment_plans',
+                    'samples',
+                    'sample_history'
+                ];
+
+                let html = '<h4>所有存储数据：</h4>';
+                
+                storageKeys.forEach(key => {
+                    const data = localStorage.getItem(key);
+                    if (data) {
+                        try {
+                            const parsed = JSON.parse(data);
+                            html += `<strong>${key}:</strong> ${parsed.length} 条记录<br>`;
+                        } catch (e) {
+                            html += `<strong>${key}:</strong> ${data.length} 字符<br>`;
+                        }
+                    } else {
+                        html += `<strong>${key}:</strong> 无数据<br>`;
+                    }
+                });
+
+                // 显示localStorage使用情况
+                let totalSize = 0;
+                for (let key in localStorage) {
+                    if (localStorage.hasOwnProperty(key)) {
+                        totalSize += localStorage[key].length;
+                    }
+                }
+                
+                html += `<br><strong>localStorage 总使用量:</strong> ${(totalSize / 1024).toFixed(2)} KB`;
+                
+                testDiv.innerHTML = html;
+            } catch (error) {
+                testDiv.innerHTML = '<div class="error">✗ 读取存储数据失败: ' + error.message + '</div>';
+            }
+        }
+
+        // 清空所有存储数据
+        function clearAllStorage() {
+            if (confirm('确定要清空所有存储数据吗？这将删除所有实验记录、课题等数据！')) {
+                localStorage.clear();
+                alert('所有数据已清空');
+                // 刷新显示
+                document.getElementById('basicTest').innerHTML = '';
+                document.getElementById('recordTest').innerHTML = '';
+                document.getElementById('projectTest').innerHTML = '';
+                document.getElementById('allData').innerHTML = '';
+            }
+        }
+
+        // 页面加载时自动执行基础测试
+        window.onload = function() {
+            testBasicStorage();
+            viewAllStorageData();
+        };
+    </script>
+</body>
+</html>

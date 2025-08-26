@@ -1,15 +1,22 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { projectService } from '@/lib/storage';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
 import { Button } from '@/components/Button';
+import { Project } from '@/types';
 
 export default function CreateTopic() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [project, setProject] = useState<Project | null>(null);
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
+  
+  // 检测是否为编辑模式
+  const isEditMode = Boolean(id);
   
   // 表单状态
   const [formData, setFormData] = useState({
@@ -21,6 +28,32 @@ export default function CreateTopic() {
   const [errors, setErrors] = useState({
     title: ''
   });
+  
+  // 加载现有项目（如果是编辑模式）
+  useEffect(() => {
+    if (isEditMode && id) {
+      setLoading(true);
+      try {
+        const foundProject = projectService.getById(id);
+        if (foundProject) {
+          setProject(foundProject);
+          setFormData({
+            title: foundProject.title,
+            description: foundProject.description || ''
+          });
+        } else {
+          toast.error('未找到该课题');
+          navigate('/projects');
+        }
+      } catch (err) {
+        console.error('Error loading project:', err);
+        toast.error('加载课题失败');
+        navigate('/projects');
+      } finally {
+        setLoading(false);
+      }
+    }
+  }, [id, isEditMode, navigate]);
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -57,29 +90,39 @@ export default function CreateTopic() {
     try {
       setIsSubmitting(true);
       
-      // 创建新课题
-      projectService.create({
-        title: formData.title,
-        description: formData.description,
-        status: 'planning',
-        priority: 'medium',
-        progress: 0,
-        tags: [],
-        leader: '系统管理员',
-        members: [],
-        objectives: [],
-        milestones: [],
-        startDate: new Date().toISOString().split('T')[0]
-      });
-      
-      toast.success('课题创建成功');
+      if (isEditMode && project) {
+        // 更新现有课题
+        projectService.update(project.id, {
+          title: formData.title,
+          description: formData.description
+        });
+        
+        toast.success('课题更新成功');
+      } else {
+        // 创建新课题
+        projectService.create({
+          title: formData.title,
+          description: formData.description,
+          status: 'planning',
+          priority: 'medium',
+          progress: 0,
+          tags: [],
+          leader: '系统管理员',
+          members: [],
+          objectives: [],
+          milestones: [],
+          startDate: new Date().toISOString().split('T')[0]
+        });
+        
+        toast.success('课题创建成功');
+      }
       
       // 延迟导航以确保用户看到成功提示
       setTimeout(() => {
         navigate('/projects');
       }, 1000);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : '创建课题失败，请重试');
+      toast.error(error instanceof Error ? error.message : `${isEditMode ? '更新' : '创建'}课题失败，请重试`);
       setIsSubmitting(false);
     }
   };
@@ -90,7 +133,7 @@ export default function CreateTopic() {
       
       <div className={sidebarCollapsed ? 'ml-16' : 'ml-64'}>
         <Header 
-          title="创建课题" 
+          title={isEditMode ? '编辑课题' : '创建课题'} 
           sidebarCollapsed={sidebarCollapsed}
           actions={
             <Button onClick={() => navigate('/projects')}>
@@ -101,7 +144,13 @@ export default function CreateTopic() {
         />
         
         <main className="container mx-auto px-4 py-6">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 max-w-2xl mx-auto transition-all duration-300 hover:shadow-md">
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+              <p className="text-gray-600 dark:text-gray-400">加载中...</p>
+            </div>
+          ) : (
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 max-w-2xl mx-auto transition-all duration-300 hover:shadow-md">
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -155,18 +204,19 @@ export default function CreateTopic() {
                   {isSubmitting ? (
                     <>
                       <i className="fa-solid fa-spinner fa-spin mr-2"></i>
-                      创建中...
+                      {isEditMode ? '更新中...' : '创建中...'}
                     </>
                   ) : (
                     <>
                       <i className="fa-solid fa-save mr-2"></i>
-                      创建课题
+                      {isEditMode ? '更新课题' : '创建课题'}
                     </>
                   )}
                 </Button>
               </div>
             </form>
           </div>
+          )}
         </main>
       </div>
     </div>

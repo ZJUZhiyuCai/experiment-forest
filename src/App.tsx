@@ -58,8 +58,10 @@ export default function App() {
             <Route path="/topics" element={<Topics />} />
             <Route path="/topics/new" element={<CreateTopic />} />
             <Route path="/topics/:id" element={<TopicDetail />} />
+            <Route path="/topics/:id/edit" element={<CreateTopic />} />
             <Route path="/projects" element={<Projects />} />
             <Route path="/projects/:id" element={<ProjectDetail />} />
+            <Route path="/projects/:id/edit" element={<CreateTopic />} />
             <Route path="/projects/:id/records" element={<ExperimentRecords />} />
             <Route path="/projects/:id/notes" element={<Notes />} />
             <Route path="/projects/:id/sops" element={<SOPs />} />
