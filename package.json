@@ -6,8 +6,9 @@
   "scripts": {
     "dev:client": "vite --host --port 3000",
     "dev": "vite --host --port 3000",
-    "build:client": "vite build --outDir dist/static",
-    "build": "rm -rf dist && npm run build:client && cp package.json dist && touch dist/build.flag"
+    "build:client": "vite build --outDir dist",
+    "build": "vite build --outDir dist",
+    "preview": "vite preview"
   },
   "dependencies": {
     "clsx": "^2.1.1",
@@ -37,6 +38,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.3",
+    "rimraf": "^6.0.1",
     "tailwindcss": "^3.4.17",
     "typescript": "~5.7.2",
     "vite": "^6.2.0",

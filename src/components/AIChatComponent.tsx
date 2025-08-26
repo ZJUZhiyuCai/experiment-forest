@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChatSession, ChatMessage, ChatContext, ExperimentCategory, AISettings } from '@/types';
-import { aiChatService } from '@/lib/aiChatService';
+import { ChatSession, ChatMessage, ChatContext, ExperimentCategory, AISettings } from '../types';
+import { aiChatService } from '../lib/aiChatService';
 import { toast } from 'sonner';
 
 interface AIChatComponentProps {
@@ -91,7 +91,7 @@ export const AIChatComponent: React.FC<AIChatComponentProps> = React.memo(({
         pageContext: 'chat_interface'
       };
 
-      const aiMessage = await aiChatService.sendMessage(
+      await aiChatService.sendMessage(
         currentSession.id,
         message,
         context

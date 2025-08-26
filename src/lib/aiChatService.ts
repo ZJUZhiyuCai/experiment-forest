@@ -6,7 +6,7 @@ import {
   AIAssistantConfig, 
   ExperimentCategory,
   AISettings 
-} from '@/types';
+} from '../types';
 
 // AI聊天服务类
 export class AIChatService {
