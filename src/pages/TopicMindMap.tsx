@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { projectService, experimentRecordService, experimentNoteService, sopService } from '@/lib/cachedStorage';
-import { Project } from '@/types';
+import { Project, MindMapNode as MindMapNodeType, MindMapEdge } from '@/types';
 import { mindMapAIService, MindMapGenerationOptions } from '@/lib/mindMapAIService';
 import { Sidebar } from '@/components/Sidebar';
 import { Header } from '@/components/Header';
@@ -13,8 +13,8 @@ import { forceSimulation, forceLink, forceManyBody, forceCenter, forceCollide } 
 import { select } from 'd3-selection';
 import { drag } from 'd3-drag';
 
-// 节点类型定义
-interface MindMapNode {
+// D3专用的简化节点类型定义
+interface D3MindMapNode {
   id: string;
   type: 'project' | 'record' | 'note' | 'sop';
   title: string;
@@ -39,7 +39,7 @@ export default function TopicMindMap() {
   const navigate = useNavigate();
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
-  const [nodes, setNodes] = useState<MindMapNode[]>([]);
+  const [nodes, setNodes] = useState<D3MindMapNode[]>([]);
   const [links, setLinks] = useState<MindMapLink[]>([]);
   const [isSimulating, setIsSimulating] = useState(false);
   
@@ -57,7 +57,7 @@ export default function TopicMindMap() {
   const [hasAIGenerated, setHasAIGenerated] = useState(false);
   
   const svgRef = useRef<SVGSVGElement>(null);
-  const simulationRef = useRef<d3.Simulation<MindMapNode, MindMapLink> | null>(null);
+  const simulationRef = useRef<d3.Simulation<D3MindMapNode, MindMapLink> | null>(null);
   
   // 颜色配置
   const nodeColors = {
@@ -91,7 +91,7 @@ export default function TopicMindMap() {
         const notes = experimentNoteService.getAll().filter(n => n.projectId === id);
         const sops = sopService.getAll().filter(s => s.projectId === id);
         
-        const nodeList: MindMapNode[] = [
+        const nodeList: D3MindMapNode[] = [
           {
             id: projectData.id,
             type: 'project',
@@ -99,7 +99,7 @@ export default function TopicMindMap() {
             color: nodeColors.project,
             status: projectData.status
           },
-          ...records.map((record): MindMapNode => ({
+          ...records.map((record): D3MindMapNode => ({
             id: record.id,
             type: 'record',
             title: record.title,
@@ -107,13 +107,13 @@ export default function TopicMindMap() {
             category: record.category,
             status: record.status
           })),
-          ...notes.map((note): MindMapNode => ({
+          ...notes.map((note): D3MindMapNode => ({
             id: note.id,
             type: 'note',
             title: note.title,
             color: nodeColors.note
           })),
-          ...sops.map((sop): MindMapNode => ({
+          ...sops.map((sop): D3MindMapNode => ({
             id: sop.id,
             type: 'sop',
             title: sop.title,
@@ -167,6 +167,13 @@ export default function TopicMindMap() {
       const notes = experimentNoteService.getAll().filter(n => n.projectId === id);
       const sops = sopService.getAll().filter(s => s.projectId === id);
 
+      console.log('AI生成前的数据统计:', {
+        records: records.length,
+        notes: notes.length,
+        sops: sops.length,
+        options: generationOptions
+      });
+
       const generatedMindMap = await mindMapAIService.generateProjectMindMap(
         project,
         records,
@@ -175,19 +182,41 @@ export default function TopicMindMap() {
         generationOptions
       );
 
-      const convertedNodes: MindMapNode[] = generatedMindMap.nodes.map(node => ({
-        id: node.id,
-        type: mapNodeTypeToLocal(node.relatedType || 'experiment'),
-        title: node.title,
-        color: getNodeColor(node.relatedType || 'experiment'),
-        category: node.type as string,
-        status: 'active'
-      }));
+      console.log('AI生成的原始数据:', {
+        nodes: generatedMindMap.nodes.length,
+        edges: generatedMindMap.edges.length,
+        centerNode: generatedMindMap.centerNode.title,
+        firstNode: generatedMindMap.nodes[0]
+      });
 
-      const convertedLinks: MindMapLink[] = generatedMindMap.edges.map(edge => ({
-        source: edge.source,
-        target: edge.target
-      }));
+      // 转换为D3格式，确保包含所有必要字段
+      const convertedNodes: D3MindMapNode[] = generatedMindMap.nodes.map((node, index) => {
+        const d3Node: D3MindMapNode = {
+          id: node.id,
+          type: mapNodeTypeToLocal(node.relatedType || 'experiment'),
+          title: node.title || `节点${index + 1}`,
+          color: getNodeColor(node.relatedType || 'experiment'),
+          category: (node.type as string) || 'default',
+          status: 'active'
+        };
+        console.log(`转换节点 ${index}:`, { original: node, converted: d3Node });
+        return d3Node;
+      });
+
+      const convertedLinks: MindMapLink[] = generatedMindMap.edges.map((edge, index) => {
+        const link = {
+          source: edge.source,
+          target: edge.target
+        };
+        console.log(`转换连接 ${index}:`, { original: edge, converted: link });
+        return link;
+      });
+
+      console.log('转换后的D3数据:', {
+        nodes: convertedNodes.length,
+        links: convertedLinks.length,
+        firstConvertedNode: convertedNodes[0]
+      });
 
       setNodes(convertedNodes);
       setLinks(convertedLinks);
@@ -234,7 +263,7 @@ export default function TopicMindMap() {
     const notes = experimentNoteService.getAll().filter(n => n.projectId === id);
     const sops = sopService.getAll().filter(s => s.projectId === id);
 
-    const nodeList: MindMapNode[] = [
+    const nodeList: D3MindMapNode[] = [
       {
         id: project.id,
         type: 'project',
@@ -242,7 +271,7 @@ export default function TopicMindMap() {
         color: nodeColors.project,
         status: project.status
       },
-      ...records.map((record): MindMapNode => ({
+      ...records.map((record): D3MindMapNode => ({
         id: record.id,
         type: 'record',
         title: record.title,
@@ -250,13 +279,13 @@ export default function TopicMindMap() {
         category: record.category,
         status: record.status
       })),
-      ...notes.map((note): MindMapNode => ({
+      ...notes.map((note): D3MindMapNode => ({
         id: note.id,
         type: 'note',
         title: note.title,
         color: nodeColors.note
       })),
-      ...sops.map((sop): MindMapNode => ({
+      ...sops.map((sop): D3MindMapNode => ({
         id: sop.id,
         type: 'sop',
         title: sop.title,
@@ -280,24 +309,42 @@ export default function TopicMindMap() {
 
   // 初始化D3力导向图
   useEffect(() => {
-    if (!svgRef.current || nodes.length === 0 || isSimulating) return;
+    if (!svgRef.current || nodes.length === 0) {
+      console.log('D3渲染跳过:', { hasSvg: !!svgRef.current, nodeCount: nodes.length, isSimulating });
+      return;
+    }
 
+    if (isSimulating) {
+      console.log('D3渲染跳过: 正在仿真中');
+      return;
+    }
+
+    console.log('开始D3渲染:', { nodeCount: nodes.length, linkCount: links.length });
+    
     setIsSimulating(true);
     
     const svg = select(svgRef.current);
     const width = 800;
     const height = 600;
     
+    // 清除旧内容
     svg.selectAll("*").remove();
     
-    const simulation = forceSimulation(nodes)
-      .force('link', forceLink(links).id((d: any) => d.id).distance(80))
-      .force('charge', forceManyBody().strength(-300))
+    console.log('D3数据检查:', {
+      nodes: nodes.map(n => ({ id: n.id, title: n.title, type: n.type, color: n.color })),
+      links: links.map(l => ({ source: l.source, target: l.target }))
+    });
+    
+    // 创建力导向仿真
+    const simulation = forceSimulation(nodes as any)
+      .force('link', forceLink(links).id((d: any) => d.id).distance(100))
+      .force('charge', forceManyBody().strength(-400))
       .force('center', forceCenter(width / 2, height / 2))
-      .force('collision', forceCollide().radius(35));
+      .force('collision', forceCollide().radius(40));
     
     simulationRef.current = simulation;
     
+    // 创建连接线
     const link = svg.append('g')
       .attr('class', 'links')
       .selectAll('line')
@@ -307,6 +354,7 @@ export default function TopicMindMap() {
       .attr('stroke-opacity', 0.6)
       .attr('stroke-width', 2);
     
+    // 创建节点组
     const node = svg.append('g')
       .attr('class', 'nodes')
       .selectAll('g')
@@ -315,20 +363,30 @@ export default function TopicMindMap() {
       .attr('class', 'node')
       .style('cursor', 'pointer');
     
+    // 添加圆形节点
     (node as any).append('circle')
       .attr('r', (d: any) => d.type === 'project' ? 30 : 20)
-      .attr('fill', (d: any) => d.color)
+      .attr('fill', (d: any) => {
+        console.log('设置节点颜色:', { id: d.id, title: d.title, color: d.color });
+        return d.color || '#999999';
+      })
       .attr('stroke', '#fff')
       .attr('stroke-width', 2);
     
+    // 添加文本标签
     (node as any).append('text')
-      .text((d: MindMapNode) => d.title.length > 12 ? d.title.substring(0, 12) + '...' : d.title)
-      .attr('dy', (d: MindMapNode) => d.type === 'project' ? 40 : 30)
+      .text((d: D3MindMapNode) => {
+        const text = d.title && d.title.length > 12 ? d.title.substring(0, 12) + '...' : (d.title || '未命名');
+        console.log('设置节点文本:', { id: d.id, originalTitle: d.title, displayText: text });
+        return text;
+      })
+      .attr('dy', (d: D3MindMapNode) => d.type === 'project' ? 40 : 30)
       .attr('text-anchor', 'middle')
       .attr('font-size', '12px')
-      .attr('font-weight', (d: MindMapNode) => d.type === 'project' ? 'bold' : 'normal')
+      .attr('font-weight', (d: D3MindMapNode) => d.type === 'project' ? 'bold' : 'normal')
       .attr('fill', '#333');
     
+    // 添加拖拽行为
     const dragBehavior = drag() as any;
     dragBehavior
       .on('start', (event: any, d: any) => {
@@ -348,7 +406,9 @@ export default function TopicMindMap() {
     
     (node as any).call(dragBehavior);
     
-    (node as any).on('click', (_event: any, d: MindMapNode) => {
+    // 点击事件
+    (node as any).on('click', (_event: any, d: D3MindMapNode) => {
+      console.log('节点被点击:', d);
       switch (d.type) {
         case 'project':
           navigate(`/projects/${d.id}`);
@@ -365,6 +425,7 @@ export default function TopicMindMap() {
       }
     });
     
+    // 鼠标悬停效果
     (node as any).on('mouseover', function(this: any, _event: any, d: any) {
       select(this).select('circle')
         .transition()
@@ -378,6 +439,7 @@ export default function TopicMindMap() {
         .attr('r', d.type === 'project' ? 30 : 20);
     });
     
+    // 仿真更新事件
     simulation.on('tick', () => {
       (link as any)
         .attr('x1', (d: any) => (d.source as any).x)
@@ -388,11 +450,17 @@ export default function TopicMindMap() {
       (node as any).attr('transform', (d: any) => `translate(${d.x || 0},${d.y || 0})`);
     });
     
+    // 仿真结束事件
     simulation.on('end', () => {
+      console.log('D3仿真结束');
       setIsSimulating(false);
     });
     
+    console.log('D3仿真开始，节点数:', nodes.length, '连接数:', links.length);
+    
+    // 清理函数
     return () => {
+      console.log('D3仿真停止');
       simulation.stop();
     };
   }, [nodes, links, navigate, isSimulating]);
@@ -444,6 +512,11 @@ export default function TopicMindMap() {
                 <i className={`fa-solid fa-magic mr-2 ${isGenerating ? 'animate-spin' : ''}`}></i>
                 {isGenerating ? 'AI生成中...' : 'AI生成'}
               </Button>
+              
+              <Link to="/settings" className="text-xs text-blue-600 hover:text-blue-800">
+                <i className="fa-solid fa-cog mr-1"></i>
+                AI配置
+              </Link>
               
               {hasAIGenerated && (
                 <Button 
@@ -676,21 +749,32 @@ export default function TopicMindMap() {
                   </div>
                 </div>
               ) : (
-                <svg
-                  ref={svgRef}
-                  width="100%"
-                  height="100%"
-                  viewBox="0 0 800 600"
-                  style={{ background: '#fafafa' }}
-                />
+                <>
+                  <svg
+                    ref={svgRef}
+                    width="100%"
+                    height="100%"
+                    viewBox="0 0 800 600"
+                    style={{ background: '#fafafa' }}
+                  />
+                  {/* 调试信息显示 */}
+                  {process.env.NODE_ENV === 'development' && (
+                    <div className="absolute top-2 left-2 bg-black bg-opacity-75 text-white text-xs p-2 rounded">
+                      <div>节点数: {nodes.length}</div>
+                      <div>连接数: {links.length}</div>
+                      <div>仿真中: {isSimulating ? '是' : '否'}</div>
+                      <div>AI生成: {hasAIGenerated ? '是' : '否'}</div>
+                    </div>
+                  )}
+                </>
               )}
               
               {nodes.length === 1 && !isGenerating && (
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center text-gray-500">
+                  <div className="text-center text-gray-500 max-w-md">
                     <p className="mb-2">暂无关联的实验记录、笔记或SOP</p>
                     <p className="text-sm mb-4">使用AI生成功能创建智能化思维导图，或添加相关数据：</p>
-                    <div className="space-x-4">
+                    <div className="space-x-4 mb-4">
                       <Link to={`/projects/${id}/records`} className="text-blue-600 hover:underline">
                         添加实验记录
                       </Link>
@@ -700,6 +784,14 @@ export default function TopicMindMap() {
                       <Link to={`/projects/${id}/sops`} className="text-blue-600 hover:underline">
                         添加SOP
                       </Link>
+                    </div>
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-left">
+                      <p className="text-sm font-medium text-blue-800 mb-2">💡 AI功能说明：</p>
+                      <ul className="text-xs text-blue-700 space-y-1">
+                        <li>• 点击"AI生成"按钮创建智能思维导图</li>
+                        <li>• 首次使用时会使用模拟数据进行演示</li>
+                        <li>• 如需真实AI功能，请在 <Link to="/settings" className="text-blue-600 underline">设置页面</Link> 配置API</li>
+                      </ul>
                     </div>
                   </div>
                 </div>

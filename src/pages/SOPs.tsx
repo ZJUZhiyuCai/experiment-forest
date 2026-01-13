@@ -8,6 +8,7 @@ import { LoadingSkeleton } from '@/components/LoadingSkeleton';
 import { usePerformanceProfiler } from '@/hooks/usePerformance';
 import { Sidebar } from '@/components/Sidebar';
 import { Header } from '@/components/Header';
+import { FullscreenTextarea } from '@/components/FullscreenTextarea';
 
 export default function SOPs() {
   const { id: routeProjectId } = useParams<{ id: string }>();
@@ -293,13 +294,20 @@ export default function SOPs() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     SOP内容
                   </label>
-                  <textarea
-                    name="content"
+                  <FullscreenTextarea
                     value={formData.content}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[300px]"
+                    onChange={(value) => setFormData(prev => ({ ...prev, content: value }))}
+                    title="SOP内容"
                     placeholder="详细描述标准操作流程，建议包含目的、适用范围、操作步骤、注意事项等..."
-                  ></textarea>
+                  >
+                    <textarea
+                      name="content"
+                      value={formData.content}
+                      onChange={handleChange}
+                      className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[400px] pr-12"
+                      placeholder="详细描述标准操作流程，建议包含目的、适用范围、操作步骤、注意事项等..."
+                    />
+                  </FullscreenTextarea>
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     提示: 使用编号和项目符号可以使SOP更易读
                   </p>

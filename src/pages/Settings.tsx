@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
 import { useTheme } from '@/hooks/useTheme';
@@ -51,22 +51,31 @@ export default function Settings() {
       toast.error('保存失败，请重试');
     }
   };
-  
-  const autoSaveSettings = useCallback(() => {
-    try {
-      localStorage.setItem('aiSettings', JSON.stringify(aiSettings));
-    } catch (error) {
-      console.error('自动保存失败:', error);
+
+  // 优化后的自动保存逻辑 - 使用 ref 避免频繁重新创建函数
+  const prevAiSettingsRef = useRef<string>(JSON.stringify(aiSettings));
+
+  useEffect(() => {
+    const currentSettingsString = JSON.stringify(aiSettings);
+
+    // 只在设置真正改变时才保存
+    if (currentSettingsString !== prevAiSettingsRef.current) {
+      const timer = setTimeout(() => {
+        try {
+          localStorage.setItem('aiSettings', currentSettingsString);
+          console.log('[Settings] 自动保存成功');
+        } catch (error) {
+          console.error('自动保存失败:', error);
+        }
+      }, 1000); // 防抖1秒
+
+      // 更新 ref
+      prevAiSettingsRef.current = currentSettingsString;
+
+      // 清理函数
+      return () => clearTimeout(timer);
     }
   }, [aiSettings]);
-  
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      autoSaveSettings();
-    }, 1000);
-    
-    return () => clearTimeout(timer);
-  }, [autoSaveSettings]);
   
   const testAPIConnection = async () => {
     if (!aiSettings.apiEndpoint || !aiSettings.apiKey) {

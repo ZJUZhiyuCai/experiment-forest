@@ -349,7 +349,10 @@ export const chatWithAPI = async (message: string, topic: string): Promise<strin
   
   // 验证API设置
   if (!settings.useCustomAPI || !settings.apiEndpoint || !settings.apiKey || !settings.model) {
-    throw new Error('AI API配置不完整，请检查设置');
+    console.warn('AI API配置不完整，使用模拟数据回退');
+    // 使用模拟数据作为回退
+    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
+    return generateMockChatResponse(message, topic);
   }
   
   try {
@@ -402,8 +405,10 @@ export const chatWithAPI = async (message: string, topic: string): Promise<strin
       throw new Error('API返回格式不支持');
     }
   } catch (error) {
-    console.error('AI聊天API调用失败:', error);
-    throw error;
+    console.error('AI聊天API调用失败，使用模拟数据回退:', error);
+    // API调用失败时使用模拟数据作为回退
+    await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 1000));
+    return generateMockChatResponse(message, topic);
   }
 };
 

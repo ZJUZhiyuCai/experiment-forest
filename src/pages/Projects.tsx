@@ -511,7 +511,7 @@ export default function Projects() {
                       name="description"
                       value={formData.description}
                       onChange={handleChange}
-                      className={`w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-purple-500 min-h-[120px] resize-y transition-colors ${
+                      className={`w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-purple-500 min-h-[200px] resize-y transition-colors ${
                         errors.description 
                           ? 'border-red-500 bg-red-50' 
                           : 'border-gray-300 bg-white'

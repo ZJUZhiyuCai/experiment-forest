@@ -700,7 +700,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
               name="notes"
               value={formData.notes || ''}
               onChange={handleChange}
-              rows={4}
+              rows={6}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
               placeholder="输入样本相关备注信息..."
             />

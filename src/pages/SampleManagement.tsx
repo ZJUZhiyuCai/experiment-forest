@@ -88,15 +88,14 @@ const SampleManagement: React.FC = () => {
           sidebarCollapsed={sidebarCollapsed}
         />
         
-        <main className="container mx-auto px-4 py-6">
-          {/* 面包屑导航 */}
-          <nav className="flex mb-6" aria-label="Breadcrumb">
+        <main className="container mx-auto px-4 py-4">
+          <nav className="flex mb-4" aria-label="Breadcrumb">
             <ol className="flex items-center space-x-4">
               <li>
                 <div className="flex items-center">
                   <button
                     onClick={() => setCurrentView('list')}
-                    className={`text-sm font-medium ${
+                    className={`font-medium ${
                       currentView === 'list'
                         ? 'text-[#7FB069]'
                         : 'text-gray-500 hover:text-[#7FB069]'
@@ -111,7 +110,7 @@ const SampleManagement: React.FC = () => {
                   <li>
                     <div className="flex items-center">
                       <i className="fa-solid fa-chevron-right text-gray-400 mr-4"></i>
-                      <span className="text-sm font-medium text-[#4A7C59]">
+                      <span className="font-medium text-[#4A7C59]">
                         {selectedSample.name}
                       </span>
                     </div>
@@ -123,7 +122,7 @@ const SampleManagement: React.FC = () => {
                   <li>
                     <div className="flex items-center">
                       <i className="fa-solid fa-chevron-right text-gray-400 mr-4"></i>
-                      <span className="text-sm font-medium text-[#4A7C59]">
+                      <span className="font-medium text-[#4A7C59]">
                         {editingSample ? '编辑样本' : '新建样本'}
                       </span>
                     </div>

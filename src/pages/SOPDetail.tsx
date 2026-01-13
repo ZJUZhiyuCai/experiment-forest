@@ -5,6 +5,7 @@ import { SOP } from '@/types';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
 import { Button } from '@/components/Button';
+import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 
 export default function SOPDetail() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -165,8 +166,8 @@ export default function SOPDetail() {
             {sop.purpose && (
               <div className="mb-6">
                 <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">目的</h2>
-                <div className="prose prose-sm dark:prose-invert max-w-none bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                  <p className="text-gray-700 dark:text-gray-300">{sop.purpose}</p>
+                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-inner">
+                  <MarkdownRenderer content={sop.purpose} className="sop-purpose" />
                 </div>
               </div>
             )}
@@ -174,34 +175,34 @@ export default function SOPDetail() {
             {sop.scope && (
               <div className="mb-6">
                 <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">适用范围</h2>
-                <div className="prose prose-sm dark:prose-invert max-w-none bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                  <p className="text-gray-700 dark:text-gray-300">{sop.scope}</p>
+                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-inner">
+                  <MarkdownRenderer content={sop.scope} className="sop-scope" />
                 </div>
               </div>
             )}
             
             <div className="mb-6">
               <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-3">操作流程</h2>
-              <div className="prose prose-sm dark:prose-invert max-w-none bg-gray-50 dark:bg-gray-700 p-6 rounded-lg font-mono text-sm">
-                {sop.content.split('\n').map((line, index) => {
-                  // 保留空行
-                  if (!line.trim()) return <p key={index}>&nbsp;</p>;
-                  
-                  // 为以数字开头的行添加列表样式
-                  if (/^\d+\./.test(line)) {
-                    return <p key={index} className="ml-6 mb-2 text-gray-700 dark:text-gray-300">{line}</p>;
-                  }
-                  
-                  return <p key={index} className="mb-2 text-gray-700 dark:text-gray-300">{line}</p>;
-                })}
+              <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-inner">
+                <MarkdownRenderer 
+                  content={sop.content} 
+                  className="sop-procedure"
+                  tableCaption={"操作步骤"}
+                />
+              </div>
+              
+              {/* 添加提示语，帮助用户了解新功能 */}
+              <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 flex items-center">
+                <i className="fa-solid fa-lightbulb mr-1 text-yellow-500"></i>
+                <span>提示: 支持 LaTeX 数学公式 (使用 $...$ 或 $$...$$) 和代码高亮功能</span>
               </div>
             </div>
             
             {sop.references && (
               <div className="mb-6">
                 <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">参考资料</h2>
-                <div className="prose prose-sm dark:prose-invert max-w-none bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                  <p className="text-gray-700 dark:text-gray-300">{sop.references}</p>
+                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-inner">
+                  <MarkdownRenderer content={sop.references} className="sop-references" />
                 </div>
               </div>
             )}

@@ -229,62 +229,48 @@ const SampleList: React.FC<SampleListProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* 页面标题和操作按钮 */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-[#4A7C59]">样本管理</h1>
-          <p className="mt-1 text-sm text-gray-500">
-            管理实验室样本，包括生物样本、化学样本和试剂等
-          </p>
-        </div>
-        {showActions && (
-          <div className="flex space-x-3">
-            {selectedSamples.length > 0 && (
-              <button
-                onClick={handleBatchDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
-              >
-                删除选中 ({selectedSamples.length})
-              </button>
-            )}
+      {/* 操作按钮 */}
+      {showActions && (
+        <div className="flex justify-end">
+          {selectedSamples.length > 0 && (
             <button
-              onClick={() => setShowForm(true)}
-              className="px-4 py-2 bg-[#7FB069] text-white rounded-lg hover:bg-[#6FA055] focus:outline-none focus:ring-2 focus:ring-[#7FB069]"
+              onClick={handleBatchDelete}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 mr-3"
             >
-              <i className="fa-solid fa-plus mr-2"></i>
-              新建样本
+              删除选中 ({selectedSamples.length})
             </button>
-          </div>
-        )}
-      </div>
+          )}
+          <button
+            onClick={() => setShowForm(true)}
+            className="px-4 py-2 bg-[#7FB069] text-white rounded-lg hover:bg-[#6FA055] focus:outline-none focus:ring-2 focus:ring-[#7FB069]"
+          >
+            <i className="fa-solid fa-plus mr-2"></i>
+            新建样本
+          </button>
+        </div>
+      )}
 
       {/* 搜索和筛选 */}
-      <div className="bg-white rounded-lg shadow p-6">
+      <div className="bg-white rounded-lg shadow py-4 px-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              搜索
-            </label>
             <div className="relative">
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="搜索样本名称、编号或备注"
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7FB069] bg-white text-gray-900"
+                placeholder="搜索样本名称或编号"
+                className="w-full pl-10 pr-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7FB069] bg-white text-gray-900"
               />
               <i className="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
             </div>
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              状态筛选
-            </label>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as SampleStatus | 'all')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7FB069] bg-white text-gray-900"
+              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7FB069] bg-white text-gray-900"
             >
               <option value="all">所有状态</option>
               <option value="available">可用</option>
@@ -297,13 +283,10 @@ const SampleList: React.FC<SampleListProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              类型筛选
-            </label>
             <select
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value as SampleType | 'all')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7FB069] bg-white text-gray-900"
+              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7FB069] bg-white text-gray-900"
             >
               <option value="all">所有类型</option>
               <option value="biological">生物样本</option>
@@ -316,13 +299,10 @@ const SampleList: React.FC<SampleListProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              存储条件筛选
-            </label>
             <select
               value={storageFilter}
               onChange={(e) => setStorageFilter(e.target.value as StorageCondition | 'all')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7FB069] bg-white text-gray-900"
+              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7FB069] bg-white text-gray-900"
             >
               <option value="all">所有存储条件</option>
               <option value="room_temperature">室温</option>
@@ -335,14 +315,11 @@ const SampleList: React.FC<SampleListProps> = ({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              排序方式
-            </label>
             <div className="flex space-x-1">
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as any)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-[#7FB069] bg-white text-gray-900"
+                className="flex-1 px-3 py-2.5 border border-gray-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-[#7FB069] bg-white text-gray-900"
               >
                 <option value="name">名称</option>
                 <option value="status">状态</option>
@@ -351,7 +328,7 @@ const SampleList: React.FC<SampleListProps> = ({
               </select>
               <button
                 onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                className="px-3 py-2 border border-l-0 border-gray-300 rounded-r-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#7FB069] bg-white"
+                className="px-3 py-2.5 border border-l-0 border-gray-300 rounded-r-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#7FB069] bg-white"
               >
                 <i className={`fa-solid fa-sort-${sortOrder === 'asc' ? 'up' : 'down'} text-gray-600`}></i>
               </button>
@@ -389,23 +366,20 @@ const SampleList: React.FC<SampleListProps> = ({
                       />
                     </th>
                   )}
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left font-medium text-gray-700 text-base">
                     样本信息
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left font-medium text-gray-700 text-base">
                     类型/状态
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left font-medium text-gray-700 text-base">
                     存储信息
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    量体信息
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left font-medium text-gray-700 text-base">
                     更新时间
                   </th>
                   {showActions && (
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-right font-medium text-gray-700 text-base">
                       操作
                     </th>
                   )}
@@ -435,60 +409,37 @@ const SampleList: React.FC<SampleListProps> = ({
                       </td>
                     )}
                     <td className="px-6 py-4">
-                      <div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {sample.name}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          编号: {sample.sampleId}
-                        </div>
-                        {sample.source?.cellLine && (
-                          <div className="text-xs text-gray-400 dark:text-gray-500">
-                            细胞系: {sample.source.cellLine}
-                          </div>
-                        )}
+                      <div className="flex items-center">
+                        <span className="font-medium text-gray-800">{sample.name}</span>
+                        {sample.sampleId && <span className="text-gray-500 ml-2">({sample.sampleId})</span>}
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="space-y-1">
-                        <span className="inline-block px-2 py-1 text-xs font-medium rounded-full bg-[#A8D5BA] text-[#4A7C59]">
+                      <div className="flex flex-row items-center space-x-2">
+                        <span className="px-2 py-1 text-sm font-medium rounded-md bg-[#A8D5BA] text-[#4A7C59]">
                           {getTypeText(sample.type)}
                         </span>
-                        <br />
-                        <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(sample.status)}`}>
+                        <span className={`px-2 py-1 text-sm font-medium rounded-md ${getStatusColor(sample.status)}`}>
                           {getStatusText(sample.status)}
                         </span>
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">
-                        {sample.storage?.condition === 'room_temperature' && '室温'}
-                        {sample.storage?.condition === 'refrigerated' && '冷藏(4°C)'}
-                        {sample.storage?.condition === 'frozen_minus_20' && '冷冻(-20°C)'}
-                        {sample.storage?.condition === 'frozen_minus_80' && '超低温(-80°C)'}
-                        {sample.storage?.condition === 'liquid_nitrogen' && '液氮'}
-                        {sample.storage?.condition === 'desiccated' && '干燥'}
-                      </div>
-                      {sample.storage?.location && (
-                        <div className="text-sm text-gray-500">
-                          位置: {sample.storage.location}
+                      <div className="flex items-center">
+                        <div className="font-medium">
+                          {sample.storage?.condition === 'room_temperature' && '室温'}
+                          {sample.storage?.condition === 'refrigerated' && '冷藏(4°C)'}
+                          {sample.storage?.condition === 'frozen_minus_20' && '冷冻(-20°C)'}
+                          {sample.storage?.condition === 'frozen_minus_80' && '超低温(-80°C)'}
+                          {sample.storage?.condition === 'liquid_nitrogen' && '液氮'}
+                          {sample.storage?.condition === 'desiccated' && '干燥'}
+                          {sample.storage?.location && (
+                            <span className="text-gray-600 ml-1"> · {sample.storage.location}</span>
+                          )}
                         </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900 space-y-1">
-                        {sample.quantity?.volume && (
-                          <div>体积: {sample.quantity.volume} {sample.quantity.volumeUnit}</div>
-                        )}
-                        {sample.quantity?.concentration && (
-                          <div>浓度: {sample.quantity.concentration} {sample.quantity.concentrationUnit}</div>
-                        )}
-                        {sample.quantity?.weight && (
-                          <div>重量: {sample.quantity.weight} {sample.quantity.weightUnit}</div>
-                        )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">
+                    <td className="px-6 py-4 text-sm">
                       {new Date(sample.updatedAt).toLocaleDateString('zh-CN')}
                     </td>
                     {showActions && (
@@ -520,32 +471,31 @@ const SampleList: React.FC<SampleListProps> = ({
       </div>
 
       {/* 统计信息 */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold text-[#4A7C59] mb-4">统计信息</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="bg-white rounded-lg shadow p-4">
+        <div className="grid grid-cols-4 gap-4">
           <div className="text-center">
             <div className="text-2xl font-bold text-[#7FB069]">
               {samples.length}
             </div>
-            <div className="text-sm text-gray-500">总样本数</div>
+            <div>总数</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-[#A8D5BA]">
               {samples.filter(s => s.status === 'available').length}
             </div>
-            <div className="text-sm text-gray-500">可用样本</div>
+            <div>可用</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-[#4A7C59]">
               {samples.filter(s => s.status === 'in_use').length}
             </div>
-            <div className="text-sm text-gray-500">使用中</div>
+            <div>使用中</div>
           </div>
           <div className="text-center">
             <div className="text-2xl font-bold text-red-600">
               {samples.filter(s => ['exhausted', 'expired', 'contaminated'].includes(s.status)).length}
             </div>
-            <div className="text-sm text-gray-500">不可用</div>
+            <div>不可用</div>
           </div>
         </div>
       </div>

@@ -263,9 +263,21 @@ ${nodes.map(node => `- ${node.title} (${node.type})`).join('\n')}
     const aiSettings = this.getAISettings();
     
     if (aiSettings.useCustomAPI && aiSettings.apiEndpoint && aiSettings.apiKey) {
-      return this.callCustomAPI(prompt, aiSettings);
+      try {
+        return await this.callCustomAPI(prompt, aiSettings);
+      } catch (error) {
+        console.warn('自定义AI API调用失败，使用模拟数据:', error);
+        // 如果自定义API失败，降级到模拟数据
+        return this.generateMockAIResponse(prompt);
+      }
     } else {
-      return chatWithAPI(prompt, '思维导图生成');
+      try {
+        return await chatWithAPI(prompt, '思维导图生成');
+      } catch (error) {
+        console.warn('默认AI API调用失败，使用模拟数据:', error);
+        // 如果默认API失败，降级到模拟数据
+        return this.generateMockAIResponse(prompt);
+      }
     }
   }
 
@@ -384,6 +396,76 @@ ${nodes.map(node => `- ${node.title} (${node.type})`).join('\n')}
     }
   }
 
+  // 生成模拟AI响应
+  private generateMockAIResponse(prompt: string): string {
+    // 根据提示词类型生成不同的模拟响应
+    if (prompt.includes('思维导图')) {
+      return JSON.stringify({
+        nodes: [
+          {
+            id: 'center-node',
+            title: '课题主题',
+            type: 'project',
+            category: 'main',
+            description: '课题的核心内容和研究方向',
+            priority: 'high'
+          },
+          {
+            id: 'research-objectives',
+            title: '研究目标',
+            type: 'objective',
+            category: 'goal',
+            description: '明确的研究目标和预期成果',
+            priority: 'high'
+          },
+          {
+            id: 'experimental-design',
+            title: '实验设计',
+            type: 'experiment',
+            category: 'method',
+            description: '详细的实验方案和操作流程',
+            priority: 'medium'
+          },
+          {
+            id: 'data-analysis',
+            title: '数据分析',
+            type: 'analysis',
+            category: 'data',
+            description: '数据处理和统计分析方法',
+            priority: 'medium'
+          },
+          {
+            id: 'literature-review',
+            title: '文献综述',
+            type: 'document',
+            category: 'resource',
+            description: '相关文献和研究背景',
+            priority: 'low'
+          },
+          {
+            id: 'risk-assessment',
+            title: '风险评估',
+            type: 'analysis',
+            category: 'planning',
+            description: '潜在风险和应对策略',
+            priority: 'medium'
+          }
+        ],
+        edges: [
+          { source: 'center-node', target: 'research-objectives' },
+          { source: 'center-node', target: 'experimental-design' },
+          { source: 'center-node', target: 'data-analysis' },
+          { source: 'center-node', target: 'literature-review' },
+          { source: 'experimental-design', target: 'risk-assessment' },
+          { source: 'research-objectives', target: 'data-analysis' }
+        ]
+      });
+    }
+    
+    // 默认响应
+    return '模拟AI响应：请配置AI API以获得真实的AI生成功能。';
+  }
+
   // 获取AI设置
   private getAISettings(): AISettings {
     const saved = localStorage.getItem('aiSettings');
@@ -391,7 +473,7 @@ ${nodes.map(node => `- ${node.title} (${node.type})`).join('\n')}
       apiEndpoint: '',
       apiKey: '',
       useCustomAPI: false,
-      model: 'gpt-3.5-turbo'
+      model: 'gwen2.5-72b-instruct'
     };
   }
 
@@ -404,6 +486,8 @@ ${nodes.map(node => `- ${node.title} (${node.type})`).join('\n')}
     sops: SOP[],
     maxNodes: number
   ): Promise<Omit<GeneratedMindMap, 'metadata'>> {
+    console.log('开始解析AI响应:', aiResponse.substring(0, 200) + '...');
+    
     try {
       // 尝试解析JSON响应
       let parsedData: any;
@@ -412,12 +496,14 @@ ${nodes.map(node => `- ${node.title} (${node.type})`).join('\n')}
         const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           parsedData = JSON.parse(jsonMatch[0]);
+          console.log('成功解析AI响应JSON:', parsedData);
         } else {
-          throw new Error('未找到JSON数据');
+          console.warn('AI响应中未找到JSON，使用默认结构');
+          return this.generateDefaultMindMap(project, records, notes, sops);
         }
       } catch (parseError) {
-        // 如果解析失败，使用默认结构生成
-        parsedData = this.generateDefaultMindMap(project, records, notes, sops);
+        console.warn('JSON解析失败，使用默认结构:', parseError);
+        return this.generateDefaultMindMap(project, records, notes, sops);
       }
 
       // 转换为标准格式
@@ -447,14 +533,18 @@ ${nodes.map(node => `- ${node.title} (${node.type})`).join('\n')}
       };
       
       nodes.push(centerNode);
+      console.log('创建中心节点:', centerNode);
 
       // 处理AI生成的节点
       if (parsedData.nodes && Array.isArray(parsedData.nodes)) {
+        console.log('处理AI生成的节点，数量:', parsedData.nodes.length);
+        
         parsedData.nodes.slice(0, maxNodes - 1).forEach((nodeData: any, index: number) => {
+          const nodeId = nodeData.id || this.generateId();
           const node: MindMapNode = {
-            id: this.generateId(),
+            id: nodeId,
             title: nodeData.title || `节点 ${index + 1}`,
-            content: nodeData.description || '',
+            content: nodeData.description || nodeData.content || '',
             type: nodeData.type || 'experiment',
             position: this.calculateNodePosition(index, parsedData.nodes.length),
             size: { width: 150, height: 80 },
@@ -466,6 +556,7 @@ ${nodes.map(node => `- ${node.title} (${node.type})`).join('\n')}
             updatedAt: new Date()
           };
           nodes.push(node);
+          console.log(`创建节点 ${index}:`, node);
 
           // 创建与中心节点的连接
           const edge: MindMapEdge = {
@@ -483,15 +574,22 @@ ${nodes.map(node => `- ${node.title} (${node.type})`).join('\n')}
             updatedAt: new Date()
           };
           edges.push(edge);
+          console.log(`创建边 ${index}:`, edge);
         });
+      } else {
+        console.warn('AI响应中没有有效的节点数据，使用默认结构');
+        return this.generateDefaultMindMap(project, records, notes, sops);
       }
 
       // 处理AI生成的连接
       if (parsedData.edges && Array.isArray(parsedData.edges)) {
-        parsedData.edges.forEach((edgeData: any) => {
+        console.log('处理额外的连接，数量:', parsedData.edges.length);
+        
+        parsedData.edges.forEach((edgeData: any, index: number) => {
           if (edgeData.source && edgeData.target) {
-            const sourceNode = nodes.find(n => n.title === edgeData.source || n.id === edgeData.source);
-            const targetNode = nodes.find(n => n.title === edgeData.target || n.id === edgeData.target);
+            // 尝试通过ID或标题找到节点
+            const sourceNode = nodes.find(n => n.id === edgeData.source || n.title === edgeData.source);
+            const targetNode = nodes.find(n => n.id === edgeData.target || n.title === edgeData.target);
             
             if (sourceNode && targetNode && sourceNode.id !== targetNode.id) {
               const edge: MindMapEdge = {
@@ -510,15 +608,19 @@ ${nodes.map(node => `- ${node.title} (${node.type})`).join('\n')}
                 updatedAt: new Date()
               };
               edges.push(edge);
+              console.log(`创建额外边 ${index}:`, edge);
+            } else {
+              console.warn('找不到连接的源或目标节点:', edgeData);
             }
           }
         });
       }
 
+      console.log('最终生成的思维导图:', { nodeCount: nodes.length, edgeCount: edges.length });
       return { nodes, edges, centerNode };
 
     } catch (error) {
-      console.error('解析AI响应失败:', error);
+      console.error('解析AI响应失败，使用默认思维导图:', error);
       // 返回默认思维导图
       return this.generateDefaultMindMap(project, records, notes, sops);
     }
@@ -531,6 +633,13 @@ ${nodes.map(node => `- ${node.title} (${node.type})`).join('\n')}
     notes: ExperimentNote[],
     sops: SOP[]
   ): Omit<GeneratedMindMap, 'metadata'> {
+    console.log('生成默认思维导图，输入数据:', {
+      projectTitle: project.title,
+      recordCount: records.length,
+      noteCount: notes.length,
+      sopCount: sops.length
+    });
+    
     const nodes: MindMapNode[] = [];
     const edges: MindMapEdge[] = [];
 
@@ -556,24 +665,31 @@ ${nodes.map(node => `- ${node.title} (${node.type})`).join('\n')}
       updatedAt: new Date()
     };
     nodes.push(centerNode);
+    console.log('创建默认中心节点:', centerNode);
 
     // 主要分支节点
     const mainBranches = [
-      { title: '研究目标', type: 'objective', category: 'goal' },
-      { title: '实验设计', type: 'experiment', category: 'method' },
-      { title: '数据分析', type: 'analysis', category: 'data' },
-      { title: '相关文档', type: 'document', category: 'resource' }
+      { title: '研究目标', type: 'objective', category: 'goal', color: '#10B981' },
+      { title: '实验设计', type: 'experiment', category: 'method', color: '#F59E0B' },
+      { title: '数据分析', type: 'analysis', category: 'data', color: '#3B82F6' },
+      { title: '相关文档', type: 'document', category: 'resource', color: '#6366F1' }
     ];
 
     mainBranches.forEach((branch, index) => {
       const node: MindMapNode = {
         id: this.generateId(),
         title: branch.title,
-        content: '',
+        content: `默认生成的${branch.title}节点`,
         type: branch.type as any,
         position: this.calculateNodePosition(index, mainBranches.length),
         size: { width: 150, height: 80 },
-        style: this.getNodeStyle(branch.type as any),
+        style: {
+          shape: 'rectangle',
+          color: branch.color,
+          textColor: '#FFFFFF',
+          borderColor: branch.color,
+          fontSize: 14
+        },
         relatedType: this.mapNodeTypeToRelatedType(branch.type),
         level: 1,
         parent: centerNode.id,
@@ -581,9 +697,10 @@ ${nodes.map(node => `- ${node.title} (${node.type})`).join('\n')}
         updatedAt: new Date()
       };
       nodes.push(node);
+      console.log(`创建默认分支节点 ${index}:`, node);
 
       // 连接到中心节点
-      edges.push({
+      const edge: MindMapEdge = {
         id: this.generateId(),
         source: centerNode.id,
         target: node.id,
@@ -596,7 +713,87 @@ ${nodes.map(node => `- ${node.title} (${node.type})`).join('\n')}
         },
         createdAt: new Date(),
         updatedAt: new Date()
-      });
+      };
+      edges.push(edge);
+      console.log(`创建默认边 ${index}:`, edge);
+    });
+
+    // 根据实际数据添加额外节点
+    if (records.length > 0) {
+      const recordNode: MindMapNode = {
+        id: this.generateId(),
+        title: `实验记录 (${records.length}个)`,
+        content: `包含${records.length}个实验记录`,
+        type: 'experiment',
+        position: this.calculateNodePosition(4, 6),
+        size: { width: 120, height: 60 },
+        style: this.getNodeStyle('experiment'),
+        relatedType: 'experiment',
+        level: 2,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      nodes.push(recordNode);
+      
+      // 连接到实验设计节点
+      const experimentDesignNode = nodes.find(n => n.title === '实验设计');
+      if (experimentDesignNode) {
+        edges.push({
+          id: this.generateId(),
+          source: experimentDesignNode.id,
+          target: recordNode.id,
+          type: 'relation',
+          style: {
+            color: '#9CA3AF',
+            width: 1,
+            strokeType: 'solid',
+            arrow: true
+          },
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+      }
+    }
+
+    if (notes.length > 0) {
+      const noteNode: MindMapNode = {
+        id: this.generateId(),
+        title: `研究笔记 (${notes.length}个)`,
+        content: `包含${notes.length}个研究笔记`,
+        type: 'note',
+        position: this.calculateNodePosition(5, 6),
+        size: { width: 120, height: 60 },
+        style: this.getNodeStyle('note'),
+        relatedType: 'note',
+        level: 2,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
+      nodes.push(noteNode);
+      
+      // 连接到相关文档节点
+      const documentNode = nodes.find(n => n.title === '相关文档');
+      if (documentNode) {
+        edges.push({
+          id: this.generateId(),
+          source: documentNode.id,
+          target: noteNode.id,
+          type: 'relation',
+          style: {
+            color: '#9CA3AF',
+            width: 1,
+            strokeType: 'solid',
+            arrow: true
+          },
+          createdAt: new Date(),
+          updatedAt: new Date()
+        });
+      }
+    }
+
+    console.log('默认思维导图生成完成:', {
+      nodeCount: nodes.length,
+      edgeCount: edges.length
     });
 
     return { nodes, edges, centerNode };

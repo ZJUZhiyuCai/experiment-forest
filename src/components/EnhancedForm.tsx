@@ -1,18 +1,21 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { FullscreenEditor } from './FullscreenEditor';
+import { WysiwygTextarea } from './WysiwygTextarea';
 
 interface EnhancedInputProps {
   label: string;
   value: string;
   onChange: (value: string) => void;
-  type?: 'text' | 'email' | 'password' | 'textarea' | 'select' | 'date';
+  type?: 'text' | 'email' | 'password' | 'textarea' | 'wysiwyg' | 'select' | 'date';
   placeholder?: string;
   error?: string;
   icon?: string;
   options?: { value: string; label: string }[];
   required?: boolean;
   className?: string;
+  wysiwygMode?: 'inline' | 'fullscreen' | 'both'; // 所见即所得模式选项
 }
 
 export const EnhancedInput: React.FC<EnhancedInputProps> = ({
@@ -25,10 +28,12 @@ export const EnhancedInput: React.FC<EnhancedInputProps> = ({
   icon,
   options,
   required,
-  className
+  className,
+  wysiwygMode = 'both'
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
+  const [isFullscreenOpen, setIsFullscreenOpen] = useState(false);
 
   const hasValue = value.length > 0;
   const showFloatingLabel = isFocused || hasValue;
@@ -60,10 +65,36 @@ export const EnhancedInput: React.FC<EnhancedInputProps> = ({
     switch (type) {
       case 'textarea':
         return (
-          <textarea
-            {...commonProps}
-            rows={4}
-            className={cn(baseInputClasses, 'resize-none')}
+          <div className="relative">
+            <textarea
+              {...commonProps}
+              rows={8}
+              className={cn(baseInputClasses, 'resize-y min-h-[200px] pr-12')}
+            />
+            {/* 全屏编辑按钮 */}
+            <motion.button
+              type="button"
+              onClick={() => setIsFullscreenOpen(true)}
+              className="absolute top-3 right-3 p-2 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all duration-200 group"
+              title="全屏编辑"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              <i className="fa-solid fa-expand text-sm group-hover:rotate-12 transition-transform duration-200"></i>
+            </motion.button>
+          </div>
+        );
+      
+      case 'wysiwyg':
+        return (
+          <WysiwygTextarea
+            value={value}
+            onChange={onChange}
+            placeholder={placeholder}
+            className={cn(baseInputClasses, 'min-h-[200px]')}
+            title={label}
+            mode={wysiwygMode}
+            required={required}
           />
         );
       
@@ -185,8 +216,19 @@ export const EnhancedInput: React.FC<EnhancedInputProps> = ({
               <i className="fa-solid fa-check text-white text-xs"></i>
             </div>
           </motion.div>
-        )}
-      </AnimatePresence>
+        )}      </AnimatePresence>
+
+      {/* 全屏编辑器 */}
+      {type === 'textarea' && (
+        <FullscreenEditor
+          isOpen={isFullscreenOpen}
+          onClose={() => setIsFullscreenOpen(false)}
+          value={value}
+          onChange={onChange}
+          title={label}
+          placeholder={placeholder}
+        />
+      )}
     </motion.div>
   );
 };

@@ -23,6 +23,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [featuredSOPs, setFeaturedSOPs] = useState<SOP[]>([]);
   const [topics, setTopics] = useState<Project[]>([]);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
 
   // 优化统计数据计算
   const stats = useMemo(() => {
@@ -31,8 +32,28 @@ export default function Dashboard() {
       notes: experimentNoteService.getAll().length,
       sops: sopService.getAll().length
     };
-  }, []); // 只在组件挂载时计算一次
-  
+  }, []);
+
+  // 计算当前月份有记录的日期
+  const recordsByDate = useMemo(() => {
+    const allRecords = experimentRecordService.getAll();
+    const dateMap = new Map<number, number>();
+
+    allRecords.forEach(record => {
+      const recordDate = new Date(record.date);
+      // 检查是否是当前月份
+      if (
+        recordDate.getMonth() === currentMonth.getMonth() &&
+        recordDate.getFullYear() === currentMonth.getFullYear()
+      ) {
+        const day = recordDate.getDate();
+        dateMap.set(day, (dateMap.get(day) || 0) + 1);
+      }
+    });
+
+    return dateMap;
+  }, [currentMonth]);
+
   useEffect(() => {
     // 获取所有课题
     const allTopics = projectService.getAll();
@@ -290,19 +311,37 @@ export default function Dashboard() {
              <div className="bg-white dark:bg-gradient-to-br dark:from-slate-800 dark:to-slate-900 rounded-xl shadow-sm border border-gray-200 dark:border-slate-600 p-6 transition-all duration-300 hover:shadow-md dark:hover:shadow-2xl">
                <div className="flex justify-between items-center mb-4">
                  <h3 className="text-lg font-medium text-gray-800 dark:text-slate-200">
-                   {new Date().toLocaleString('zh-CN', { year: 'numeric', month: 'long' })}
+                   {currentMonth.toLocaleString('zh-CN', { year: 'numeric', month: 'long' })}
                  </h3>
                  <div className="flex space-x-2">
-                   <Button size="sm" variant="outline" className="h-8 w-8 p-0">
+                   <Button
+                     size="sm"
+                     variant="outline"
+                     className="h-8 w-8 p-0"
+                     onClick={() => {
+                       const newMonth = new Date(currentMonth);
+                       newMonth.setMonth(newMonth.getMonth() - 1);
+                       setCurrentMonth(newMonth);
+                     }}
+                   >
                      <i className="fa-solid fa-chevron-left"></i>
                    </Button>
-                   <Button size="sm" variant="outline" className="h-8 w-8 p-0">
+                   <Button
+                     size="sm"
+                     variant="outline"
+                     className="h-8 w-8 p-0"
+                     onClick={() => {
+                       const newMonth = new Date(currentMonth);
+                       newMonth.setMonth(newMonth.getMonth() + 1);
+                       setCurrentMonth(newMonth);
+                     }}
+                   >
                      <i className="fa-solid fa-chevron-right"></i>
                    </Button>
                  </div>
                </div>
-               
-               {/* 简化的日历预览 */}
+
+               {/* 简化的日历预览 - 使用真实数据 */}
                <div className="grid grid-cols-7 gap-1 text-center mb-2">
                  {['日', '一', '二', '三', '四', '五', '六'].map(day => (
                    <div key={day} className="text-xs font-medium text-gray-500 dark:text-slate-400 py-2">
@@ -310,18 +349,24 @@ export default function Dashboard() {
                    </div>
                  ))}
                </div>
-               
+
                <div className="grid grid-cols-7 gap-1 text-center">
                  {Array.from({ length: 31 }, (_, i) => i + 1).map(date => {
-                   const hasRecord = Math.random() > 0.7;
+                   const recordCount = recordsByDate.get(date) || 0;
+                   const hasRecord = recordCount > 0;
+                   const isToday = date === new Date().getDate() &&
+                     currentMonth.getMonth() === new Date().getMonth() &&
+                     currentMonth.getFullYear() === new Date().getFullYear();
+
                    return (
-                     <div 
+                     <div
                        key={date}
                        className={`
-                         h-10 flex items-center justify-center rounded-lg text-sm cursor-pointer transition-colors
+                         h-10 flex flex-col items-center justify-center rounded-lg text-sm cursor-pointer transition-colors relative
                          ${hasRecord ? 'bg-[#A8D5BA]/20 text-[#555555] dark:bg-emerald-900/30 dark:text-emerald-200 font-medium' : 'text-gray-600 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700'}
-                         ${date === new Date().getDate() ? 'ring-2 ring-[#A8D5BA]' : ''}
+                         ${isToday ? 'ring-2 ring-[#A8D5BA]' : ''}
                        `}
+                       title={`${recordCount} 条实验记录`}
                      >
                        <span>{date}</span>
                        {hasRecord && (

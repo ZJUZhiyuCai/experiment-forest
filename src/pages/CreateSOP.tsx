@@ -8,6 +8,7 @@ import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
 import { Button } from '@/components/Button';
 import { EnhancedFormContainer, EnhancedInput } from '@/components/EnhancedForm';
+import { FullscreenTextarea } from '@/components/FullscreenTextarea';
 import { useLocation } from 'react-router-dom';
 import { TreePlantingCelebration } from '@/components/TreePlantingCelebration';
 import { sopTemplates, getSOPTemplateById } from '@/utils/sopTemplates';
@@ -496,92 +497,60 @@ export default function CreateSOP() {
       case 2:
         return (
           <div className="space-y-6 animate-fadeIn">
-            <div>
-              <label className="block text-sm font-medium text-[#555555] mb-1">
-                目的 <span className="text-red-500">*</span>
-              </label>
-              <textarea
-                name="purpose"
-                value={formData.purpose}
-                onChange={handleChange}
-                className={`w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-200 ${
-                  errors.purpose 
-                    ? 'border-red-500 bg-red-50' 
-                    : 'border-gray-300 bg-white'
-                } text-[#555555] min-h-[120px] resize-y`}
-                placeholder="描述本SOP的目的和预期目标..."
-                aria-invalid={!!errors.purpose}
-              ></textarea>
-              {errors.purpose && (
-                <p className="mt-1 text-sm text-red-500 flex items-center">
-                  <i className="fa-solid fa-exclamation-circle mr-1"></i> {errors.purpose}
-                </p>
-              )}
-            </div>
+            <EnhancedInput
+              label="目的"
+              type="wysiwyg"
+              value={formData.purpose}
+              onChange={(value) => setFormData(prev => ({ ...prev, purpose: value }))}
+              error={errors.purpose}
+              icon="fa-bullseye"
+              required
+              placeholder="描述本SOP的目的和预期目标..."
+              wysiwygMode="both"
+            />
             
-            <div>
-              <label className="block text-sm font-medium text-[#555555] mb-1">
-                适用范围
-              </label>
-              <textarea
-                name="scope"
-                value={formData.scope}
-                onChange={handleChange}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-[#555555] focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-200 min-h-[120px] resize-y"
-                placeholder="描述本SOP适用的场景、人员和设备..."
-              ></textarea>
-            </div>
+            <EnhancedInput
+              label="适用范围"
+              type="wysiwyg"
+              value={formData.scope}
+              onChange={(value) => setFormData(prev => ({ ...prev, scope: value }))}
+              icon="fa-crosshairs"
+              placeholder="描述本SOP适用的场景、人员和设备..."
+              wysiwygMode="both"
+            />
             
-            <div>
-              <label className="block text-sm font-medium text-[#555555] mb-1">
-                参考资料
-              </label>
-              <textarea
-                name="references"
-                value={formData.references}
-                onChange={handleChange}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-[#555555] focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-200 min-h-[80px] resize-y"
-                placeholder="列出相关的参考文档、标准或法规..."
-              ></textarea>
-            </div>
+            <EnhancedInput
+              label="参考资料"
+              type="wysiwyg"
+              value={formData.references}
+              onChange={(value) => setFormData(prev => ({ ...prev, references: value }))}
+              icon="fa-book"
+              placeholder="列出相关的参考文档、标准或法规..."
+              wysiwygMode="both"
+            />
           </div>
         );
         
       case 3:
         return (
           <div className="space-y-6 animate-fadeIn">
-            <div>
-              <label className="block text-sm font-medium text-[#555555] mb-1">
-                操作流程 <span className="text-red-500">*</span>
-              </label>
-              <div className="bg-emerald-50 rounded-lg p-4 mb-2 border border-emerald-200">
-                <p className="text-xs text-emerald-700 mb-3">
-                  <i className="fa-solid fa-lightbulb mr-1"></i> 提示: 使用编号列表描述操作步骤，使流程更清晰。
-                </p>
-                <textarea
-                  name="content"
-                  value={formData.content}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-3 rounded-lg border focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-200 ${
-                    errors.content 
-                      ? 'border-red-500 bg-red-50' 
-                      : 'border-gray-300 bg-white'
-                  } text-[#555555] min-h-[350px] resize-y font-mono text-sm leading-relaxed`}
-                  placeholder="1. 准备工作：检查设备状态和所需材料...
-2. 操作步骤：详细描述每一步操作...
-   a. 子步骤1...
-   b. 子步骤2...
-3. 注意事项：列出操作过程中的安全注意事项...
-4. 收尾工作：清理工作区域和设备..."
-                  aria-invalid={!!errors.content}
-                ></textarea>
-              </div>
-              {errors.content && (
-                <p className="mt-1 text-sm text-red-500 flex items-center">
-                  <i className="fa-solid fa-exclamation-circle mr-1"></i> {errors.content}
-                </p>
-              )}
+            <div className="bg-emerald-50 rounded-lg p-4 mb-6 border border-emerald-200">
+              <p className="text-xs text-emerald-700 mb-3">
+                <i className="fa-solid fa-lightbulb mr-1"></i> 提示: 使用编号列表描述操作步骤，使流程更清晰。支持Markdown格式和所见即所得编辑。
+              </p>
             </div>
+            
+            <EnhancedInput
+              label="操作流程"
+              type="wysiwyg"
+              value={formData.content}
+              onChange={(value) => setFormData(prev => ({ ...prev, content: value }))}
+              error={errors.content}
+              icon="fa-list-check"
+              required
+              placeholder="1. 准备工作：检查设备状态和所需材料...\n2. 操作步骤：详细描述每一步操作...\n   a. 子步骤1...\n   b. 子步骤2...\n3. 注意事项：列出操作过程中的安全注意事项...\n4. 收尾工作：清理工作区域和设备..."
+              wysiwygMode="both"
+            />
             
             <div>
               <label className="block text-sm font-medium text-[#555555] mb-1">

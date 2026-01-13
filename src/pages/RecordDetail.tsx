@@ -150,8 +150,18 @@ export default function RecordDetail() {
             
             <div className="mb-6">
               <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-3">实验内容</h2>
-              <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                <MarkdownRenderer content={record.content} />
+              <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-inner">
+                <MarkdownRenderer 
+                  content={record.content} 
+                  className="experimental-data-display" 
+                  tableCaption={"实验数据表"} 
+                />
+              </div>
+              
+              {/* 添加提示语，帮助用户了解新功能 */}
+              <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 flex items-center">
+                <i className="fa-solid fa-lightbulb mr-1 text-yellow-500"></i>
+                <span>提示: 支持 LaTeX 数学公式 (使用 $...$ 或 $$...$$) 和代码高亮功能</span>
               </div>
             </div>
             

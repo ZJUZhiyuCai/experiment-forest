@@ -5,6 +5,7 @@ import { ExperimentNote, ExperimentRecord } from '@/types';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
 import { Button } from '@/components/Button';
+import { MarkdownRenderer } from '@/components/MarkdownRenderer';
 
 export default function NoteDetail() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -121,10 +122,8 @@ export default function NoteDetail() {
             
             <div className="mb-6">
               <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-3">笔记内容</h2>
-              <div className="prose prose-sm dark:prose-invert max-w-none bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                {note.content.split('\n').map((paragraph, index) => (
-                  <p key={index} className="mb-4 text-gray-700 dark:text-gray-300">{paragraph}</p>
-                ))}
+              <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-inner">
+                <MarkdownRenderer content={note.content} />
               </div>
             </div>
             
