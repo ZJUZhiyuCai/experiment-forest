@@ -194,11 +194,7 @@ ${this.getExperimentTypeSummary(records)}
       requestBody.model = modelName;
     }
 
-    console.log('AI API 请求信息:', {
-      endpoint: settings.apiEndpoint,
-      model: requestBody.model,
-      messageCount: messages.length
-    });
+
 
     // 标准化API端点
     let apiEndpoint = settings.apiEndpoint;
@@ -251,7 +247,7 @@ ${this.getExperimentTypeSummary(records)}
       }
 
       const data = await response.json();
-      console.log('AI API 响应成功:', { hasChoices: !!data.choices, choicesCount: data.choices?.length });
+
 
       return data.choices?.[0]?.message?.content || '抱歉，AI没有返回有效响应';
     } catch (error) {
