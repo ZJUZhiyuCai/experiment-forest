@@ -25,18 +25,18 @@ export const FullscreenWysiwygEditor: React.FC<FullscreenWysiwygEditorProps> = (
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isOpen) return;
-      
+
       // Ctrl/Cmd + S 保存并关闭
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
         onClose();
       }
-      
+
       // Escape 键关闭
       if (e.key === 'Escape') {
         onClose();
       }
-      
+
       // F11 切换全屏
       if (e.key === 'F11') {
         e.preventDefault();
@@ -70,13 +70,13 @@ export const FullscreenWysiwygEditor: React.FC<FullscreenWysiwygEditorProps> = (
           {/* 顶部工具栏 */}
           <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-gray-200">
             <div className="flex items-center space-x-4">
-              <h2 className="text-xl font-bold text-[#4A7C59] flex items-center">
+              <h2 className="text-xl font-bold text-forest-primary flex items-center">
                 <i className="fa-solid fa-magic mr-2 text-emerald-500"></i>
                 {title}
               </h2>
               <span className="text-sm text-gray-500">所见即所得编辑模式</span>
             </div>
-            
+
             <div className="flex items-center space-x-3">
               {/* 快捷键提示 */}
               <div className="text-xs text-gray-500 hidden md:block">
@@ -85,7 +85,7 @@ export const FullscreenWysiwygEditor: React.FC<FullscreenWysiwygEditorProps> = (
                 <span>F11 全屏</span> <span className="mx-2">•</span>
                 <span>Esc 退出</span>
               </div>
-              
+
               {/* 全屏切换按钮 */}
               <button
                 onClick={() => setIsFullscreen(!isFullscreen)}
@@ -95,7 +95,7 @@ export const FullscreenWysiwygEditor: React.FC<FullscreenWysiwygEditorProps> = (
                 <i className={`fa-solid ${isFullscreen ? 'fa-compress' : 'fa-expand'} mr-1`}></i>
                 {isFullscreen ? '退出全屏' : '全屏'}
               </button>
-              
+
               {/* 关闭按钮 */}
               <button
                 onClick={onClose}

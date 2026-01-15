@@ -39,25 +39,25 @@ const SampleDetail: React.FC<SampleDetailProps> = ({ sampleId, onEdit, onClose }
 
   const getStatusColor = (status: string): string => {
     const statusColors: Record<string, string> = {
-      available: 'bg-green-100 text-green-800',
-      in_use: 'bg-blue-100 text-blue-800',
-      exhausted: 'bg-gray-100 text-gray-800',
-      expired: 'bg-red-100 text-red-800',
-      contaminated: 'bg-red-100 text-red-800',
-      reserved: 'bg-yellow-100 text-yellow-800'
+      available: 'bg-status-success/10 text-status-success',
+      in_use: 'bg-status-info/10 text-status-info',
+      exhausted: 'bg-status-warning/10 text-status-warning',
+      expired: 'bg-status-error/10 text-status-error',
+      contaminated: 'bg-status-error/10 text-status-error',
+      reserved: 'bg-forest-accent/20 text-forest-primary'
     };
     return statusColors[status] || statusColors.available;
   };
 
   const getActionTypeColor = (actionType: string): string => {
     const actionColors: Record<string, string> = {
-      created: 'bg-green-100 text-green-800',
-      updated: 'bg-blue-100 text-blue-800',
-      used: 'bg-yellow-100 text-yellow-800',
-      moved: 'bg-purple-100 text-purple-800',
-      status_changed: 'bg-orange-100 text-orange-800'
+      created: 'bg-status-success/10 text-status-success',
+      updated: 'bg-status-info/10 text-status-info',
+      used: 'bg-status-warning/10 text-status-warning',
+      moved: 'bg-forest-accent/20 text-forest-primary',
+      status_changed: 'bg-earth-brown/10 text-earth-brown'
     };
-    return actionColors[actionType] || 'bg-gray-100 text-gray-800';
+    return actionColors[actionType] || 'bg-earth-beige/50 text-text-main';
   };
 
   if (loading) {
@@ -85,11 +85,11 @@ const SampleDetail: React.FC<SampleDetailProps> = ({ sampleId, onEdit, onClose }
   return (
     <div className="max-w-6xl mx-auto">
       {/* 页面头部 */}
-      <div className="bg-white rounded-lg shadow-lg mb-6">
-        <div className="px-6 py-4 border-b border-gray-200">
+      <div className="bg-white rounded-2xl shadow-sm border border-forest-accent/30 mb-6">
+        <div className="px-6 py-4 border-b border-forest-accent/20">
           <div className="flex justify-between items-start">
             <div>
-              <h1 className="text-2xl font-bold text-[#4A7C59]">
+              <h1 className="text-2xl font-bold text-forest-primary">
                 {sample.name}
               </h1>
               <p className="text-sm text-gray-500 mt-1">
@@ -105,11 +105,11 @@ const SampleDetail: React.FC<SampleDetailProps> = ({ sampleId, onEdit, onClose }
                   {sample.status === 'reserved' && '已预留'}
                 </span>
                 <span className="text-sm text-gray-500">
-                  类型: {sample.type === 'biological' ? '生物样本' : 
-                        sample.type === 'chemical' ? '化学样本' :
-                        sample.type === 'reagent' ? '试剂' :
+                  类型: {sample.type === 'biological' ? '生物样本' :
+                    sample.type === 'chemical' ? '化学样本' :
+                      sample.type === 'reagent' ? '试剂' :
                         sample.type === 'standard' ? '标准品' :
-                        sample.type === 'control' ? '对照品' : '其他'}
+                          sample.type === 'control' ? '对照品' : '其他'}
                 </span>
               </div>
             </div>
@@ -117,16 +117,16 @@ const SampleDetail: React.FC<SampleDetailProps> = ({ sampleId, onEdit, onClose }
               {onEdit && (
                 <button
                   onClick={onEdit}
-                  className="px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg hover:from-emerald-600 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="px-4 py-2 bg-forest-secondary text-white rounded-xl hover:bg-forest-primary focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 shadow-sm transition-all"
                 >
-                  <i className="fa-solid fa-edit mr-2"></i>
+                  <i className="fa-solid fa-pen-to-square mr-2"></i>
                   编辑
                 </button>
               )}
               {onClose && (
                 <button
                   onClick={onClose}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                  className="px-4 py-2 border border-forest-accent/30 text-text-main rounded-xl hover:bg-forest-accent/10 focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 transition-all"
                 >
                   <i className="fa-solid fa-times mr-2"></i>
                   关闭
@@ -141,31 +141,28 @@ const SampleDetail: React.FC<SampleDetailProps> = ({ sampleId, onEdit, onClose }
           <nav className="flex space-x-8" aria-label="Tabs">
             <button
               onClick={() => setActiveTab('details')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'details'
-                  ? 'border-emerald-500 text-emerald-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'details'
+                ? 'border-forest-primary text-forest-primary'
+                : 'border-transparent text-text-soft hover:text-text-main hover:border-forest-accent/30'
+                }`}
             >
               详细信息
             </button>
             <button
               onClick={() => setActiveTab('history')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'history'
-                  ? 'border-emerald-500 text-emerald-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'history'
+                ? 'border-forest-primary text-forest-primary'
+                : 'border-transparent text-text-soft hover:text-text-main hover:border-forest-accent/30'
+                }`}
             >
               操作历史 ({history.length})
             </button>
             <button
               onClick={() => setActiveTab('qc')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'qc'
-                  ? 'border-emerald-500 text-emerald-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${activeTab === 'qc'
+                ? 'border-forest-primary text-forest-primary'
+                : 'border-transparent text-text-soft hover:text-text-main hover:border-forest-accent/30'
+                }`}
             >
               质量控制
             </button>
@@ -174,12 +171,12 @@ const SampleDetail: React.FC<SampleDetailProps> = ({ sampleId, onEdit, onClose }
       </div>
 
       {/* 选项卡内容 */}
-      <div className="bg-white rounded-lg shadow-lg p-6">
+      <div className="bg-white rounded-2xl shadow-sm border border-forest-accent/30 p-6">
         {activeTab === 'details' && (
           <div className="space-y-8">
             {/* 基本信息 */}
             <div>
-              <h3 className="text-lg font-semibold text-[#4A7C59] mb-4">基本信息</h3>
+              <h3 className="text-lg font-semibold text-forest-primary mb-4">基本信息</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-500">样本编号</label>
@@ -192,11 +189,11 @@ const SampleDetail: React.FC<SampleDetailProps> = ({ sampleId, onEdit, onClose }
                 <div>
                   <label className="block text-sm font-medium text-gray-500">样本类型</label>
                   <p className="mt-1 text-sm text-gray-900">
-                    {sample.type === 'biological' ? '生物样本' : 
-                     sample.type === 'chemical' ? '化学样本' :
-                     sample.type === 'reagent' ? '试剂' :
-                     sample.type === 'standard' ? '标准品' :
-                     sample.type === 'control' ? '对照品' : '其他'}
+                    {sample.type === 'biological' ? '生物样本' :
+                      sample.type === 'chemical' ? '化学样本' :
+                        sample.type === 'reagent' ? '试剂' :
+                          sample.type === 'standard' ? '标准品' :
+                            sample.type === 'control' ? '对照品' : '其他'}
                   </p>
                 </div>
                 <div>
@@ -223,7 +220,7 @@ const SampleDetail: React.FC<SampleDetailProps> = ({ sampleId, onEdit, onClose }
             {/* 来源信息 */}
             {sample.source && Object.keys(sample.source).some(key => sample.source?.[key as keyof typeof sample.source]) && (
               <div>
-                <h3 className="text-lg font-semibold text-[#4A7C59] mb-4">来源信息</h3>
+                <h3 className="text-lg font-semibold text-forest-primary mb-4">来源信息</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {sample.source.donorId && (
                     <div>
@@ -241,8 +238,8 @@ const SampleDetail: React.FC<SampleDetailProps> = ({ sampleId, onEdit, onClose }
                     <div>
                       <label className="block text-sm font-medium text-gray-500">性别</label>
                       <p className="mt-1 text-sm text-gray-900">
-                        {sample.source.donorGender === 'male' ? '男性' : 
-                         sample.source.donorGender === 'female' ? '女性' : '未知'}
+                        {sample.source.donorGender === 'male' ? '男性' :
+                          sample.source.donorGender === 'female' ? '女性' : '未知'}
                       </p>
                     </div>
                   )}
@@ -271,7 +268,7 @@ const SampleDetail: React.FC<SampleDetailProps> = ({ sampleId, onEdit, onClose }
             {/* 量体信息 */}
             {sample.quantity && Object.keys(sample.quantity).some(key => sample.quantity?.[key as keyof typeof sample.quantity]) && (
               <div>
-                <h3 className="text-lg font-semibold text-[#4A7C59] mb-4">量体信息</h3>
+                <h3 className="text-lg font-semibold text-forest-primary mb-4">量体信息</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {sample.quantity.volume && (
                     <div>
@@ -304,7 +301,7 @@ const SampleDetail: React.FC<SampleDetailProps> = ({ sampleId, onEdit, onClose }
             {/* 存储信息 */}
             {sample.storage && Object.keys(sample.storage).some(key => sample.storage?.[key as keyof typeof sample.storage]) && (
               <div>
-                <h3 className="text-lg font-semibold text-[#4A7C59] mb-4">存储信息</h3>
+                <h3 className="text-lg font-semibold text-forest-primary mb-4">存储信息</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   {sample.storage.condition && (
                     <div>
@@ -336,11 +333,11 @@ const SampleDetail: React.FC<SampleDetailProps> = ({ sampleId, onEdit, onClose }
                       <label className="block text-sm font-medium text-gray-500">容器类型</label>
                       <p className="mt-1 text-sm text-gray-900">
                         {sample.storage.containerType === 'tube' ? '离心管' :
-                         sample.storage.containerType === 'vial' ? '小瓶' :
-                         sample.storage.containerType === 'plate' ? '培养板' :
-                         sample.storage.containerType === 'flask' ? '培养瓶' :
-                         sample.storage.containerType === 'box' ? '冻存盒' :
-                         sample.storage.containerType === 'bag' ? '样本袋' : sample.storage.containerType}
+                          sample.storage.containerType === 'vial' ? '小瓶' :
+                            sample.storage.containerType === 'plate' ? '培养板' :
+                              sample.storage.containerType === 'flask' ? '培养瓶' :
+                                sample.storage.containerType === 'box' ? '冻存盒' :
+                                  sample.storage.containerType === 'bag' ? '样本袋' : sample.storage.containerType}
                       </p>
                     </div>
                   )}
@@ -351,12 +348,12 @@ const SampleDetail: React.FC<SampleDetailProps> = ({ sampleId, onEdit, onClose }
             {/* 标签 */}
             {sample.tags && sample.tags.length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold text-[#4A7C59] mb-4">标签</h3>
+                <h3 className="text-lg font-semibold text-forest-primary mb-4">标签</h3>
                 <div className="flex flex-wrap gap-2">
                   {sample.tags.map((tag, index) => (
                     <span
                       key={index}
-                      className="inline-block px-3 py-1 text-sm bg-gray-100 text-gray-800 rounded-full"
+                      className="inline-block px-3 py-1 text-sm bg-forest-accent/20 text-forest-primary rounded-full"
                     >
                       {tag}
                     </span>
@@ -368,7 +365,7 @@ const SampleDetail: React.FC<SampleDetailProps> = ({ sampleId, onEdit, onClose }
             {/* 备注 */}
             {sample.notes && (
               <div>
-                <h3 className="text-lg font-semibold text-[#4A7C59] mb-4">备注</h3>
+                <h3 className="text-lg font-semibold text-forest-primary mb-4">备注</h3>
                 <p className="text-sm text-gray-700 whitespace-pre-wrap">
                   {sample.notes}
                 </p>
@@ -379,7 +376,7 @@ const SampleDetail: React.FC<SampleDetailProps> = ({ sampleId, onEdit, onClose }
 
         {activeTab === 'history' && (
           <div>
-            <h3 className="text-lg font-semibold text-[#4A7C59] mb-4">操作历史</h3>
+            <h3 className="text-lg font-semibold text-forest-primary mb-4">操作历史</h3>
             {history.length === 0 ? (
               <div className="text-center py-8">
                 <i className="fa-solid fa-history text-3xl text-gray-400 mb-4"></i>
@@ -425,7 +422,7 @@ const SampleDetail: React.FC<SampleDetailProps> = ({ sampleId, onEdit, onClose }
 
         {activeTab === 'qc' && (
           <div>
-            <h3 className="text-lg font-semibold text-[#4A7C59] mb-4">质量控制</h3>
+            <h3 className="text-lg font-semibold text-forest-primary mb-4">质量控制</h3>
             {sample.qualityControl && Object.keys(sample.qualityControl).some(key => sample.qualityControl?.[key as keyof typeof sample.qualityControl] !== undefined) ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {sample.qualityControl.purity && (
@@ -455,11 +452,10 @@ const SampleDetail: React.FC<SampleDetailProps> = ({ sampleId, onEdit, onClose }
                 <div>
                   <label className="block text-sm font-medium text-gray-500">无菌检验</label>
                   <p className="mt-1 text-sm text-gray-900">
-                    <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${
-                      sample.qualityControl.sterility 
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}>
+                    <span className={`inline-block px-2 py-1 text-xs font-medium rounded-full ${sample.qualityControl.sterility
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-red-100 text-red-800'
+                      }`}>
                       {sample.qualityControl.sterility ? '合格' : '不合格'}
                     </span>
                   </p>

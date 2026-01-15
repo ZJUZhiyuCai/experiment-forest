@@ -39,12 +39,12 @@ export const EnhancedInput: React.FC<EnhancedInputProps> = ({
   const showFloatingLabel = isFocused || hasValue;
 
   const baseInputClasses = `
-    w-full px-4 py-3 border-2 rounded-lg transition-all duration-300 
-    bg-white text-gray-900 placeholder-transparent
+    w-full px-4 py-3 border-2 rounded-xl transition-all duration-300 
+    bg-white text-text-main placeholder-transparent
     focus:outline-none focus:ring-0
-    ${error 
-      ? 'border-red-400 focus:border-red-500' 
-      : 'border-gray-200 focus:border-emerald-500 hover:border-emerald-300'
+    ${error
+      ? 'border-status-error focus:border-status-error'
+      : 'border-forest-accent/30 focus:border-forest-secondary hover:border-forest-secondary/50'
     }
   `;
 
@@ -75,7 +75,7 @@ export const EnhancedInput: React.FC<EnhancedInputProps> = ({
             <motion.button
               type="button"
               onClick={() => setIsFullscreenOpen(true)}
-              className="absolute top-3 right-3 p-2 text-gray-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all duration-200 group"
+              className="absolute top-3 right-3 p-2 text-text-muted hover:text-forest-secondary hover:bg-forest-main/10 rounded-xl transition-all duration-200 group"
               title="全屏编辑"
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
@@ -84,7 +84,7 @@ export const EnhancedInput: React.FC<EnhancedInputProps> = ({
             </motion.button>
           </div>
         );
-      
+
       case 'wysiwyg':
         return (
           <WysiwygTextarea
@@ -97,7 +97,7 @@ export const EnhancedInput: React.FC<EnhancedInputProps> = ({
             required={required}
           />
         );
-      
+
       case 'select':
         return (
           <select {...commonProps} className={baseInputClasses}>
@@ -109,14 +109,14 @@ export const EnhancedInput: React.FC<EnhancedInputProps> = ({
             ))}
           </select>
         );
-      
+
       default:
         return <input {...commonProps} type={type} />;
     }
   };
 
   return (
-    <motion.div 
+    <motion.div
       className={cn('relative', className)}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -126,7 +126,7 @@ export const EnhancedInput: React.FC<EnhancedInputProps> = ({
       <motion.div
         className="absolute inset-0 rounded-lg bg-gradient-to-r from-emerald-400/10 to-teal-400/10"
         initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ 
+        animate={{
           opacity: isFocused ? 1 : 0,
           scale: isFocused ? 1 : 0.8
         }}
@@ -136,10 +136,10 @@ export const EnhancedInput: React.FC<EnhancedInputProps> = ({
       <div className="relative">
         {/* 图标 */}
         {icon && (
-          <motion.div 
+          <motion.div
             className={cn(
               'absolute left-3 top-1/2 transform -translate-y-1/2 z-10 transition-colors duration-300',
-              isFocused || hasValue ? 'text-emerald-500' : 'text-gray-400'
+              isFocused || hasValue ? 'text-forest-secondary' : 'text-text-muted'
             )}
             animate={{ scale: isFocused ? 1.1 : 1 }}
             transition={{ duration: 0.2 }}
@@ -166,17 +166,17 @@ export const EnhancedInput: React.FC<EnhancedInputProps> = ({
           animate={{
             y: showFloatingLabel ? -8 : 0,
             scale: showFloatingLabel ? 0.85 : 1,
-            color: isFocused ? '#059669' : showFloatingLabel ? '#4b5563' : '#9ca3af'
+            color: isFocused ? 'var(--forest-secondary)' : showFloatingLabel ? 'var(--text-main)' : 'var(--text-muted)'
           }}
           transition={{ duration: 0.2 }}
         >
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className="text-status-error ml-1">*</span>}
         </motion.label>
 
         {/* 底部装饰线 */}
         <motion.div
-          className="absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-emerald-400 to-teal-500"
+          className="absolute bottom-0 left-0 h-0.5 bg-forest-secondary"
           initial={{ width: 0 }}
           animate={{ width: isFocused ? '100%' : 0 }}
           transition={{ duration: 0.3 }}
@@ -191,9 +191,9 @@ export const EnhancedInput: React.FC<EnhancedInputProps> = ({
             animate={{ opacity: 1, y: 0, height: 'auto' }}
             exit={{ opacity: 0, y: -10, height: 0 }}
             transition={{ duration: 0.3 }}
-            className="mt-2 flex items-center text-red-500 text-sm"
+            className="mt-2 flex items-center text-status-error text-sm"
           >
-            <motion.i 
+            <motion.i
               className="fa-solid fa-exclamation-circle mr-2"
               animate={{ rotate: [0, 5, -5, 0] }}
               transition={{ duration: 0.5 }}
@@ -212,7 +212,7 @@ export const EnhancedInput: React.FC<EnhancedInputProps> = ({
             exit={{ opacity: 0, scale: 0 }}
             className="absolute right-3 top-1/2 transform -translate-y-1/2"
           >
-            <div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center">
+            <div className="w-5 h-5 bg-forest-secondary rounded-full flex items-center justify-center">
               <i className="fa-solid fa-check text-white text-xs"></i>
             </div>
           </motion.div>
@@ -265,47 +265,47 @@ export const EnhancedFormContainer: React.FC<EnhancedFormContainerProps> = ({
       transition={{ duration: 0.6 }}
     >
       {/* 表单头部 */}
-      <motion.div 
-        className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-t-xl p-6 border-l-4 border-emerald-500"
+      <motion.div
+        className="bg-forest-main/5 rounded-t-2xl p-6 border-l-4 border-forest-primary"
         initial={{ opacity: 0, x: -50 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
       >
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-[#4A7C59] flex items-center">
-              <motion.i 
-                className="fa-solid fa-seedling mr-3 text-emerald-500"
+            <h2 className="text-2xl font-bold text-forest-primary flex items-center">
+              <motion.i
+                className="fa-solid fa-seedling mr-3 text-forest-secondary"
                 animate={{ rotate: [0, 10, -10, 0] }}
                 transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
               />
               {title}
             </h2>
             {subtitle && (
-              <p className="text-gray-600 mt-2">{subtitle}</p>
+              <p className="text-text-soft mt-2">{subtitle}</p>
             )}
           </div>
-          
+
           {/* 进度指示器 */}
           {typeof progress === 'number' && (
             <div className="flex items-center space-x-3">
-              <span className="text-sm text-gray-600">完成度</span>
-              <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+              <span className="text-sm text-text-soft">完成度</span>
+              <div className="w-24 h-2 bg-earth-beige rounded-full overflow-hidden">
                 <motion.div
-                  className="h-full bg-gradient-to-r from-emerald-400 to-teal-500"
+                  className="h-full bg-forest-secondary"
                   initial={{ width: 0 }}
                   animate={{ width: `${progress}%` }}
                   transition={{ duration: 0.8 }}
                 />
               </div>
-              <span className="text-sm font-medium text-emerald-600">{progress}%</span>
+              <span className="text-sm font-medium text-forest-primary">{progress}%</span>
             </div>
           )}
         </div>
       </motion.div>
 
       {/* 表单主体 */}
-      <motion.div 
+      <motion.div
         className="bg-white rounded-b-xl shadow-lg border border-gray-100"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -313,9 +313,9 @@ export const EnhancedFormContainer: React.FC<EnhancedFormContainerProps> = ({
       >
         <form onSubmit={onSubmit} className="p-6 space-y-6">
           {children}
-          
+
           {/* 表单按钮 */}
-          <motion.div 
+          <motion.div
             className="flex justify-end space-x-4 pt-6 border-t border-gray-200"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -325,22 +325,22 @@ export const EnhancedFormContainer: React.FC<EnhancedFormContainerProps> = ({
               <motion.button
                 type="button"
                 onClick={onCancel}
-                className="px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg 
-                         hover:bg-gray-50 hover:border-gray-400 transition-all duration-300
-                         focus:outline-none focus:ring-2 focus:ring-gray-500"
+                className="px-6 py-3 border-2 border-forest-accent/30 text-text-main rounded-xl 
+                         hover:bg-forest-accent/10 hover:border-forest-accent/50 transition-all duration-300
+                         focus:outline-none focus:ring-2 focus:ring-forest-secondary/50"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
                 {cancelText}
               </motion.button>
             )}
-            
+
             <motion.button
               type="submit"
               disabled={isSubmitting}
-              className="px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg 
-                       hover:from-emerald-600 hover:to-teal-700 transition-all duration-300
-                       focus:outline-none focus:ring-2 focus:ring-emerald-500 
+              className="px-8 py-3 bg-forest-secondary text-white rounded-xl 
+                       hover:bg-forest-primary transition-all duration-300
+                       focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 
                        disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl"
               whileHover={{ scale: isSubmitting ? 1 : 1.05 }}
               whileTap={{ scale: isSubmitting ? 1 : 0.95 }}
@@ -348,7 +348,7 @@ export const EnhancedFormContainer: React.FC<EnhancedFormContainerProps> = ({
               <div className="flex items-center">
                 {isSubmitting ? (
                   <>
-                    <motion.i 
+                    <motion.i
                       className="fa-solid fa-spinner mr-2"
                       animate={{ rotate: 360 }}
                       transition={{ duration: 1, repeat: Infinity, ease: "linear" }}

@@ -74,7 +74,8 @@
 
 ### 核心库
 - **React Router 7.3** - 路由管理
-- **D3.js 7.9** - 思维导图可视化
+- **React Flow 11.11** - 专业级思维导图引擎
+- **Dagre 0.8** - 自动层级布局
 - **Marked 16.2** - Markdown解析
 - **KaTeX 0.16** - 数学公式渲染
 - **Highlight.js 11.11** - 代码高亮
@@ -253,19 +254,18 @@ experiment-forest/
 
 ## 📝 更新日志
 
-### v1.0.0 (2025-01-13)
-- ✨ 初始版本发布
-- 🚀 性能优化（代码分割、缓存预热）
-- 🐛 修复多个bug
-- 📚 完善文档
+### v1.1.0 (2025-01-16)
+- 🎨 **UI 全面升级** - 采用莫兰迪色系（Morandi Design）与森林主题完全融合
+- 🧠 **思维导图重构** - 从 D3.js 迁移至 React Flow，支持更流畅的交互和自动布局
+- ⚡ **性能优化** - 移除冗余代码，优化构建体积
+- 🛠️ **组件标准化** - 统一的 Button、Input 和 Card 组件设计
+- 🐛 **修复** - 修复了多个类型定义错误和未使用的代码引用
 
 ### 主要更新
 - ✅ 优化Settings.tsx自动保存逻辑
 - ✅ MarkdownRenderer动态导入，减少首屏加载体积99.3%
-- ✅ AIChatComponent Hook优化
 - ✅ Dashboard日历使用真实数据
-- ✅ 添加缓存预热机制
-- ✅ 完善部署文档
+- ✅ **全新改版**：实验笔记、SOP文档、样本管理、新建记录页面的视觉优化
 
 ---
 
@@ -301,7 +301,7 @@ experiment-forest/
 
 ## 📞 联系方式
 
-- 📧 **技术支持**: 3210102604@zju.edu.cn
+- 📧 **技术支持**: 22519085@zju.edu.cn
 - 🐛 **问题反馈**: [GitHub Issues](https://github.com/caizhiyu/experiment-forest/issues)
 - 💬 **讨论交流**: [GitHub Discussions](https://github.com/caizhiyu/experiment-forest/discussions)
 

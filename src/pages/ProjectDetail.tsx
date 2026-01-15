@@ -26,23 +26,23 @@ export default function ProjectDetail() {
 
     try {
       setLoading(true);
-      
+
       const projectData = projectService.getById(id);
       if (!projectData) {
         toast.error('课题不存在');
         navigate('/projects');
         return;
       }
-      
+
       setProject(projectData);
-      
+
       const statsData = projectService.getStats(id);
       setStats(statsData);
-      
+
       const allRecords = experimentRecordService.getAll().filter(r => r.projectId === id);
       const allNotes = experimentNoteService.getAll().filter(n => n.projectId === id);
       const allSOPs = sopService.getAll().filter(s => s.projectId === id);
-      
+
       setRecords(allRecords);
       setNotes(allNotes);
       setSOPs(allSOPs);
@@ -57,10 +57,10 @@ export default function ProjectDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F9F6F2] flex items-center justify-center">
+      <div className="min-h-screen bg-earth-beige/50 flex items-center justify-center">
         <div className="text-center">
-          <i className="fa-solid fa-spinner fa-spin text-4xl text-purple-500 mb-4"></i>
-          <p className="text-gray-600">加载课题详情中...</p>
+          <i className="fa-solid fa-spinner fa-spin text-4xl text-forest-primary mb-4"></i>
+          <p className="text-text-main">加载课题详情中...</p>
         </div>
       </div>
     );
@@ -70,12 +70,12 @@ export default function ProjectDetail() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'planning': return 'bg-yellow-100 text-yellow-600';
-      case 'active': return 'bg-green-100 text-green-600';
-      case 'paused': return 'bg-orange-100 text-orange-600';
-      case 'completed': return 'bg-blue-100 text-blue-600';
-      case 'archived': return 'bg-gray-100 text-gray-600';
-      default: return 'bg-gray-100 text-gray-600';
+      case 'planning': return 'bg-status-warning/10 text-status-warning';
+      case 'active': return 'bg-status-answer/10 text-status-answer';
+      case 'paused': return 'bg-status-info/10 text-status-info';
+      case 'completed': return 'bg-status-success/10 text-status-success';
+      case 'archived': return 'bg-text-muted/10 text-text-muted';
+      default: return 'bg-text-muted/10 text-text-muted';
     }
   };
 
@@ -91,11 +91,11 @@ export default function ProjectDetail() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F9F6F2] text-[#555555]">
+    <div className="min-h-screen bg-earth-beige text-text-main">
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
-      
+
       <div className={sidebarCollapsed ? 'ml-16' : 'ml-64'}>
-        <Header 
+        <Header
           title={project.title}
           sidebarCollapsed={sidebarCollapsed}
           breadcrumb={[
@@ -107,9 +107,9 @@ export default function ProjectDetail() {
               <span className={`px-3 py-1 text-sm rounded-full ${getStatusColor(project.status)}`}>
                 {getStatusText(project.status)}
               </span>
-              <button 
+              <button
                 onClick={() => navigate('/projects')}
-                className="text-gray-600 hover:text-gray-800 transition-colors border border-gray-300 px-3 py-1 rounded-lg"
+                className="text-text-main hover:text-forest-primary transition-colors border border-forest-accent/30 px-3 py-1 rounded-xl hover:bg-forest-accent/10"
               >
                 <i className="fa-solid fa-arrow-left mr-2"></i>
                 返回列表
@@ -120,18 +120,18 @@ export default function ProjectDetail() {
 
         <main className="container mx-auto px-4 py-6">
           {/* 课题基本信息 */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
+          <div className="bg-white rounded-2xl shadow-sm border border-forest-accent/30 p-6 mb-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
-                <h2 className="text-xl font-bold text-gray-800 mb-4">课题描述</h2>
-                <p className="text-gray-600 mb-4">{project.description}</p>
-                
+                <h2 className="text-xl font-bold text-forest-primary mb-4">课题描述</h2>
+                <p className="text-text-main mb-4">{project.description}</p>
+
                 {project.tags.length > 0 && (
                   <div>
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">标签</h3>
+                    <h3 className="text-lg font-semibold text-forest-primary mb-2">标签</h3>
                     <div className="flex flex-wrap gap-2">
                       {project.tags.map((tag, index) => (
-                        <span key={index} className="bg-purple-100 text-purple-600 px-3 py-1 text-sm rounded-full">
+                        <span key={index} className="bg-forest-secondary/10 text-forest-secondary px-3 py-1 text-sm rounded-full">
                           {tag}
                         </span>
                       ))}
@@ -141,24 +141,24 @@ export default function ProjectDetail() {
               </div>
 
               <div>
-                <h2 className="text-xl font-bold text-gray-800 mb-4">课题信息</h2>
+                <h2 className="text-xl font-bold text-forest-primary mb-4">课题信息</h2>
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">负责人:</span>
+                    <span className="text-text-muted">负责人:</span>
                     <span className="font-medium">{project.leader}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">开始日期:</span>
-                    <span className="font-medium">{new Date(project.startDate).toLocaleDateString('zh-CN')}</span>
+                    <span className="text-text-muted">开始日期:</span>
+                    <span className="font-medium text-text-main">{new Date(project.startDate).toLocaleDateString('zh-CN')}</span>
                   </div>
                   {project.endDate && (
                     <div className="flex justify-between">
-                      <span className="text-gray-600">结束日期:</span>
-                      <span className="font-medium">{new Date(project.endDate).toLocaleDateString('zh-CN')}</span>
+                      <span className="text-text-muted">结束日期:</span>
+                      <span className="font-medium text-text-main">{new Date(project.endDate).toLocaleDateString('zh-CN')}</span>
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span className="text-gray-600">进度:</span>
+                    <span className="text-text-muted">进度:</span>
                     <span className="font-medium">{project.progress}%</span>
                   </div>
                 </div>
@@ -169,42 +169,42 @@ export default function ProjectDetail() {
           {/* 统计数据 */}
           {stats && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="bg-white rounded-2xl shadow-sm border border-forest-accent/30 p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">实验记录</p>
-                    <p className="text-2xl font-bold text-emerald-600">{stats.totalRecords}</p>
+                    <p className="text-sm text-text-muted mb-1">实验记录</p>
+                    <p className="text-2xl font-bold text-status-success">{stats.totalRecords}</p>
                   </div>
-                  <i className="fa-solid fa-flask text-emerald-500 text-2xl"></i>
+                  <i className="fa-solid fa-flask text-status-success/80 text-2xl"></i>
                 </div>
-                <p className="text-xs text-gray-500 mt-2">已完成 {stats.completedRecords} 个</p>
+                <p className="text-xs text-text-soft mt-2">已完成 {stats.completedRecords} 个</p>
               </div>
 
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="bg-white rounded-2xl shadow-sm border border-forest-accent/30 p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">实验笔记</p>
-                    <p className="text-2xl font-bold text-blue-600">{stats.totalNotes}</p>
+                    <p className="text-sm text-text-muted mb-1">实验笔记</p>
+                    <p className="text-2xl font-bold text-status-info">{stats.totalNotes}</p>
                   </div>
-                  <i className="fa-solid fa-sticky-note text-blue-500 text-2xl"></i>
+                  <i className="fa-solid fa-sticky-note text-status-info/80 text-2xl"></i>
                 </div>
               </div>
 
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="bg-white rounded-2xl shadow-sm border border-forest-accent/30 p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600 mb-1">SOP文档</p>
-                    <p className="text-2xl font-bold text-orange-600">{stats.totalSOPs}</p>
+                    <p className="text-sm text-text-muted mb-1">SOP文档</p>
+                    <p className="text-2xl font-bold text-status-warning">{stats.totalSOPs}</p>
                   </div>
-                  <i className="fa-solid fa-file-alt text-orange-500 text-2xl"></i>
+                  <i className="fa-solid fa-file-alt text-status-warning/80 text-2xl"></i>
                 </div>
               </div>
             </div>
           )}
 
           {/* 标签页导航 */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-            <div className="border-b border-gray-200">
+          <div className="bg-white rounded-2xl shadow-sm border border-forest-accent/30">
+            <div className="border-b border-forest-accent/20">
               <nav className="flex space-x-8 px-6">
                 {[
                   { key: 'overview', label: '概览', icon: 'fa-chart-pie' },
@@ -215,11 +215,10 @@ export default function ProjectDetail() {
                   <button
                     key={tab.key}
                     onClick={() => setActiveTab(tab.key as any)}
-                    className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center ${
-                      activeTab === tab.key
-                        ? 'border-emerald-500 text-emerald-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
+                    className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors flex items-center ${activeTab === tab.key
+                      ? 'border-forest-primary text-forest-primary'
+                      : 'border-transparent text-text-soft hover:text-text-main hover:border-forest-accent/30'
+                      }`}
                   >
                     <i className={`fa-solid ${tab.icon} mr-2`}></i>
                     {tab.label}
@@ -233,39 +232,39 @@ export default function ProjectDetail() {
               {activeTab === 'overview' && (
                 <div>
                   {/* AI和思维导图功能快捷入口 */}
-                  <div className="mb-6 p-4 bg-gradient-to-r from-emerald-50 to-blue-50 border border-emerald-200 rounded-lg">
-                    <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
-                      <i className="fa-solid fa-magic mr-2 text-emerald-600"></i>
+                  <div className="mb-6 p-4 bg-gradient-to-r from-forest-main/5 to-forest-secondary/5 border border-forest-accent/20 rounded-xl">
+                    <h3 className="text-lg font-semibold text-forest-primary mb-3 flex items-center">
+                      <i className="fa-solid fa-magic mr-2 text-forest-secondary"></i>
                       智能化功能
                     </h3>
                     <div className="flex flex-wrap gap-3">
-                      <Link 
+                      <Link
                         to={`/chat`}
-                        className="flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 shadow-md hover:shadow-lg"
+                        className="flex items-center px-4 py-2 bg-forest-secondary text-white rounded-xl hover:bg-forest-primary transition-all duration-200 transform hover:-translate-y-0.5 shadow-sm hover:shadow-md"
                       >
                         <i className="fa-solid fa-robot mr-2"></i>
                         小森博士
                       </Link>
-                      <Link 
+                      <Link
                         to={`/topics/${project.id}/mindmap`}
-                        className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 shadow-md hover:shadow-lg"
+                        className="flex items-center px-4 py-2 bg-text-muted text-white rounded-xl hover:bg-text-main transition-all duration-200 transform hover:-translate-y-0.5 shadow-sm hover:shadow-md"
                       >
                         <i className="fa-solid fa-project-diagram mr-2"></i>
                         思维导图
                       </Link>
-                      <Link 
+                      <Link
                         to={`/settings#ai-api-settings`}
-                        className="flex items-center px-3 py-2 border border-gray-300 text-gray-600 hover:text-gray-800 hover:border-gray-400 rounded-lg transition-colors text-sm"
+                        className="flex items-center px-3 py-2 border border-forest-accent/30 text-text-main hover:text-forest-primary hover:border-forest-primary rounded-xl transition-colors text-sm"
                       >
                         <i className="fa-solid fa-cog mr-2"></i>
                         AI设置
                       </Link>
                     </div>
-                    <p className="text-sm text-gray-600 mt-2">
+                    <p className="text-sm text-text-soft mt-2">
                       💡 使用AI助手获得专业建议，通过思维导图可视化课题结构
                     </p>
                   </div>
-                  
+
                   <h3 className="text-lg font-semibold text-gray-800 mb-4">最近活动</h3>
                   <div className="space-y-3">
                     {[...records, ...notes, ...sops]
@@ -276,16 +275,15 @@ export default function ProjectDetail() {
                       })
                       .slice(0, 5)
                       .map((item, index) => (
-                        <div key={index} className="flex items-center p-3 bg-gray-50 rounded-lg">
-                          <i className={`fa-solid ${
-                            'status' in item ? 'fa-flask' : 
+                        <div key={index} className="flex items-center p-3 bg-forest-main/5 rounded-xl border border-forest-accent/10">
+                          <i className={`fa-solid ${'status' in item ? 'fa-flask' :
                             'relatedRecordId' in item ? 'fa-sticky-note' : 'fa-file-alt'
-                          } text-gray-400 mr-3`}></i>
+                            } text-text-soft mr-3`}></i>
                           <div className="flex-1">
-                            <h4 className="font-medium text-gray-800">{item.title}</h4>
-                            <p className="text-sm text-gray-500">
-                              {'status' in item ? '实验记录' : 
-                               'relatedRecordId' in item ? '实验笔记' : 'SOP文档'} • 
+                            <h4 className="font-medium text-text-main">{item.title}</h4>
+                            <p className="text-sm text-text-muted">
+                              {'status' in item ? '实验记录' :
+                                'relatedRecordId' in item ? '实验笔记' : 'SOP文档'} •
                               {new Date('lastUpdated' in item ? item.lastUpdated : item.updatedAt).toLocaleDateString('zh-CN')}
                             </p>
                           </div>
@@ -302,10 +300,10 @@ export default function ProjectDetail() {
               {activeTab === 'records' && (
                 <div>
                   <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold text-gray-800">实验记录</h3>
+                    <h3 className="text-lg font-semibold text-text-main">实验记录</h3>
                     <Link
                       to={`/records?project=${project.id}`}
-                      className="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg transition-colors"
+                      className="bg-forest-secondary hover:bg-forest-primary text-white px-4 py-2 rounded-xl transition-colors shadow-sm"
                     >
                       <i className="fa-solid fa-plus mr-2"></i>新建记录
                     </Link>
@@ -313,12 +311,12 @@ export default function ProjectDetail() {
                   {records.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {records.map((record) => (
-                        <div key={record.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                          <h4 className="font-medium text-gray-800 mb-2">{record.title}</h4>
-                          <p className="text-sm text-gray-600 mb-2">{record.content.substring(0, 100)}...</p>
-                          <div className="flex justify-between items-center text-xs text-gray-500">
+                        <div key={record.id} className="border border-forest-accent/30 rounded-xl p-4 hover:shadow-md transition-shadow bg-white">
+                          <h4 className="font-medium text-text-main mb-2">{record.title}</h4>
+                          <p className="text-sm text-text-soft mb-2">{record.content.substring(0, 100)}...</p>
+                          <div className="flex justify-between items-center text-xs text-text-muted">
                             <span>{new Date(record.date).toLocaleDateString('zh-CN')}</span>
-                            <Link to={`/records/${record.id}`} className="text-emerald-600 hover:text-emerald-700">查看详情</Link>
+                            <Link to={`/records/${record.id}`} className="text-forest-primary hover:text-forest-secondary">查看详情</Link>
                           </div>
                         </div>
                       ))}
@@ -341,10 +339,10 @@ export default function ProjectDetail() {
               {activeTab === 'notes' && (
                 <div>
                   <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold text-gray-800">实验笔记</h3>
+                    <h3 className="text-lg font-semibold text-text-main">实验笔记</h3>
                     <Link
                       to={`/notes?project=${project.id}`}
-                      className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-colors"
+                      className="bg-forest-secondary hover:bg-forest-primary text-white px-4 py-2 rounded-xl transition-colors shadow-sm"
                     >
                       <i className="fa-solid fa-plus mr-2"></i>新建笔记
                     </Link>
@@ -352,12 +350,12 @@ export default function ProjectDetail() {
                   {notes.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {notes.map((note) => (
-                        <div key={note.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                          <h4 className="font-medium text-gray-800 mb-2">{note.title}</h4>
-                          <p className="text-sm text-gray-600 mb-2">{note.content.substring(0, 100)}...</p>
-                          <div className="flex justify-between items-center text-xs text-gray-500">
+                        <div key={note.id} className="border border-forest-accent/30 rounded-xl p-4 hover:shadow-md transition-shadow bg-white h-auto">
+                          <h4 className="font-medium text-text-main mb-2">{note.title}</h4>
+                          <p className="text-sm text-text-soft mb-2">{note.content.substring(0, 100)}...</p>
+                          <div className="flex justify-between items-center text-xs text-text-muted">
                             <span>{new Date(note.createdAt).toLocaleDateString('zh-CN')}</span>
-                            <Link to={`/notes/${note.id}`} className="text-blue-600 hover:text-blue-700">查看详情</Link>
+                            <Link to={`/notes/${note.id}`} className="text-forest-primary hover:text-forest-secondary">查看详情</Link>
                           </div>
                         </div>
                       ))}
@@ -380,10 +378,10 @@ export default function ProjectDetail() {
               {activeTab === 'sops' && (
                 <div>
                   <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-lg font-semibold text-gray-800">SOP文档</h3>
+                    <h3 className="text-lg font-semibold text-text-main">SOP文档</h3>
                     <Link
                       to={`/sops?project=${project.id}`}
-                      className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg transition-colors"
+                      className="bg-forest-secondary hover:bg-forest-primary text-white px-4 py-2 rounded-xl transition-colors shadow-sm"
                     >
                       <i className="fa-solid fa-plus mr-2"></i>新建SOP
                     </Link>
@@ -391,12 +389,12 @@ export default function ProjectDetail() {
                   {sops.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {sops.map((sop) => (
-                        <div key={sop.id} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                          <h4 className="font-medium text-gray-800 mb-2">{sop.title}</h4>
-                          <p className="text-sm text-gray-600 mb-2">版本: {sop.version} | 作者: {sop.author}</p>
-                          <div className="flex justify-between items-center text-xs text-gray-500">
+                        <div key={sop.id} className="border border-forest-accent/30 rounded-xl p-4 hover:shadow-md transition-shadow bg-white">
+                          <h4 className="font-medium text-text-main mb-2">{sop.title}</h4>
+                          <p className="text-sm text-text-soft mb-2">版本: {sop.version} | 作者: {sop.author}</p>
+                          <div className="flex justify-between items-center text-xs text-text-muted">
                             <span>{new Date(sop.lastUpdated).toLocaleDateString('zh-CN')}</span>
-                            <Link to={`/sops/${sop.id}`} className="text-orange-600 hover:text-orange-700">查看详情</Link>
+                            <Link to={`/sops/${sop.id}`} className="text-forest-primary hover:text-forest-secondary">查看详情</Link>
                           </div>
                         </div>
                       ))}

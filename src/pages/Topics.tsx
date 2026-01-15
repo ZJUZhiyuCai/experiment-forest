@@ -12,19 +12,19 @@ export default function Topics() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
-  
+
   useEffect(() => {
     // 获取所有课题
     const allProjects = projectService.getAll();
     setProjects(allProjects);
   }, []);
-  
+
   // 过滤课题
-  const filteredProjects = projects.filter(project => 
-    project.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
+  const filteredProjects = projects.filter(project =>
+    project.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
     (project.description && project.description.toLowerCase().includes(searchQuery.toLowerCase()))
   );
-  
+
   // 删除课题
   const handleDelete = (id: string) => {
     if (window.confirm('确定要删除这个课题吗？此操作不可撤销。')) {
@@ -43,14 +43,14 @@ export default function Topics() {
       }
     }
   };
-  
+
   return (
-    <div className="min-h-screen bg-[#F9F6F2] text-[#555555]">
+    <div className="min-h-screen bg-earth-beige text-text-main">
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
-      
+
       <div className={sidebarCollapsed ? 'ml-16' : 'ml-64'}>
-        <Header 
-          title="课题管理" 
+        <Header
+          title="课题管理"
           sidebarCollapsed={sidebarCollapsed}
           actions={
             <Button onClick={() => navigate('/projects/new')}>
@@ -59,7 +59,7 @@ export default function Topics() {
             </Button>
           }
         />
-        
+
         <main className="container mx-auto px-4 py-6">
           {/* 搜索 */}
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-6 transition-all duration-300 hover:shadow-md">
@@ -67,14 +67,14 @@ export default function Topics() {
               <input
                 type="text"
                 placeholder="搜索课题..."
-                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"  
+                className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
               <i className="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
             </div>
           </div>
-          
+
           {/* 课题列表 */}
           <div>
             <div className="flex justify-between items-center mb-4">
@@ -85,11 +85,11 @@ export default function Topics() {
                 </span>
               </h2>
             </div>
-            
+
             {filteredProjects.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {filteredProjects.map(project => (
-                  <div 
+                  <div
                     key={project.id}
                     className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-300 hover:shadow-md"
                   >
@@ -101,21 +101,21 @@ export default function Topics() {
                           </Link>
                         </h3>
                         <div className="flex space-x-1">
-                          <button 
+                          <button
                             onClick={() => navigate(`/projects/${project.id}`)}
                             className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-500 dark:text-gray-400"
                             aria-label="查看"
                           >
                             <i className="fa-solid fa-eye"></i>
                           </button>
-                          <button 
+                          <button
                             onClick={() => navigate(`/projects/edit/${project.id}`)}
                             className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-500 dark:text-gray-400"
                             aria-label="编辑"
                           >
                             <i className="fa-solid fa-pencil"></i>
                           </button>
-                          <button 
+                          <button
                             onClick={() => handleDelete(project.id)}
                             className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400"
                             aria-label="删除"
@@ -124,11 +124,11 @@ export default function Topics() {
                           </button>
                         </div>
                       </div>
-                      
+
                       <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-3 mb-4">
                         {project.description || '无描述'}
                       </p>
-                      
+
                       <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-400">
                         <span>
                           <i className="fa-solid fa-calendar mr-1"></i>

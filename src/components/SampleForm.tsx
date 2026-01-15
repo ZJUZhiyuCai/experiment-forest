@@ -66,7 +66,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
-    
+
     if (name.includes('.')) {
       const [section, field] = name.split('.');
       setFormData(prev => {
@@ -158,13 +158,13 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
     <div className="max-w-4xl mx-auto">
       <div className="bg-white rounded-lg shadow-lg p-6">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-[#4A7C59]">
+          <h2 className="text-2xl font-bold text-forest-primary">
             {sample ? '编辑样本' : '新建样本'}
           </h2>
           <button
             type="button"
             onClick={onCancel}
-            className="text-gray-500 hover:text-[#4A7C59]"
+            className="text-text-muted hover:text-text-main hover:bg-forest-accent/10 p-2 rounded-lg transition-colors"
           >
             <i className="fa-solid fa-times text-xl"></i>
           </button>
@@ -173,20 +173,17 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* 基本信息 */}
           <div>
-            <h3 className="text-lg font-semibold text-[#4A7C59] mb-4">基本信息</h3>
+            <h3 className="text-lg font-semibold text-forest-primary mb-4">基本信息</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   样本编号 <span className="text-red-500">*</span>
                 </label>
                 <input
-                  type="text"
-                  name="sampleId"
                   value={formData.sampleId || ''}
                   onChange={handleChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
-                    errors.sampleId ? 'border-red-500' : 'border-gray-300'
-                  } bg-white text-gray-900`}
+                  className={`w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 ${errors.sampleId ? 'border-status-error' : 'border-forest-accent/30'
+                    } bg-white text-text-main`}
                   placeholder="输入样本编号"
                 />
                 {errors.sampleId && (
@@ -199,13 +196,10 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
                   样本名称 <span className="text-red-500">*</span>
                 </label>
                 <input
-                  type="text"
-                  name="name"
                   value={formData.name || ''}
                   onChange={handleChange}
-                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 ${
-                    errors.name ? 'border-red-500' : 'border-gray-300'
-                  } bg-white text-gray-900`}
+                  className={`w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 ${errors.name ? 'border-status-error' : 'border-forest-accent/30'
+                    } bg-white text-text-main`}
                   placeholder="输入样本名称"
                 />
                 {errors.name && (
@@ -221,7 +215,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
                   name="type"
                   value={formData.type || ''}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
+                  className="w-full px-3 py-2 border border-forest-accent/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 bg-white text-text-main"
                 >
                   <option value="biological">生物样本</option>
                   <option value="chemical">化学样本</option>
@@ -240,7 +234,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
                   name="status"
                   value={formData.status || ''}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
+                  className="w-full px-3 py-2 border border-forest-accent/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 bg-white text-text-main"
                 >
                   <option value="available">可用</option>
                   <option value="in_use">使用中</option>
@@ -255,7 +249,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
 
           {/* 来源信息 */}
           <div>
-            <h3 className="text-lg font-semibold text-[#4A7C59] mb-4">来源信息</h3>
+            <h3 className="text-lg font-semibold text-forest-primary mb-4">来源信息</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -266,7 +260,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
                   name="source.donorId"
                   value={formData.source?.donorId || ''}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
+                  className="w-full px-3 py-2 border border-forest-accent/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 bg-white text-text-main"
                   placeholder="供体编号"
                 />
               </div>
@@ -280,7 +274,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
                   name="source.donorAge"
                   value={formData.source?.donorAge || ''}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
+                  className="w-full px-3 py-2 border border-forest-accent/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 bg-white text-text-main"
                   placeholder="年龄"
                 />
               </div>
@@ -293,7 +287,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
                   name="source.donorGender"
                   value={formData.source?.donorGender || ''}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
+                  className="w-full px-3 py-2 border border-forest-accent/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 bg-white text-text-main"
                 >
                   <option value="">请选择</option>
                   <option value="male">男性</option>
@@ -311,7 +305,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
                   name="source.species"
                   value={formData.source?.species || ''}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
+                  className="w-full px-3 py-2 border border-forest-accent/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 bg-white text-text-main"
                   placeholder="如：Homo sapiens"
                 />
               </div>
@@ -325,7 +319,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
                   name="source.tissueType"
                   value={formData.source?.tissueType || ''}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
+                  className="w-full px-3 py-2 border border-forest-accent/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 bg-white text-text-main"
                   placeholder="组织类型"
                 />
               </div>
@@ -339,7 +333,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
                   name="source.cellLine"
                   value={formData.source?.cellLine || ''}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
+                  className="w-full px-3 py-2 border border-forest-accent/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 bg-white text-text-main"
                   placeholder="如：HeLa, 293T"
                 />
               </div>
@@ -348,7 +342,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
 
           {/* 量体信息 */}
           <div>
-            <h3 className="text-lg font-semibold text-[#4A7C59] mb-4">量体信息</h3>
+            <h3 className="text-lg font-semibold text-forest-primary mb-4">量体信息</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="grid grid-cols-2 gap-2">
                 <div>
@@ -360,7 +354,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
                     name="quantity.volume"
                     value={formData.quantity?.volume || ''}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
+                    className="w-full px-3 py-2 border border-forest-accent/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 bg-white text-text-main"
                     placeholder="体积"
                     step="0.01"
                   />
@@ -373,7 +367,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
                     name="quantity.volumeUnit"
                     value={formData.quantity?.volumeUnit || 'mL'}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
+                    className="w-full px-3 py-2 border border-forest-accent/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 bg-white text-text-main"
                   >
                     <option value="μL">μL</option>
                     <option value="mL">mL</option>
@@ -392,7 +386,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
                     name="quantity.concentration"
                     value={formData.quantity?.concentration || ''}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
+                    className="w-full px-3 py-2 border border-forest-accent/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 bg-white text-text-main"
                     placeholder="浓度"
                     step="0.01"
                   />
@@ -405,7 +399,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
                     name="quantity.concentrationUnit"
                     value={formData.quantity?.concentrationUnit || 'mg/mL'}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
+                    className="w-full px-3 py-2 border border-forest-accent/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 bg-white text-text-main"
                   >
                     <option value="mg/mL">mg/mL</option>
                     <option value="μg/mL">μg/mL</option>
@@ -427,7 +421,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
                     name="quantity.weight"
                     value={formData.quantity?.weight || ''}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
+                    className="w-full px-3 py-2 border border-forest-accent/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 bg-white text-text-main"
                     placeholder="重量"
                     step="0.01"
                   />
@@ -440,7 +434,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
                     name="quantity.weightUnit"
                     value={formData.quantity?.weightUnit || 'g'}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
+                    className="w-full px-3 py-2 border border-forest-accent/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 bg-white text-text-main"
                   >
                     <option value="mg">mg</option>
                     <option value="g">g</option>
@@ -453,7 +447,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
 
           {/* 存储信息 */}
           <div>
-            <h3 className="text-lg font-semibold text-[#4A7C59] mb-4">存储信息</h3>
+            <h3 className="text-lg font-semibold text-forest-primary mb-4">存储信息</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -463,7 +457,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
                   name="storage.condition"
                   value={formData.storage?.condition || ''}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
+                  className="w-full px-3 py-2 border border-forest-accent/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 bg-white text-text-main"
                 >
                   <option value="room_temperature">室温</option>
                   <option value="refrigerated">冷藏(4°C)</option>
@@ -483,7 +477,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
                   name="storage.location"
                   value={formData.storage?.location || ''}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
+                  className="w-full px-3 py-2 border border-forest-accent/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 bg-white text-text-main"
                   placeholder="如：冰箱A-2层-3号位置"
                 />
               </div>
@@ -497,7 +491,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
                   name="storage.container"
                   value={formData.storage?.container || ''}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
+                  className="w-full px-3 py-2 border border-forest-accent/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 bg-white text-text-main"
                   placeholder="容器编号"
                 />
               </div>
@@ -510,7 +504,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
                   name="storage.containerType"
                   value={formData.storage?.containerType || ''}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
+                  className="w-full px-3 py-2 border border-forest-accent/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 bg-white text-text-main"
                 >
                   <option value="">请选择</option>
                   <option value="tube">离心管</option>
@@ -526,7 +520,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
 
           {/* 日期信息 */}
           <div>
-            <h3 className="text-lg font-semibold text-[#4A7C59] mb-4">日期信息</h3>
+            <h3 className="text-lg font-semibold text-forest-primary mb-4">日期信息</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -537,7 +531,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
                   name="dates.receivedDate"
                   value={formData.dates?.receivedDate ? formData.dates.receivedDate.split('T')[0] : ''}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
+                  className="w-full px-3 py-2 border border-forest-accent/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 bg-white text-text-main"
                 />
               </div>
 
@@ -550,7 +544,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
                   name="dates.expiryDate"
                   value={formData.dates?.expiryDate ? formData.dates.expiryDate.split('T')[0] : ''}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
+                  className="w-full px-3 py-2 border border-forest-accent/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 bg-white text-text-main"
                 />
               </div>
 
@@ -563,7 +557,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
                   name="dates.lastAccessDate"
                   value={formData.dates?.lastAccessDate ? formData.dates.lastAccessDate.split('T')[0] : ''}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
+                  className="w-full px-3 py-2 border border-forest-accent/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 bg-white text-text-main"
                 />
               </div>
             </div>
@@ -571,7 +565,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
 
           {/* 质量控制 */}
           <div>
-            <h3 className="text-lg font-semibold text-[#4A7C59] mb-4">质量控制</h3>
+            <h3 className="text-lg font-semibold text-forest-primary mb-4">质量控制</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -582,7 +576,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
                   name="qualityControl.purity"
                   value={formData.qualityControl?.purity || ''}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
+                  className="w-full px-3 py-2 border border-forest-accent/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 bg-white text-text-main"
                   placeholder="纯度"
                   step="0.01"
                   min="0"
@@ -599,7 +593,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
                   name="qualityControl.purityMethod"
                   value={formData.qualityControl?.purityMethod || ''}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
+                  className="w-full px-3 py-2 border border-forest-accent/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 bg-white text-text-main"
                   placeholder="如：HPLC, GC-MS"
                 />
               </div>
@@ -613,7 +607,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
                   name="qualityControl.endotoxin"
                   value={formData.qualityControl?.endotoxin || ''}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
+                  className="w-full px-3 py-2 border border-forest-accent/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 bg-white text-text-main"
                   placeholder="内毒素含量"
                   step="0.01"
                 />
@@ -628,7 +622,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
                   name="qualityControl.viability"
                   value={formData.qualityControl?.viability || ''}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
+                  className="w-full px-3 py-2 border border-forest-accent/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 bg-white text-text-main"
                   placeholder="细胞活力"
                   step="0.01"
                   min="0"
@@ -643,9 +637,9 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
                   name="qualityControl.sterility"
                   checked={formData.qualityControl?.sterility || false}
                   onChange={handleChange}
-                  className="h-4 w-4 text-emerald-600 focus:ring-emerald-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-forest-secondary focus:ring-forest-secondary/50 border-forest-accent/30 rounded"
                 />
-                <label htmlFor="sterility" className="text-sm font-medium text-gray-700">
+                <label htmlFor="sterility" className="text-sm font-medium text-text-main">
                   无菌检验合格
                 </label>
               </div>
@@ -654,7 +648,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
 
           {/* 项目关联和标签 */}
           <div>
-            <h3 className="text-lg font-semibold text-[#4A7C59] mb-4">项目关联</h3>
+            <h3 className="text-lg font-semibold text-forest-primary mb-4">项目关联</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -665,7 +659,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
                   name="projectId"
                   value={formData.projectId || ''}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
+                  className="w-full px-3 py-2 border border-forest-accent/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 bg-white text-text-main"
                   placeholder="项目编号"
                 />
               </div>
@@ -684,7 +678,7 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
                       tags: e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag)
                     }));
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
+                  className="w-full px-3 py-2 border border-forest-accent/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 bg-white text-text-main"
                   placeholder="如：重要, 紧急, 高优先级"
                 />
               </div>
@@ -701,24 +695,24 @@ const SampleForm: React.FC<SampleFormProps> = ({ sample, onSubmit, onCancel }) =
               value={formData.notes || ''}
               onChange={handleChange}
               rows={6}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white text-gray-900"
+              className="w-full px-3 py-2 border border-forest-accent/30 rounded-xl focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 bg-white text-text-main"
               placeholder="输入样本相关备注信息..."
             />
           </div>
 
           {/* 表单按钮 */}
-          <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
+          <div className="flex justify-end space-x-4 pt-6 border-t border-forest-accent/20">
             <button
               type="button"
               onClick={onCancel}
-              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="px-6 py-2 border border-forest-accent/30 text-text-main rounded-xl hover:bg-forest-accent/10 focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 transition-colors"
             >
               取消
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-lg hover:from-emerald-600 hover:to-teal-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-6 py-2 bg-forest-secondary text-white rounded-xl hover:bg-forest-primary focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm"
             >
               {isSubmitting ? '保存中...' : '保存'}
             </button>

@@ -1,0 +1,66 @@
+/* 实验小森林设计令牌 - Design Tokens */
+
+:root {
+    /* 实验小森林 - 莫兰迪色系 (Morandi Palette) */
+    /* 特点：低饱和度、高级灰调、柔和静谧 */
+
+    /* 主色调 - 鼠尾草绿系 (Sage Green Series) */
+    --forest-primary: #798E7B;
+    /* 主色：灰绿色 */
+    --forest-secondary: #9DB4A5;
+    /* 辅色：浅灰绿 */
+    --forest-accent: #C4D2C9;
+    /* 点缀：极浅灰绿 */
+    --forest-light: #E8EDEA;
+    /* 背景：淡雾绿 */
+
+    /* 大地色调 - 暖灰/亚麻系 (Linen/Taupe Series) */
+    --earth-brown: #AFA69A;
+    /* 边框/深色块：暖褐灰 */
+    --earth-beige: #F4F3F0;
+    /* 全局背景：带有温度的米灰 */
+    --earth-warm: #E6E2DD;
+    /* 卡片背景：浅灰褐 */
+
+    /* 文字颜色 - 柔和炭灰 */
+    --text-main: #58595B;
+    /* 正文：深炭灰 */
+    --text-soft: #86888A;
+    /* 说明：中灰 */
+    --text-muted: #B0B3B6;
+    /* 弱化：浅灰 */
+    --text-inverse: #FFFFFF;
+    /* 反白 */
+
+    /* 状态颜色 - 莫兰迪状态色 */
+    --status-success: #98AFA0;
+    /* 灰薄荷 */
+    --status-warning: #DCC6A0;
+    /* 枯叶黄 */
+    --status-error: #C69FA0;
+    /* 干玫瑰 */
+    --status-info: #9AA7B1;
+    /* 雾霾蓝 */
+
+    /* 字体系统 */
+    --font-header: 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+    --font-body: 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+
+    /* 字体权重 */
+    --font-weight-light: 300;
+    --font-weight-normal: 400;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    --radius-md: 0.75rem;
+    /* 12px */
+    --radius-lg: 1rem;
+    /* 16px */
+    --radius-xl: 1.5rem;
+    /* 24px */
+    --radius-full: 9999px;
+
+    /* --- 过渡动画 (Transitions) --- */
+
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}

@@ -18,25 +18,25 @@ export default function TopicDetail() {
   const [relatedSOPs, setRelatedSOPs] = useState<SOP[]>([]);
   const { id } = useParams();
   const navigate = useNavigate();
-  
+
   useEffect(() => {
     if (!id) {
       setError('课题ID不存在');
       setLoading(false);
       return;
     }
-    
+
     try {
       // 获取课题详情
       const foundTopic = projectService.getById(id);
       if (foundTopic) {
         setTopic(foundTopic);
-        
+
         // 获取关联的实验记录
         const allRecords = experimentRecordService.getAll();
         const records = allRecords.filter(record => record.projectId === id);
         setRelatedRecords(records);
-        
+
         // 获取关联的SOP
         const allSOPs = sopService.getAll();
         const sops = allSOPs.filter(sop => sop.projectId === id);
@@ -51,13 +51,13 @@ export default function TopicDetail() {
       setLoading(false);
     }
   }, [id]);
-  
+
   const handleEdit = () => {
     if (topic) {
       navigate(`/projects/edit/${topic.id}`);
     }
   };
-  
+
   const handleDelete = () => {
     if (window.confirm('确定要删除这个课题吗？此操作不可撤销。')) {
       try {
@@ -73,7 +73,7 @@ export default function TopicDetail() {
       }
     }
   };
-  
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
@@ -84,7 +84,7 @@ export default function TopicDetail() {
       </div>
     );
   }
-  
+
   if (error || !topic) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
@@ -100,14 +100,14 @@ export default function TopicDetail() {
       </div>
     );
   }
-  
+
   return (
-    <div className="min-h-screen bg-[#F9F6F2] text-[#555555]">
+    <div className="min-h-screen bg-earth-beige text-text-main">
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
-      
+
       <div className={sidebarCollapsed ? 'ml-16' : 'ml-64'}>
-        <Header 
-          title="课题详情" 
+        <Header
+          title="课题详情"
           sidebarCollapsed={sidebarCollapsed}
           actions={
             <div className="flex space-x-2">
@@ -123,17 +123,17 @@ export default function TopicDetail() {
             </div>
           }
         />
-        
+
         <main className="container mx-auto px-4 py-6">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 mb-6 transition-all duration-300 hover:shadow-md">
             <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">{topic.title}</h1>
-            
+
             <div className="prose prose-sm dark:prose-invert max-w-none mb-6">
               <p className="text-gray-700 dark:text-gray-300">
                 {topic.description || '无描述'}
               </p>
             </div>
-            
+
             <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400">
               <div className="flex items-center">
                 <i className="fa-solid fa-calendar mr-1"></i>
@@ -150,10 +150,10 @@ export default function TopicDetail() {
               <div className="flex items-center">
                 <i className="fa-solid fa-file-pdf mr-1"></i>
                 <span>SOP文档: {relatedSOPs.length}</span>
-             </div>
-             
+              </div>
+
               <div className="mt-6 flex flex-wrap gap-3">
-                <Button asChild size="sm" className="bg-emerald-600 hover:bg-emerald-700">
+                <Button asChild size="sm" className="bg-forest-primary hover:bg-forest-secondary">
                   <Link to="/chat">
                     <i className="fa-solid fa-robot mr-2"></i>
                     <span>AI助手</span>
@@ -166,9 +166,9 @@ export default function TopicDetail() {
                   </Link>
                 </Button>
               </div>
-           </div>
+            </div>
           </div>
-          
+
           {/* 关联的实验记录 */}
           <section className="mb-10">
             <div className="flex justify-between items-center mb-4">
@@ -184,7 +184,7 @@ export default function TopicDetail() {
                 </Link>
               </Button>
             </div>
-            
+
             {relatedRecords.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {relatedRecords.map(record => (
@@ -209,7 +209,7 @@ export default function TopicDetail() {
               </div>
             )}
           </section>
-          
+
           {/* 关联的SOP */}
           <section>
             <div className="flex justify-between items-center mb-4">
@@ -225,7 +225,7 @@ export default function TopicDetail() {
                 </Link>
               </Button>
             </div>
-            
+
             {relatedSOPs.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {relatedSOPs.map(sop => (

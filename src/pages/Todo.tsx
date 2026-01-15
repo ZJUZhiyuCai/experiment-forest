@@ -25,7 +25,7 @@ export default function Todo() {
   const [editingTodo, setEditingTodo] = useState<TodoItem | null>(null);
   const [filter, setFilter] = useState<'all' | 'active' | 'completed' | 'urgent'>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // 表单数据
   const [formData, setFormData] = useState<Partial<TodoItem>>({
     title: '',
@@ -63,7 +63,7 @@ export default function Todo() {
   // 创建或更新待办事项
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.title?.trim()) {
       toast.error('请填写任务标题');
       return;
@@ -83,7 +83,7 @@ export default function Todo() {
     };
 
     if (editingTodo) {
-      const updatedTodos = todos.map(todo => 
+      const updatedTodos = todos.map(todo =>
         todo.id === editingTodo.id ? todoData : todo
       );
       saveTodos(updatedTodos);
@@ -99,14 +99,14 @@ export default function Todo() {
   // 切换完成状态
   const toggleCompleted = (id: string) => {
     const updatedTodos = todos.map(todo =>
-      todo.id === id ? { 
-        ...todo, 
-        completed: !todo.completed, 
-        updatedAt: new Date().toISOString() 
+      todo.id === id ? {
+        ...todo,
+        completed: !todo.completed,
+        updatedAt: new Date().toISOString()
       } : todo
     );
     saveTodos(updatedTodos);
-    
+
     const todo = todos.find(t => t.id === id);
     if (todo) {
       toast.success(todo.completed ? '任务已标记为未完成' : '任务已完成！');
@@ -156,7 +156,7 @@ export default function Todo() {
     if (filter === 'active' && todo.completed) return false;
     if (filter === 'completed' && !todo.completed) return false;
     if (filter === 'urgent' && todo.priority !== 'urgent') return false;
-    
+
     // 搜索筛选
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
@@ -166,7 +166,7 @@ export default function Todo() {
         todo.tags.some(tag => tag.toLowerCase().includes(query))
       );
     }
-    
+
     return true;
   });
 
@@ -175,9 +175,9 @@ export default function Todo() {
     total: todos.length,
     completed: todos.filter(todo => todo.completed).length,
     urgent: todos.filter(todo => todo.priority === 'urgent' && !todo.completed).length,
-    overdue: todos.filter(todo => 
-      todo.dueDate && 
-      new Date(todo.dueDate) < new Date() && 
+    overdue: todos.filter(todo =>
+      todo.dueDate &&
+      new Date(todo.dueDate) < new Date() &&
       !todo.completed
     ).length
   };
@@ -195,7 +195,7 @@ export default function Todo() {
   // 获取分类颜色
   const getCategoryColor = (category: TodoItem['category']) => {
     switch (category) {
-      case 'experiment': return 'text-emerald-600 bg-emerald-100';
+      case 'experiment': return 'text-forest-primary bg-emerald-100';
       case 'research': return 'text-blue-600 bg-blue-100';
       case 'admin': return 'text-purple-600 bg-purple-100';
       default: return 'text-gray-600 bg-gray-100';
@@ -213,12 +213,12 @@ export default function Todo() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7FDF0] text-[#555555]">
+    <div className="min-h-screen bg-earth-beige text-text-main">
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
-      
+
       <div className={sidebarCollapsed ? 'ml-16' : 'ml-64'}>
-        <Header 
-          title="待办事项" 
+        <Header
+          title="待办事项"
           sidebarCollapsed={sidebarCollapsed}
           actions={
             <Button onClick={() => setIsFormOpen(true)}>
@@ -227,7 +227,7 @@ export default function Todo() {
             </Button>
           }
         />
-        
+
         <main className="container mx-auto px-4 py-6">
           {/* 统计卡片 */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
@@ -237,8 +237,8 @@ export default function Todo() {
                   <p className="text-sm text-gray-600">总任务</p>
                   <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
                 </div>
-                <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
-                  <i className="fa-solid fa-tasks text-emerald-600"></i>
+                <div className="w-10 h-10 bg-forest-accent/30 rounded-full flex items-center justify-center">
+                  <i className="fa-solid fa-tasks text-forest-primary"></i>
                 </div>
               </div>
             </div>
@@ -247,10 +247,10 @@ export default function Todo() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">已完成</p>
-                  <p className="text-2xl font-bold text-emerald-600">{stats.completed}</p>
+                  <p className="text-2xl font-bold text-forest-primary">{stats.completed}</p>
                 </div>
-                <div className="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
-                  <i className="fa-solid fa-check text-emerald-600"></i>
+                <div className="w-10 h-10 bg-forest-accent/30 rounded-full flex items-center justify-center">
+                  <i className="fa-solid fa-check text-forest-primary"></i>
                 </div>
               </div>
             </div>
@@ -293,17 +293,16 @@ export default function Todo() {
                   <button
                     key={item.key}
                     onClick={() => setFilter(item.key as any)}
-                    className={`px-3 py-2 text-sm rounded-lg transition-colors ${
-                      filter === item.key
-                        ? 'bg-emerald-500 text-white'
-                        : 'text-gray-600 hover:bg-gray-100'
-                    }`}
+                    className={`px-3 py-2 text-sm rounded-lg transition-colors ${filter === item.key
+                      ? 'bg-forest-secondary text-white'
+                      : 'text-gray-600 hover:bg-gray-100'
+                      }`}
                   >
                     {item.label} ({item.count})
                   </button>
                 ))}
               </div>
-              
+
               <div className="relative w-full md:w-64">
                 <i className="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
                 <input
@@ -311,7 +310,7 @@ export default function Todo() {
                   placeholder="搜索任务..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-secondary"
                 />
               </div>
             </div>
@@ -340,52 +339,49 @@ export default function Todo() {
                 <AnimatePresence>
                   {filteredTodos.map((todo) => {
                     const isOverdue = todo.dueDate && new Date(todo.dueDate) < new Date() && !todo.completed;
-                    
+
                     return (
                       <motion.div
                         key={todo.id}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
-                        className={`p-4 hover:bg-gray-50 transition-colors ${
-                          todo.completed ? 'opacity-75' : ''
-                        } ${isOverdue ? 'bg-red-50' : ''}`}
+                        className={`p-4 hover:bg-gray-50 transition-colors ${todo.completed ? 'opacity-75' : ''
+                          } ${isOverdue ? 'bg-red-50' : ''}`}
                       >
                         <div className="flex items-start space-x-3">
                           <button
                             onClick={() => toggleCompleted(todo.id)}
-                            className={`mt-1 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${
-                              todo.completed
-                                ? 'bg-emerald-500 border-emerald-500 text-white'
-                                : 'border-gray-300 hover:border-emerald-500'
-                            }`}
+                            className={`mt-1 w-5 h-5 rounded border-2 flex items-center justify-center transition-colors ${todo.completed
+                              ? 'bg-forest-secondary border-forest-secondary text-white'
+                              : 'border-gray-300 hover:border-forest-secondary'
+                              }`}
                           >
                             {todo.completed && <i className="fa-solid fa-check text-xs"></i>}
                           </button>
-                          
+
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center space-x-2 mb-2">
-                              <h3 className={`font-medium ${
-                                todo.completed ? 'line-through text-gray-500' : 'text-gray-800'
-                              }`}>
+                              <h3 className={`font-medium ${todo.completed ? 'line-through text-gray-500' : 'text-gray-800'
+                                }`}>
                                 {todo.title}
                               </h3>
-                              
+
                               <span className={`px-2 py-1 text-xs rounded-full border ${getPriorityColor(todo.priority)}`}>
                                 {todo.priority === 'urgent' ? '紧急' :
-                                 todo.priority === 'high' ? '高' :
-                                 todo.priority === 'medium' ? '中' : '低'}
+                                  todo.priority === 'high' ? '高' :
+                                    todo.priority === 'medium' ? '中' : '低'}
                               </span>
-                              
+
                               <span className={`px-2 py-1 text-xs rounded ${getCategoryColor(todo.category)}`}>
                                 {getCategoryName(todo.category)}
                               </span>
                             </div>
-                            
+
                             {todo.description && (
                               <p className="text-sm text-gray-600 mb-2">{todo.description}</p>
                             )}
-                            
+
                             <div className="flex items-center justify-between">
                               <div className="flex items-center space-x-4 text-xs text-gray-500">
                                 {todo.dueDate && (
@@ -397,13 +393,13 @@ export default function Todo() {
                                     )}
                                   </span>
                                 )}
-                                
+
                                 <span>
                                   <i className="fa-solid fa-clock mr-1"></i>
                                   {new Date(todo.createdAt).toLocaleDateString()}
                                 </span>
                               </div>
-                              
+
                               {todo.tags.length > 0 && (
                                 <div className="flex items-center space-x-1">
                                   {todo.tags.slice(0, 3).map((tag, index) => (
@@ -421,11 +417,11 @@ export default function Todo() {
                               )}
                             </div>
                           </div>
-                          
+
                           <div className="flex items-center space-x-2">
                             <button
                               onClick={() => openEditForm(todo)}
-                              className="p-2 text-gray-500 hover:text-emerald-600 transition-colors"
+                              className="p-2 text-gray-500 hover:text-forest-primary transition-colors"
                             >
                               <i className="fa-solid fa-edit"></i>
                             </button>
@@ -464,7 +460,7 @@ export default function Todo() {
                   <h3 className="text-lg font-bold mb-4">
                     {editingTodo ? '编辑任务' : '新建任务'}
                   </h3>
-                  
+
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -475,7 +471,7 @@ export default function Todo() {
                         name="title"
                         value={formData.title}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-secondary"
                         placeholder="输入任务标题"
                         required
                       />
@@ -490,7 +486,7 @@ export default function Todo() {
                         value={formData.description}
                         onChange={handleChange}
                         rows={3}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-secondary"
                         placeholder="输入任务描述（可选）"
                       />
                     </div>
@@ -504,7 +500,7 @@ export default function Todo() {
                           name="priority"
                           value={formData.priority}
                           onChange={handleChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-secondary"
                         >
                           <option value="low">低</option>
                           <option value="medium">中</option>
@@ -512,7 +508,7 @@ export default function Todo() {
                           <option value="urgent">紧急</option>
                         </select>
                       </div>
-                      
+
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           分类
@@ -521,7 +517,7 @@ export default function Todo() {
                           name="category"
                           value={formData.category}
                           onChange={handleChange}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-secondary"
                         >
                           <option value="experiment">实验</option>
                           <option value="research">研究</option>
@@ -540,7 +536,7 @@ export default function Todo() {
                         name="dueDate"
                         value={formData.dueDate}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-secondary"
                       />
                     </div>
 
@@ -553,7 +549,7 @@ export default function Todo() {
                         name="tags"
                         value={formData.tags?.join(', ') || ''}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-secondary"
                         placeholder="例如：重要, 实验, 论文"
                       />
                     </div>
@@ -568,7 +564,7 @@ export default function Todo() {
                       </button>
                       <button
                         type="submit"
-                        className="flex-1 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors"
+                        className="flex-1 px-4 py-2 bg-forest-secondary hover:bg-forest-primary text-white rounded-lg transition-colors"
                       >
                         {editingTodo ? '更新' : '创建'}
                       </button>

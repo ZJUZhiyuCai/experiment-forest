@@ -79,15 +79,15 @@ const SampleManagement: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#F9F6F2] text-[#555555]">
+    <div className="min-h-screen bg-earth-beige text-text-main">
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
-      
+
       <div className={sidebarCollapsed ? 'ml-16' : 'ml-64'}>
-        <Header 
-          title="样本管理" 
+        <Header
+          title="样本管理"
           sidebarCollapsed={sidebarCollapsed}
         />
-        
+
         <main className="container mx-auto px-4 py-4">
           <nav className="flex mb-4" aria-label="Breadcrumb">
             <ol className="flex items-center space-x-4">
@@ -95,11 +95,10 @@ const SampleManagement: React.FC = () => {
                 <div className="flex items-center">
                   <button
                     onClick={() => setCurrentView('list')}
-                    className={`font-medium ${
-                      currentView === 'list'
-                        ? 'text-[#7FB069]'
-                        : 'text-gray-500 hover:text-[#7FB069]'
-                    }`}
+                    className={`font-medium ${currentView === 'list'
+                      ? 'text-forest-secondary'
+                      : 'text-gray-500 hover:text-forest-secondary'
+                      }`}
                   >
                     样本管理
                   </button>
@@ -110,7 +109,7 @@ const SampleManagement: React.FC = () => {
                   <li>
                     <div className="flex items-center">
                       <i className="fa-solid fa-chevron-right text-gray-400 mr-4"></i>
-                      <span className="font-medium text-[#4A7C59]">
+                      <span className="font-medium text-forest-primary">
                         {selectedSample.name}
                       </span>
                     </div>
@@ -122,7 +121,7 @@ const SampleManagement: React.FC = () => {
                   <li>
                     <div className="flex items-center">
                       <i className="fa-solid fa-chevron-right text-gray-400 mr-4"></i>
-                      <span className="font-medium text-[#4A7C59]">
+                      <span className="font-medium text-forest-primary">
                         {editingSample ? '编辑样本' : '新建样本'}
                       </span>
                     </div>

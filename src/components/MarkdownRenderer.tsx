@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
+import { useState, useEffect } from 'react';
 
 // 动态导入重型依赖,实现代码分割
 const loadMarkdownLibs = async () => {
@@ -10,7 +10,7 @@ const loadMarkdownLibs = async () => {
   ]);
 
   return {
-    marked: markedModule.default,
+    marked: markedModule,
     DOMPurify: dompurifyModule.default,
     katex: katexModule.default,
     hljs: hljsModule.default
@@ -30,14 +30,12 @@ async function processMarkdown(markdown: string, libs: Awaited<ReturnType<typeof
   try {
     const { marked } = libs;
 
-    // 配置marked选项(只配置一次)
-    if (!marked.defaults?.gfm) {
-      marked.setOptions({
-        gfm: true,
-        breaks: true,
-        pedantic: false
-      });
-    }
+    // 配置marked选项
+    marked.setOptions({
+      gfm: true,
+      breaks: true,
+      pedantic: false
+    });
 
     // 预处理代码块中的数学公式，防止语法冲突
     const codeBlocks: string[] = [];
@@ -252,12 +250,12 @@ export function MarkdownRenderer({ content = '', className = '', tableCaption }:
       isCancelled = true;
     };
   }, [safeContent]);
-  
+
   // 添加样式和类到HTML内容
   const addStylesAndClasses = (html: string): string => {
     // 使用正则表达式替换HTML标签并添加类
     let result = html;
-    
+
     // 表格样式
     result = result.replace(
       /<table>/g,
@@ -269,7 +267,7 @@ export function MarkdownRenderer({ content = '', className = '', tableCaption }:
     result = result.replace(/<tr>/g, `<tr class="hover:bg-gray-50 dark:hover:bg-gray-700">`);
     result = result.replace(/<th>/g, `<th class="px-4 py-3 text-sm font-semibold text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700">`);
     result = result.replace(/<td>/g, `<td class="px-4 py-2 text-sm text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-gray-700">`);
-    
+
     // 标题样式
     result = result.replace(/<h1>/g, `<h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-6 border-b pb-2 border-gray-200 dark:border-gray-700">`);
     result = result.replace(/<h2>/g, `<h2 class="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4 mt-8">`);
@@ -277,40 +275,40 @@ export function MarkdownRenderer({ content = '', className = '', tableCaption }:
     result = result.replace(/<h4>/g, `<h4 class="text-lg font-medium text-gray-800 dark:text-gray-200 mb-2 mt-4">`);
     result = result.replace(/<h5>/g, `<h5 class="text-base font-medium text-gray-700 dark:text-gray-300 mb-2 mt-4">`);
     result = result.replace(/<h6>/g, `<h6 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 mt-3">`);
-    
+
     // 段落样式
     result = result.replace(/<p>/g, `<p class="mb-4 text-gray-700 dark:text-gray-300 leading-relaxed">`);
-    
+
     // 链接样式
     result = result.replace(
-      /<a\s+href="([^"]+)">/g, 
+      /<a\s+href="([^"]+)">/g,
       `<a href="$1" class="text-blue-600 dark:text-blue-400 hover:underline" target="_blank" rel="noopener noreferrer">`
     );
-    
+
     // 列表样式
     result = result.replace(/<ul>/g, `<ul class="list-disc pl-6 mb-4 text-gray-700 dark:text-gray-300">`);
     result = result.replace(/<ol>/g, `<ol class="list-decimal pl-6 mb-4 text-gray-700 dark:text-gray-300">`);
     result = result.replace(/<li>/g, `<li class="mb-1">`);
-    
+
     // 引用样式
     result = result.replace(
-      /<blockquote>/g, 
+      /<blockquote>/g,
       `<blockquote class="border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic text-gray-700 dark:text-gray-400 my-4">`
     );
-    
+
     // 行内代码样式 - 不覆盖已经高亮的代码块
     result = result.replace(
-      /<code>(?!<\/code>)([^<]*)<\/code>/g, 
+      /<code>(?!<\/code>)([^<]*)<\/code>/g,
       `<code class="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded text-sm font-mono">$1</code>`
     );
-    
+
     // 分隔线样式
     result = result.replace(/<hr>/g, `<hr class="my-6 border-gray-200 dark:border-gray-700">`);
-    
+
     // 强调样式
     result = result.replace(/<em>/g, `<em class="italic">`);
     result = result.replace(/<strong>/g, `<strong class="font-bold">`);
-    
+
     // 数学公式的额外样式
     result = result.replace(
       /<span class="katex">/g,
@@ -320,7 +318,7 @@ export function MarkdownRenderer({ content = '', className = '', tableCaption }:
       /<div class="katex-display">/g,
       `<div class="katex-display math-formula my-4 px-4 py-2 bg-blue-50 dark:bg-blue-900/10 rounded-lg shadow-sm border border-blue-100 dark:border-blue-900/20">`
     );
-    
+
     return result;
   };
 
@@ -347,11 +345,12 @@ export function MarkdownRenderer({ content = '', className = '', tableCaption }:
       </div>
     );
   }
-  
+
   // 渲染HTML内容
   return (
     <div className={`prose prose-sm dark:prose-invert max-w-none ${className}`}>
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         /* 自定义数学公式样式 */
         .inline-math-formula {
           font-size: 1.1em;

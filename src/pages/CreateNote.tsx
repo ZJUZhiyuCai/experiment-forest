@@ -22,27 +22,27 @@ export default function CreateNote() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  
+
   // 判断是编辑模式还是创建模式
   const isEditMode = !!id;
-  
+
   // 表单状态和验证错误
   const [formData, setFormData] = useState({
     title: '',
     relatedRecordId: '',
     content: ''
   });
-  
+
   const [errors, setErrors] = useState({
     title: '',
     content: ''
   });
-  
+
   useEffect(() => {
     // 获取所有实验记录（用于关联选择）
     const allRecords = experimentRecordService.getAll();
     setRecords(allRecords);
-    
+
     // 如果是编辑模式，加载现有笔记
     if (isEditMode && id) {
       setLoading(true);
@@ -68,26 +68,26 @@ export default function CreateNote() {
       }
     }
   }, [id, isEditMode, navigate]);
-  
+
   // 表单验证
   const validateForm = (): boolean => {
     const newErrors: typeof errors = { title: '', content: '' };
     let isValid = true;
-    
+
     if (!formData.title.trim()) {
       newErrors.title = '笔记标题不能为空';
       isValid = false;
     }
-    
+
     if (!formData.content.trim()) {
       newErrors.content = '笔记内容不能为空';
       isValid = false;
     }
-    
+
     setErrors(newErrors);
     return isValid;
   };
-  
+
   // 原有的handleChange函数，已更换为直接在组件中传递onChange
   // const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
   //   const { name, value } = e.target;
@@ -98,24 +98,24 @@ export default function CreateNote() {
   //     setErrors(prev => ({ ...prev, [name]: '' }));
   //   }
   // };
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-     // 表单验证
+
+    // 表单验证
     if (!validateForm()) {
       return;
     }
-    
+
     // 检查内容是否为空（修复潜在的空格提交问题）
     if (!formData.content.trim()) {
       setErrors(prev => ({ ...prev, content: '笔记内容不能为空' }));
       return;
     }
-    
+
     try {
       setIsSubmitting(true);
-      
+
       if (isEditMode && existingNote) {
         // 更新现有笔记
         const updatedNote = experimentNoteService.update(existingNote.id, {
@@ -123,7 +123,7 @@ export default function CreateNote() {
           relatedRecordId: formData.relatedRecordId || undefined,
           content: formData.content
         });
-        
+
         if (updatedNote) {
           toast.success('实验笔记更新成功');
           navigate('/notes');
@@ -138,13 +138,13 @@ export default function CreateNote() {
           relatedRecordId: formData.relatedRecordId || undefined,
           content: formData.content
         });
-        
+
         if (newNote) {
           toast.success('实验笔记创建成功');
-          
+
           // 显示种树庆祝动画
           setShowTreeCelebration(true);
-          
+
           // 延迟导航以确保用户看到成功提示
           setTimeout(() => {
             navigate('/notes');
@@ -160,25 +160,25 @@ export default function CreateNote() {
       setIsSubmitting(false);
     }
   };
-  
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F9F6F2] flex items-center justify-center">
+      <div className="min-h-screen bg-earth-beige flex items-center justify-center">
         <div className="text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500 mb-4"></div>
-          <p className="text-[#555555]">加载中...</p>
+          <p className="text-text-main">加载中...</p>
         </div>
       </div>
     );
   }
-  
+
   return (
-    <div className="min-h-screen bg-[#F9F6F2] text-[#555555]">
+    <div className="min-h-screen bg-earth-beige text-text-main">
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
-      
+
       <div className={sidebarCollapsed ? 'ml-16' : 'ml-64'}>
-        <Header 
-          title={isEditMode ? '编辑实验笔记' : '创建实验笔记'} 
+        <Header
+          title={isEditMode ? '编辑实验笔记' : '创建实验笔记'}
           sidebarCollapsed={sidebarCollapsed}
           actions={
             <Button onClick={() => navigate('/notes')} variant="outline">
@@ -187,7 +187,7 @@ export default function CreateNote() {
             </Button>
           }
         />
-        
+
         <main className="container mx-auto px-4 py-6">
           <EnhancedFormContainer
             title={isEditMode ? '编辑实验笔记' : '创建实验笔记'}
@@ -206,7 +206,7 @@ export default function CreateNote() {
               required
               placeholder="输入笔记标题"
             />
-            
+
             <EnhancedInput
               label="关联实验记录"
               type="select"
@@ -232,7 +232,7 @@ export default function CreateNote() {
           </EnhancedFormContainer>
         </main>
       </div>
-      
+
       {/* 种树庆祝动画 */}
       <TreePlantingCelebration
         isVisible={showTreeCelebration}

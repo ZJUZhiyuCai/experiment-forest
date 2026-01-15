@@ -35,7 +35,7 @@ export default function Calendar() {
   const [originalEvent, setOriginalEvent] = useState<CalendarEvent | null>(null);
   const [hasMoved, setHasMoved] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
-  
+
   const [formData, setFormData] = useState<Partial<CalendarEvent>>({
     title: '',
     description: '',
@@ -62,7 +62,7 @@ export default function Calendar() {
     const day = startOfWeek.getDay();
     const diff = startOfWeek.getDate() - day;
     startOfWeek.setDate(diff);
-    
+
     for (let i = 0; i < 7; i++) {
       const currentDay = new Date(startOfWeek);
       currentDay.setDate(startOfWeek.getDate() + i);
@@ -72,7 +72,7 @@ export default function Calendar() {
   })();
 
   const weekDayNames = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-  
+
   const moods = [
     { emoji: '😊', name: '开心' },
     { emoji: '😌', name: '平静' },
@@ -80,7 +80,7 @@ export default function Calendar() {
     { emoji: '😤', name: '生气' },
     { emoji: '🤔', name: '思考' }
   ];
-  
+
   // const tags = [
   //   { id: 'work', name: '工作', color: 'emerald' },
   //   { id: 'study', name: '学习', color: 'blue' },
@@ -94,11 +94,11 @@ export default function Calendar() {
     const now = new Date();
     const hours = now.getHours();
     const minutes = now.getMinutes();
-    
+
     if (hours < 6 || hours > 23) {
       return null;
     }
-    
+
     return ((hours - 6) + minutes / 60) * 64;
   }, []);
 
@@ -116,17 +116,17 @@ export default function Calendar() {
     const startMinute = parseInt(event.startTime.split(':')[1]);
     const endHour = parseInt(event.endTime.split(':')[0]);
     const endMinute = parseInt(event.endTime.split(':')[1]);
-    
+
     const startPos = ((startHour - 6) + startMinute / 60) * 64;
     const duration = ((endHour - startHour) + (endMinute - startMinute) / 60) * 64;
-    
+
     return { top: startPos, height: Math.max(duration, 40) };
   };
 
   const getTypeColor = (type: CalendarEvent['type']) => {
     const colors = {
       experiment: 'text-stone-700',
-      meeting: 'text-stone-700', 
+      meeting: 'text-stone-700',
       deadline: 'text-rose-700',
       task: 'text-amber-700',
       other: 'text-gray-700'
@@ -185,13 +185,13 @@ export default function Calendar() {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 60000);
-    
+
     return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
     loadMoodHistory();
-    
+
     const savedEvents = localStorage.getItem('calendarEvents');
     if (savedEvents) {
       setEvents(JSON.parse(savedEvents));
@@ -215,7 +215,7 @@ export default function Calendar() {
       setEvents(sampleEvents);
       localStorage.setItem('calendarEvents', JSON.stringify(sampleEvents));
     }
-    
+
     const savedMood = localStorage.getItem('dailyMood');
     if (savedMood) {
       const mood = JSON.parse(savedMood);
@@ -255,25 +255,25 @@ export default function Calendar() {
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isDragging || !draggedEvent || !originalEvent) return;
-    
+
     const deltaY = e.clientY - dragStartY;
     // const timeSlotHeight = 64; // 每小时的像素高度
     // 降低灵敏度：需要移动更多像素才能改变时间
     const pixelsPerSlot = 32; // 需要移动32像素才改变30分钟
     const deltaSlots = Math.round(deltaY / pixelsPerSlot);
     const deltaMinutes = deltaSlots * 30; // 每次调整30分钟
-    
+
     if (Math.abs(deltaMinutes) >= 30) { // 至少变化30分钟才更新
       setHasMoved(true); // 标记为已移动
-      
+
       const [startHour, startMinute] = originalEvent.startTime.split(':').map(Number);
       const [endHour, endMinute] = originalEvent.endTime.split(':').map(Number);
       const originalStartMinutes = startHour * 60 + startMinute;
       const originalEndMinutes = endHour * 60 + endMinute;
-      
+
       let newStartMinutes = originalStartMinutes;
       let newEndMinutes = originalEndMinutes;
-      
+
       if (dragMode === 'move') {
         // 移动整个事件
         newStartMinutes = originalStartMinutes + deltaMinutes;
@@ -293,25 +293,25 @@ export default function Calendar() {
           newEndMinutes = originalStartMinutes + 30;
         }
       }
-      
+
       // 限制在时间范围内 (6:00-23:30)
       newStartMinutes = Math.max(6 * 60, Math.min(newStartMinutes, 23 * 60));
       newEndMinutes = Math.max(6 * 60 + 30, Math.min(newEndMinutes, 23 * 60 + 30));
-      
+
       const newStartHour = Math.floor(newStartMinutes / 60);
       const newStartMin = newStartMinutes % 60;
       const newEndHour = Math.floor(newEndMinutes / 60);
       const newEndMin = newEndMinutes % 60;
-      
+
       const newStartTime = `${newStartHour.toString().padStart(2, '0')}:${newStartMin.toString().padStart(2, '0')}`;
       const newEndTime = `${newEndHour.toString().padStart(2, '0')}:${newEndMin.toString().padStart(2, '0')}`;
-      
+
       const updatedEvent = {
         ...originalEvent,
         startTime: newStartTime,
         endTime: newEndTime
       };
-      
+
       setDraggedEvent(updatedEvent);
     }
   }, [isDragging, draggedEvent, originalEvent, dragStartY, dragMode]);
@@ -327,13 +327,13 @@ export default function Calendar() {
         // 移除toast提示，让操作更流畅
       }
     }
-    
+
     setIsDragging(false);
     setDraggedEvent(null);
     setOriginalEvent(null);
     setDragStartY(0);
     setDragMode('move');
-    
+
     // 延迟重置hasMoved，避免立即触发点击事件
     setTimeout(() => {
       setHasMoved(false);
@@ -344,7 +344,7 @@ export default function Calendar() {
     if (isDragging) {
       document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
-      
+
       return () => {
         document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
@@ -380,7 +380,7 @@ export default function Calendar() {
 
     let updatedEvents;
     if (editingEvent) {
-      updatedEvents = events.map(event => 
+      updatedEvents = events.map(event =>
         event.id === editingEvent.id ? eventData : event
       );
       toast.success('已更新');
@@ -431,7 +431,7 @@ export default function Calendar() {
 
   const openEditForm = (event: CalendarEvent) => {
     setEditingEvent(event);
-    setFormData({...event});
+    setFormData({ ...event });
     setIsFormOpen(true);
   };
 
@@ -451,24 +451,24 @@ export default function Calendar() {
   };
 
   return (
-    <div className="min-h-screen" style={{background: 'linear-gradient(135deg, #FFFFFF 0%, #E5EDC1 30%, #48808D 100%)'}}>
+    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #FFFFFF 0%, #E5EDC1 30%, #48808D 100%)' }}>
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
-      
+
       <div className={sidebarCollapsed ? 'ml-16' : 'ml-64'}>
-        <Header 
-          title="实验日历" 
+        <Header
+          title="实验日历"
           sidebarCollapsed={sidebarCollapsed}
           actions={
             <div className="flex space-x-2">
-              <Button 
-                onClick={() => {setFormData({...formData, isTask: true}); setIsFormOpen(true);}}
+              <Button
+                onClick={() => { setFormData({ ...formData, isTask: true }); setIsFormOpen(true); }}
                 className="bg-blue-500 hover:bg-blue-600 text-white text-sm px-3 py-2"
               >
                 <i className="fa-solid fa-plus mr-1"></i>
                 待办
               </Button>
-              <Button 
-                onClick={() => {setFormData({...formData, isTask: false}); setIsFormOpen(true);}}
+              <Button
+                onClick={() => { setFormData({ ...formData, isTask: false }); setIsFormOpen(true); }}
                 className="bg-emerald-500 hover:bg-emerald-600 text-white text-sm px-3 py-2"
               >
                 <i className="fa-solid fa-plus mr-1"></i>
@@ -477,7 +477,7 @@ export default function Calendar() {
             </div>
           }
         />
-        
+
         <main className="p-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* 周视图 */}
@@ -491,35 +491,35 @@ export default function Calendar() {
                       onClick={() => setCurrentWeek(new Date(currentWeek.getTime() - 7 * 24 * 60 * 60 * 1000))}
                       className="p-3 rounded-xl hover:bg-white/50 hover:shadow-md transition-all text-stone-700 bg-white/40 backdrop-blur-sm"
                     >
-                      <i className="fa-solid fa-chevron-left" style={{color: '#48808D'}}></i>
+                      <i className="fa-solid fa-chevron-left" style={{ color: '#48808D' }}></i>
                     </motion.button>
-                    
+
                     <div className="text-center">
-                      <h2 className="text-xl font-bold flex items-center" style={{color: '#48808D'}}>
-                        <i className="fa-solid fa-calendar-alt mr-2" style={{color: '#48808D'}}></i>
+                      <h2 className="text-xl font-bold flex items-center" style={{ color: '#48808D' }}>
+                        <i className="fa-solid fa-calendar-alt mr-2" style={{ color: '#48808D' }}></i>
                         {currentWeek.getFullYear()}年{currentWeek.getMonth() + 1}月
                       </h2>
-                      <p className="text-sm mt-1 font-medium" style={{color: '#48808D'}}>
+                      <p className="text-sm mt-1 font-medium" style={{ color: '#48808D' }}>
                         {weekDays[0].getDate()}日 - {weekDays[6].getDate()}日
                       </p>
                     </div>
-                    
+
                     <motion.button
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.9 }}
                       onClick={() => setCurrentWeek(new Date(currentWeek.getTime() + 7 * 24 * 60 * 60 * 1000))}
                       className="p-3 rounded-xl hover:bg-white/50 hover:shadow-md transition-all text-stone-700 bg-white/40 backdrop-blur-sm"
                     >
-                      <i className="fa-solid fa-chevron-right" style={{color: '#48808D'}}></i>
+                      <i className="fa-solid fa-chevron-right" style={{ color: '#48808D' }}></i>
                     </motion.button>
                   </div>
-                  
-                  <motion.button 
+
+                  <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setCurrentWeek(new Date())}
                     className="px-4 py-2 text-white rounded-xl text-sm transition-all shadow-sm"
-                    style={{backgroundColor: '#48808D'}}>
+                    style={{ backgroundColor: '#48808D' }}>
                     <i className="fa-solid fa-calendar-day mr-2"></i>
                     今天
                   </motion.button>
@@ -529,19 +529,18 @@ export default function Calendar() {
                   <div className="grid grid-cols-8 relative">
                     {/* 时间轴 */}
                     <div className="bg-white/60 backdrop-blur-sm border-r border-white/30">
-                      <div className="h-16 flex items-center justify-center text-sm font-semibold border-b border-white/30 bg-white/40 backdrop-blur-sm" style={{color: '#48808D'}}>
+                      <div className="h-16 flex items-center justify-center text-sm font-semibold border-b border-white/30 bg-white/40 backdrop-blur-sm" style={{ color: '#48808D' }}>
                         <i className="fa-solid fa-clock mr-1"></i>
                         时间
                       </div>
                       {mainTimeSlots.map((time, index) => (
-                        <div key={time} className={`h-16 px-3 py-2 text-sm border-b border-white/20 flex items-center justify-center font-medium ${
-                          index % 2 === 0 ? 'bg-white/30' : 'bg-white/10'
-                        }`} style={{color: '#48808D'}}>
+                        <div key={time} className={`h-16 px-3 py-2 text-sm border-b border-white/20 flex items-center justify-center font-medium ${index % 2 === 0 ? 'bg-white/30' : 'bg-white/10'
+                          }`} style={{ color: '#48808D' }}>
                           {time}
                         </div>
                       ))}
                     </div>
-                    
+
                     {/* 日期列 */}
                     {weekDays.map((day, index) => {
                       const dateStr = day.toISOString().split('T')[0];
@@ -549,35 +548,32 @@ export default function Calendar() {
                       const isTodayDate = isToday(dateStr);
                       const isWeekend = index === 0 || index === 6;
                       const currentTimePos = getCurrentTimePosition();
-                      
+
                       return (
                         <div key={dateStr} className="relative border-r border-gray-200">
                           {/* 日期头 */}
-                          <div className={`h-16 px-3 py-2 border-b border-white/30 text-center transition-all ${
-                            isTodayDate ? 'bg-white/70 backdrop-blur-sm' : 
-                            isWeekend ? 'bg-white/50 backdrop-blur-sm' : 'bg-white/30 backdrop-blur-sm'
-                          }`}>
-                            <div className={`text-xs mb-1 ${
-                              isTodayDate ? 'font-semibold' : ''
-                            }`} style={{color: isTodayDate ? '#48808D' : '#48808D'}}>
+                          <div className={`h-16 px-3 py-2 border-b border-white/30 text-center transition-all ${isTodayDate ? 'bg-white/70 backdrop-blur-sm' :
+                              isWeekend ? 'bg-white/50 backdrop-blur-sm' : 'bg-white/30 backdrop-blur-sm'
+                            }`}>
+                            <div className={`text-xs mb-1 ${isTodayDate ? 'font-semibold' : ''
+                              }`} style={{ color: isTodayDate ? '#48808D' : '#48808D' }}>
                               {weekDayNames[index]}
                             </div>
-                            <div className={`text-lg font-bold`} style={{color: isTodayDate ? '#48808D' : '#48808D'}}>
+                            <div className={`text-lg font-bold`} style={{ color: isTodayDate ? '#48808D' : '#48808D' }}>
                               {day.getDate()}
                             </div>
                             {isTodayDate && (
-                              <div className="w-2 h-2 rounded-full mx-auto mt-1 animate-pulse" style={{backgroundColor: '#48808D'}}></div>
+                              <div className="w-2 h-2 rounded-full mx-auto mt-1 animate-pulse" style={{ backgroundColor: '#48808D' }}></div>
                             )}
                           </div>
-                          
+
                           {/* 时间槽 */}
                           <div className="relative">
                             {mainTimeSlots.map((time, timeIndex) => (
                               <motion.div
                                 key={time}
-                                className={`h-16 border-b border-white/20 transition-all duration-200 cursor-pointer group relative ${
-                                  timeIndex % 2 === 0 ? 'bg-white/20' : 'bg-white/10'
-                                }`}
+                                className={`h-16 border-b border-white/20 transition-all duration-200 cursor-pointer group relative ${timeIndex % 2 === 0 ? 'bg-white/20' : 'bg-white/10'
+                                  }`}
                                 onMouseEnter={(e) => {
                                   e.currentTarget.style.background = 'rgba(255,255,255,0.4)';
                                 }}
@@ -588,13 +584,13 @@ export default function Calendar() {
                                 whileHover={{ scale: 1.005 }}
                               >
                                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-200">
-                                  <div className="text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg" style={{backgroundColor: '#48808D'}}>
+                                  <div className="text-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg" style={{ backgroundColor: '#48808D' }}>
                                     <i className="fa-solid fa-plus text-sm"></i>
                                   </div>
                                 </div>
                               </motion.div>
                             ))}
-                            
+
                             {/* 当前时间线 */}
                             {isTodayDate && currentTimePos !== null && (
                               <motion.div
@@ -603,37 +599,34 @@ export default function Calendar() {
                                 className="absolute left-0 right-0 z-20 h-0.5 shadow-sm"
                                 style={{ top: currentTimePos, backgroundColor: '#48808D' }}
                               >
-                                <motion.div 
+                                <motion.div
                                   animate={{ scale: [1, 1.1, 1] }}
                                   transition={{ repeat: Infinity, duration: 2 }}
                                   className="absolute right-0 -top-3 text-xs text-white px-2 py-1 rounded-lg shadow-lg"
-                                  style={{backgroundColor: '#48808D'}}
+                                  style={{ backgroundColor: '#48808D' }}
                                 >
                                   <i className="fa-solid fa-clock mr-1"></i>
                                   {currentTime.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
                                 </motion.div>
-                                <div className="absolute right-0 -top-1 w-2 h-2 rounded-full shadow-lg animate-pulse" style={{backgroundColor: '#48808D'}}></div>
+                                <div className="absolute right-0 -top-1 w-2 h-2 rounded-full shadow-lg animate-pulse" style={{ backgroundColor: '#48808D' }}></div>
                               </motion.div>
                             )}
-                            
+
                             {/* 事件层 */}
                             {dayEvents.map(event => {
                               const position = getEventPosition(event);
                               const isEventDragging = isDragging && draggedEvent?.id === event.id;
                               const displayEvent = isEventDragging ? draggedEvent : event;
                               const displayPosition = isEventDragging ? getEventPosition(draggedEvent!) : position;
-                              
+
                               return (
                                 <motion.div
                                   key={event.id}
                                   layout
-                                  className={`absolute left-1 right-1 rounded-xl shadow-sm border transition-all duration-200 group ${
-                                    getPriorityColor(displayEvent!.priority)
-                                  } border-l-4 hover:shadow-lg cursor-move ${
-                                    displayEvent!.completed ? 'opacity-60' : ''
-                                  } ${
-                                    isEventDragging ? 'shadow-xl scale-105 z-50' : 'z-10'
-                                  }`}
+                                  className={`absolute left-1 right-1 rounded-xl shadow-sm border transition-all duration-200 group ${getPriorityColor(displayEvent!.priority)
+                                    } border-l-4 hover:shadow-lg cursor-move ${displayEvent!.completed ? 'opacity-60' : ''
+                                    } ${isEventDragging ? 'shadow-xl scale-105 z-50' : 'z-10'
+                                    }`}
                                   style={{
                                     background: getTypeColor(displayEvent!.type).background,
                                     borderColor: getTypeColor(displayEvent!.type).border,
@@ -654,60 +647,65 @@ export default function Calendar() {
                                   whileHover={{ scale: 1.02 }}
                                 >
                                   {/* 上部调整手柄 */}
-                                  <div 
+                                  <div
                                     className="absolute top-0 left-0 right-0 h-2 cursor-ns-resize opacity-0 group-hover:opacity-100 transition-opacity"
                                     onMouseDown={(e) => {
                                       e.stopPropagation();
                                       handleMouseDown(e, event, 'resize-start');
                                     }}
                                   >
-                                    <div className="w-full h-1 rounded-t-xl" style={{backgroundColor: '#48808D'}}></div>
+                                    <div className="w-full h-1 rounded-t-xl" style={{ backgroundColor: '#48808D' }}></div>
                                   </div>
-                                  
-                                  <div className="p-3 h-full flex flex-col relative overflow-hidden" style={{color: getTypeColor(displayEvent!.type).color}}>
+
+                                  <div className="p-3 h-full flex flex-col relative overflow-hidden" style={{ color: getTypeColor(displayEvent!.type).color }}>
                                     {/* 优先级指示器 */}
-                                    <div className={`absolute top-1 right-1 w-2 h-2 rounded-full ${
-                                      displayEvent!.priority === 'urgent' ? 'bg-rose-300' :
-                                      displayEvent!.priority === 'high' ? 'bg-orange-300' :
-                                      displayEvent!.priority === 'medium' ? 'bg-stone-400' :
-                                      'bg-gray-300'
-                                    }`}></div>
-                                    
+                                    <div className={`absolute top-1 right-1 w-2 h-2 rounded-full ${displayEvent!.priority === 'urgent' ? 'bg-rose-300' :
+                                        displayEvent!.priority === 'high' ? 'bg-orange-300' :
+                                          displayEvent!.priority === 'medium' ? 'bg-stone-400' :
+                                            'bg-gray-300'
+                                      }`}></div>
+
                                     <div className="text-sm font-semibold truncate mb-1 pr-3">
                                       {displayEvent!.title}
                                     </div>
-                                    
+
                                     <div className="text-xs opacity-70 mb-1">
                                       {displayEvent!.startTime} - {displayEvent!.endTime}
                                     </div>
-                                    
+
                                     {displayEvent!.description && displayPosition.height > 60 && (
                                       <div className="text-xs opacity-60 line-clamp-2 flex-1">
                                         {displayEvent!.description}
                                       </div>
                                     )}
-                                    
+
                                     {/* 删除按钮 */}
                                     <button
-                                      className="absolute top-1 left-1 w-4 h-4 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center hover:bg-red-600 text-xs"
+                                      className="absolute top-1 left-1 w-6 h-6 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center hover:bg-red-600 text-xs shadow-md z-30"
+                                      title="删除此事项"
+                                      onMouseDown={(e) => {
+                                        e.stopPropagation();
+                                        e.preventDefault();
+                                      }}
                                       onClick={(e) => {
                                         e.stopPropagation();
+                                        e.preventDefault();
                                         deleteEvent(event.id);
                                       }}
                                     >
                                       <i className="fa-solid fa-times"></i>
                                     </button>
                                   </div>
-                                  
+
                                   {/* 下部调整手柄 */}
-                                  <div 
+                                  <div
                                     className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize opacity-0 group-hover:opacity-100 transition-opacity"
                                     onMouseDown={(e) => {
                                       e.stopPropagation();
                                       handleMouseDown(e, event, 'resize-end');
                                     }}
                                   >
-                                    <div className="w-full h-1 rounded-b-xl" style={{backgroundColor: '#48808D'}}></div>
+                                    <div className="w-full h-1 rounded-b-xl" style={{ backgroundColor: '#48808D' }}></div>
                                   </div>
                                 </motion.div>
                               );
@@ -720,26 +718,26 @@ export default function Calendar() {
                 </div>
               </div>
             </div>
-            
+
             {/* 右侧：待办事项与心情记录 */}
             <div className="lg:col-span-1 space-y-4">
               {/* 待办事项 */}
               <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-white/30 overflow-hidden">
                 <div className="flex justify-between items-center p-4 border-b border-white/30 bg-white/60 backdrop-blur-sm">
-                  <h3 className="font-semibold flex items-center" style={{color: '#48808D'}}>
-                    <i className="fa-solid fa-list-check mr-2" style={{color: '#48808D'}}></i>
+                  <h3 className="font-semibold flex items-center" style={{ color: '#48808D' }}>
+                    <i className="fa-solid fa-list-check mr-2" style={{ color: '#48808D' }}></i>
                     待办事项
                   </h3>
-                  <button 
-                    onClick={() => {setFormData({...formData, isTask: true}); setIsFormOpen(true);}}
+                  <button
+                    onClick={() => { setFormData({ ...formData, isTask: true }); setIsFormOpen(true); }}
                     className="text-xs px-3 py-1.5 text-white rounded-lg transition-all shadow-sm"
-                    style={{backgroundColor: '#48808D'}}
+                    style={{ backgroundColor: '#48808D' }}
                   >
                     <i className="fa-solid fa-plus mr-1"></i>
                     添加
                   </button>
                 </div>
-                
+
                 <div className="p-4">
                   {allTasks.length === 0 ? (
                     <div className="text-center py-8 text-gray-400">
@@ -755,11 +753,9 @@ export default function Calendar() {
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -20 }}
-                          className={`p-3 rounded-xl border-l-4 ${
-                            getPriorityColor(task.priority)
-                          } ${
-                            task.completed ? 'bg-gray-50 opacity-60' : 'bg-white shadow-sm'
-                          } hover:shadow-md transition-all group border border-gray-100`}
+                          className={`p-3 rounded-xl border-l-4 ${getPriorityColor(task.priority)
+                            } ${task.completed ? 'bg-gray-50 opacity-60' : 'bg-white shadow-sm'
+                            } hover:shadow-md transition-all group border border-gray-100`}
                         >
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-3 flex-1">
@@ -767,11 +763,10 @@ export default function Calendar() {
                                 whileHover={{ scale: 1.1 }}
                                 whileTap={{ scale: 0.9 }}
                                 onClick={() => toggleCompleted(task.id)}
-                                className={`w-4 h-4 rounded-md border-2 flex items-center justify-center transition-all ${
-                                  task.completed
+                                className={`w-4 h-4 rounded-md border-2 flex items-center justify-center transition-all ${task.completed
                                     ? 'bg-stone-500 border-stone-500'
                                     : 'border-stone-300 hover:border-stone-500'
-                                }`}
+                                  }`}
                               >
                                 {task.completed && (
                                   <motion.i
@@ -781,23 +776,21 @@ export default function Calendar() {
                                   />
                                 )}
                               </motion.button>
-                              
+
                               <div className="flex-1 min-w-0">
-                                <div className={`text-sm font-medium truncate ${
-                                  task.completed ? 'line-through text-gray-400' : 'text-gray-700'
-                                }`}>
+                                <div className={`text-sm font-medium truncate ${task.completed ? 'line-through text-gray-400' : 'text-gray-700'
+                                  }`}>
                                   {task.title}
                                 </div>
                                 {task.description && (
-                                  <div className={`text-xs truncate mt-1 ${
-                                    task.completed ? 'text-gray-300' : 'text-gray-500'
-                                  }`}>
+                                  <div className={`text-xs truncate mt-1 ${task.completed ? 'text-gray-300' : 'text-gray-500'
+                                    }`}>
                                     {task.description}
                                   </div>
                                 )}
                               </div>
                             </div>
-                            
+
                             <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                               <motion.button
                                 whileHover={{ scale: 1.1 }}
@@ -835,14 +828,14 @@ export default function Calendar() {
                     今日心情
                   </h3>
                   <div className="flex space-x-2">
-                    <button 
+                    <button
                       onClick={() => setShowMoodHistory(true)}
                       className="text-xs px-3 py-1.5 text-gray-600 hover:text-gray-800 bg-white/80 border border-gray-200 rounded-lg transition-all hover:shadow-sm"
                     >
                       <i className="fa-solid fa-history mr-1"></i>
                       历史
                     </button>
-                    <button 
+                    <button
                       onClick={saveMood}
                       disabled={!selectedMood}
                       className="text-xs px-3 py-1.5 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-lg hover:from-pink-600 hover:to-rose-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
@@ -852,22 +845,21 @@ export default function Calendar() {
                     </button>
                   </div>
                 </div>
-                
+
                 <div className="p-4">
                   <div className="text-xs text-gray-500 mb-3 text-center">
                     选择今天的心情
                   </div>
-                  
+
                   <div className="grid grid-cols-5 gap-2">
                     {moods.map(mood => (
                       <motion.button
                         key={mood.name}
                         onClick={() => setSelectedMood(mood.name)}
-                        className={`aspect-square rounded-xl text-2xl flex items-center justify-center transition-all duration-200 ${
-                          selectedMood === mood.name
+                        className={`aspect-square rounded-xl text-2xl flex items-center justify-center transition-all duration-200 ${selectedMood === mood.name
                             ? 'bg-gradient-to-br from-yellow-100 to-orange-100 scale-110 shadow-lg ring-2 ring-yellow-300'
                             : 'bg-gray-50/80 hover:bg-gray-100/80 hover:scale-105'
-                        }`}
+                          }`}
                         whileHover={{ scale: selectedMood === mood.name ? 1.1 : 1.05 }}
                         whileTap={{ scale: 0.95 }}
                       >
@@ -875,7 +867,7 @@ export default function Calendar() {
                       </motion.button>
                     ))}
                   </div>
-                  
+
                   {selectedMood && (
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
@@ -907,7 +899,7 @@ export default function Calendar() {
                       <i className="fa-solid fa-heart text-pink-400 mr-2"></i>
                       心情历史
                     </h3>
-                    <button 
+                    <button
                       onClick={() => setShowMoodHistory(false)}
                       className="p-2 text-stone-500 hover:text-stone-700 hover:bg-stone-100 rounded-lg transition-colors"
                     >
@@ -923,8 +915,8 @@ export default function Calendar() {
                       </div>
                     ) : (
                       moodHistory.map((item, index) => (
-                        <motion.div 
-                          key={index} 
+                        <motion.div
+                          key={index}
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: index * 0.1 }}
@@ -971,14 +963,14 @@ export default function Calendar() {
                     <h3 className="text-lg font-medium text-gray-800">
                       {editingEvent ? '编辑' : '新建'}{formData.isTask ? '待办' : '实验'}
                     </h3>
-                    <button 
+                    <button
                       onClick={closeForm}
                       className="p-1 text-gray-500 hover:text-gray-700"
                     >
                       <i className="fa-solid fa-times"></i>
                     </button>
                   </div>
-                  
+
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -987,19 +979,19 @@ export default function Calendar() {
                       <input
                         type="text"
                         value={formData.title}
-                        onChange={(e) => setFormData({...formData, title: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-emerald-500 focus:border-transparent"
                         placeholder={formData.isTask ? '输入待办事项...' : '输入实验名称...'}
                         required
                       />
                     </div>
-                    
+
                     <div>
                       <label className="flex items-center p-3 bg-gray-50 rounded cursor-pointer">
                         <input
                           type="checkbox"
                           checked={formData.isTask || false}
-                          onChange={(e) => setFormData({...formData, isTask: e.target.checked})}
+                          onChange={(e) => setFormData({ ...formData, isTask: e.target.checked })}
                           className="mr-2"
                         />
                         <span className="text-sm text-gray-700">设置为待办事项</span>
@@ -1013,7 +1005,7 @@ export default function Calendar() {
                       <input
                         type="date"
                         value={formData.date}
-                        onChange={(e) => setFormData({...formData, date: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-emerald-500 focus:border-transparent"
                         required
                       />
@@ -1028,11 +1020,11 @@ export default function Calendar() {
                           <input
                             type="time"
                             value={formData.startTime}
-                            onChange={(e) => setFormData({...formData, startTime: e.target.value})}
+                            onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
                             className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-emerald-500 focus:border-transparent"
                           />
                         </div>
-                        
+
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-1">
                             结束时间
@@ -1040,7 +1032,7 @@ export default function Calendar() {
                           <input
                             type="time"
                             value={formData.endTime}
-                            onChange={(e) => setFormData({...formData, endTime: e.target.value})}
+                            onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
                             className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-emerald-500 focus:border-transparent"
                           />
                         </div>
@@ -1054,7 +1046,7 @@ export default function Calendar() {
                         </label>
                         <select
                           value={formData.type}
-                          onChange={(e) => setFormData({...formData, type: e.target.value as any})}
+                          onChange={(e) => setFormData({ ...formData, type: e.target.value as any })}
                           className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-emerald-500 focus:border-transparent bg-white"
                         >
                           <option value="experiment">实验</option>
@@ -1064,14 +1056,14 @@ export default function Calendar() {
                           <option value="other">其他</option>
                         </select>
                       </div>
-                      
+
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           优先级
                         </label>
                         <select
                           value={formData.priority}
-                          onChange={(e) => setFormData({...formData, priority: e.target.value as any})}
+                          onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
                           className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-1 focus:ring-emerald-500 focus:border-transparent bg-white"
                         >
                           <option value="low">低</option>
@@ -1088,7 +1080,7 @@ export default function Calendar() {
                       </label>
                       <textarea
                         value={formData.description}
-                        onChange={(e) => setFormData({...formData, description: e.target.value})}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                         rows={3}
                         className="w-full px-3 py-2 border border-gray-300 rounded resize-none focus:ring-1 focus:ring-emerald-500 focus:border-transparent"
                         placeholder="说明..."
@@ -1105,11 +1097,10 @@ export default function Calendar() {
                       </button>
                       <button
                         type="submit"
-                        className={`flex-1 px-4 py-2 text-white rounded ${
-                          formData.isTask 
-                            ? 'bg-blue-500 hover:bg-blue-600' 
+                        className={`flex-1 px-4 py-2 text-white rounded ${formData.isTask
+                            ? 'bg-blue-500 hover:bg-blue-600'
                             : 'bg-emerald-500 hover:bg-emerald-600'
-                        }`}
+                          }`}
                       >
                         {editingEvent ? '更新' : '创建'}
                       </button>

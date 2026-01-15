@@ -1,22 +1,38 @@
+@import './styles/tokens.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* 优设标题黑补丁 - 尝试加载远程资源或回退 */
+@font-face {
+  font-family: 'YouSheBiaoTiHei';
+  src: url('https://cdn.jsdelivr.net/gh/Leon-An/YouSheBiaoTiHei/YouSheBiaoTiHei-2.ttf') format('truetype');
+  font-display: swap;
+}
+
 :root {
-  font-family: 'You She Biao Ti Hei', 'Xia Wu Wen Kai Light', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-body);
   line-height: 1.5;
   font-weight: 300;
-  background-color: #f9f6f2;
-  color: #555555;
+  background-color: var(--earth-beige);
+  color: var(--text-main);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  -moz-osx-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+.font-header {
+  font-family: var(--font-header);
 }
 
 body {
-  background-color: #f9f6f2;
-  color: #555555;
+  background-color: var(--earth-beige);
+  color: var(--text-main);
 }
 
 /* 自定义滚动条样式 */
@@ -86,9 +102,12 @@ body {
 
 /* 动画效果 */
 @keyframes float {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translateY(0px);
   }
+
   50% {
     transform: translateY(-10px);
   }

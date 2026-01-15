@@ -28,14 +28,14 @@ export function ImageUpload({ visible, onClose, onInsert }: ImageUploadProps) {
     const file = event.target.files?.[0];
     if (file && file.type.startsWith('image/')) {
       setSelectedImage(file);
-      
+
       // 立即生成预览URL，不需要额外的上传步骤
       const reader = new FileReader();
       reader.onload = (e) => {
         setImageUrl(e.target?.result as string);
       };
       reader.readAsDataURL(file);
-      
+
       // 自动设置alt文本
       setImageAlt(file.name.replace(/\.[^/.]+$/, ""));
     }
@@ -79,20 +79,20 @@ export function ImageUpload({ visible, onClose, onInsert }: ImageUploadProps) {
   if (!visible) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col border border-forest-accent/20">
         <div className="p-6 border-b border-gray-200 dark:border-gray-700">
           <div className="flex justify-between items-center">
             <div>
-              <h3 className="text-xl font-bold text-gray-800 dark:text-white">
-                <i className="fa-solid fa-image mr-2 text-green-600"></i>
+              <h3 className="text-xl font-bold text-forest-primary">
+                <i className="fa-solid fa-image mr-2 text-forest-secondary"></i>
                 插入图片
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                 支持实验现象、结果图片和设备照片
               </p>
             </div>
-            <button 
+            <button
               onClick={handleClose}
               className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
             >
@@ -100,7 +100,7 @@ export function ImageUpload({ visible, onClose, onInsert }: ImageUploadProps) {
             </button>
           </div>
         </div>
-        
+
         <div className="p-6 flex-1 overflow-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* 左侧：上传方式选择 */}
@@ -109,44 +109,42 @@ export function ImageUpload({ visible, onClose, onInsert }: ImageUploadProps) {
                 <h4 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
                   选择图片来源
                 </h4>
-                
+
                 {/* 上传方式切换 */}
                 <div className="flex space-x-2 mb-4">
                   <button
                     onClick={() => setUploadMethod('file')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                      uploadMethod === 'file'
-                        ? 'bg-blue-100 text-blue-700 border border-blue-300'
-                        : 'bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100'
-                    }`}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${uploadMethod === 'file'
+                        ? 'bg-forest-secondary/10 text-forest-primary border border-forest-secondary'
+                        : 'bg-earth-beige/30 text-text-main border border-forest-accent/20 hover:bg-earth-beige/50'
+                      }`}
                   >
                     <i className="fa-solid fa-upload mr-2"></i>
                     本地上传
                   </button>
                   <button
                     onClick={() => setUploadMethod('url')}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                      uploadMethod === 'url'
-                        ? 'bg-blue-100 text-blue-700 border border-blue-300'
-                        : 'bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100'
-                    }`}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${uploadMethod === 'url'
+                        ? 'bg-forest-secondary/10 text-forest-primary border border-forest-secondary'
+                        : 'bg-earth-beige/30 text-text-main border border-forest-accent/20 hover:bg-earth-beige/50'
+                      }`}
                   >
                     <i className="fa-solid fa-link mr-2"></i>
                     网络链接
                   </button>
                 </div>
-                
+
                 {/* 文件上传 */}
                 {uploadMethod === 'file' && (
                   <div className="space-y-4">
-                    <div 
-                      className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center cursor-pointer hover:border-blue-400 transition-colors"
+                    <div
+                      className="border-2 border-dashed border-forest-accent/30 rounded-xl p-8 text-center cursor-pointer hover:border-forest-secondary transition-colors"
                       onClick={() => fileInputRef.current?.click()}
                     >
                       {selectedImage && imageUrl ? (
                         <div className="space-y-2">
-                          <i className="fa-solid fa-check-circle text-4xl text-green-500 mb-2"></i>
-                          <p className="text-green-600 dark:text-green-400 font-medium">
+                          <i className="fa-solid fa-check-circle text-4xl text-status-success mb-2"></i>
+                          <p className="text-status-success font-medium">
                             文件已选择: {selectedImage.name}
                           </p>
                           <p className="text-sm text-gray-500">
@@ -174,7 +172,7 @@ export function ImageUpload({ visible, onClose, onInsert }: ImageUploadProps) {
                     </div>
                   </div>
                 )}
-                
+
                 {/* URL输入 */}
                 {uploadMethod === 'url' && (
                   <div className="space-y-4">
@@ -187,10 +185,10 @@ export function ImageUpload({ visible, onClose, onInsert }: ImageUploadProps) {
                         value={imageUrl}
                         onChange={(e) => handleUrlInput(e.target.value)}
                         placeholder="https://example.com/image.jpg"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                        className="w-full px-3 py-2 border border-forest-accent/30 rounded-xl focus:ring-2 focus:ring-forest-secondary focus:border-forest-secondary bg-white text-text-main"
                       />
                     </div>
-                    
+
                     {/* 示例图片链接 */}
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -218,9 +216,9 @@ export function ImageUpload({ visible, onClose, onInsert }: ImageUploadProps) {
                               setImageUrl(example.url);
                               setImageAlt(example.name);
                             }}
-                            className="p-2 text-left border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm"
+                            className="p-2 text-left border border-forest-accent/20 rounded-lg hover:bg-earth-beige/30 transition-colors text-sm"
                           >
-                            <span className="text-blue-600 dark:text-blue-400">{example.name}</span>
+                            <span className="text-forest-secondary">{example.name}</span>
                           </button>
                         ))}
                       </div>
@@ -228,13 +226,13 @@ export function ImageUpload({ visible, onClose, onInsert }: ImageUploadProps) {
                   </div>
                 )}
               </div>
-              
+
               {/* 图片信息设置 */}
               <div className="space-y-4">
                 <h5 className="font-medium text-gray-800 dark:text-white">
                   图片信息
                 </h5>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     替代文本 (必填)
@@ -244,10 +242,10 @@ export function ImageUpload({ visible, onClose, onInsert }: ImageUploadProps) {
                     value={imageAlt}
                     onChange={(e) => setImageAlt(e.target.value)}
                     placeholder="描述图片内容，用于无障碍访问"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                    className="w-full px-3 py-2 border border-forest-accent/30 rounded-xl focus:ring-2 focus:ring-forest-secondary focus:border-forest-secondary bg-white text-text-main"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     图片说明 (可选)
@@ -257,10 +255,10 @@ export function ImageUpload({ visible, onClose, onInsert }: ImageUploadProps) {
                     value={imageCaption}
                     onChange={(e) => setImageCaption(e.target.value)}
                     placeholder="如：实验反应过程中的颜色变化"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                    className="w-full px-3 py-2 border border-forest-accent/30 rounded-xl focus:ring-2 focus:ring-forest-secondary focus:border-forest-secondary bg-white text-text-main"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                     显示宽度 (px)
@@ -270,11 +268,10 @@ export function ImageUpload({ visible, onClose, onInsert }: ImageUploadProps) {
                       <button
                         key={width}
                         onClick={() => setImageWidth(width)}
-                        className={`px-3 py-1 rounded text-sm transition-all ${
-                          imageWidth === width
-                            ? 'bg-blue-100 text-blue-700 border border-blue-300'
-                            : 'bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100'
-                        }`}
+                        className={`px-3 py-1 rounded-lg text-sm transition-all ${imageWidth === width
+                            ? 'bg-forest-secondary/10 text-forest-primary border border-forest-secondary'
+                            : 'bg-earth-beige/30 text-text-main border border-forest-accent/20 hover:bg-earth-beige/50'
+                          }`}
                       >
                         {width}px
                       </button>
@@ -286,18 +283,18 @@ export function ImageUpload({ visible, onClose, onInsert }: ImageUploadProps) {
                     onChange={(e) => setImageWidth(Number(e.target.value))}
                     min="100"
                     max="800"
-                    className="mt-2 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                    className="mt-2 w-full px-3 py-2 border border-forest-accent/30 rounded-xl focus:ring-2 focus:ring-forest-secondary focus:border-forest-secondary bg-white text-text-main"
                   />
                 </div>
               </div>
             </div>
-            
+
             {/* 右侧：预览区域 */}
             <div>
               <h4 className="text-lg font-semibold text-gray-800 dark:text-white mb-4">
                 预览
               </h4>
-              
+
               {imageUrl ? (
                 <div className="space-y-4">
                   <div className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 bg-gray-50 dark:bg-gray-900">
@@ -316,13 +313,13 @@ export function ImageUpload({ visible, onClose, onInsert }: ImageUploadProps) {
                       </p>
                     )}
                   </div>
-                  
+
                   <div className="bg-gray-50 dark:bg-gray-900 rounded-lg p-3">
                     <h6 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Markdown 预览
                     </h6>
                     <pre className="text-xs font-mono text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
-{`![${imageAlt}](${imageUrl}${imageWidth !== 400 ? ` =x${imageWidth}` : ''})${imageCaption ? `\n*${imageCaption}*` : ''}`}
+                      {`![${imageAlt}](${imageUrl}${imageWidth !== 400 ? ` =x${imageWidth}` : ''})${imageCaption ? `\n*${imageCaption}*` : ''}`}
                     </pre>
                   </div>
                 </div>
@@ -339,25 +336,25 @@ export function ImageUpload({ visible, onClose, onInsert }: ImageUploadProps) {
             </div>
           </div>
         </div>
-        
+
         <div className="p-4 flex justify-between items-center border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50">
           <div className="text-sm text-gray-500 dark:text-gray-400">
             {imageUrl && `图片大小: ${imageWidth}px 宽`}
           </div>
           <div className="flex space-x-3">
-            <Button 
-              type="button" 
+            <Button
+              type="button"
               variant="outline"
               onClick={handleClose}
             >
               <i className="fa-solid fa-times mr-2"></i>
               取消
             </Button>
-            <Button 
+            <Button
               type="button"
               onClick={handleInsert}
               disabled={!imageUrl || !imageAlt}
-              className="bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
+              className="bg-forest-secondary hover:bg-forest-primary text-white disabled:opacity-50"
             >
               <i className="fa-solid fa-check mr-2"></i>
               插入图片

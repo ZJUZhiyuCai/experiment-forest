@@ -37,22 +37,22 @@ export default function MyForest() {
     const allNotes = experimentNoteService.getAll();
     const allSOPs = sopService.getAll();
     const allProjects = projectService.getAll();
-    
+
     setRecords(allRecords);
     setNotes(allNotes);
     setSOPs(allSOPs);
     setProjects(allProjects);
-    
+
     // 计算森林统计
     const totalTrees = allRecords.length + allNotes.length + allSOPs.length;
     const achievements = [];
-    
+
     if (allRecords.length > 0) achievements.push('播种者');
     if (allNotes.length >= 5) achievements.push('园丁');
     if (allSOPs.length >= 3) achievements.push('森林守护者');
     if (totalTrees >= 20) achievements.push('森林之主');
     if (allProjects.length >= 3) achievements.push('生态建设师');
-    
+
     setForestStats({
       totalTrees,
       seedlings: allRecords.length,
@@ -66,11 +66,11 @@ export default function MyForest() {
   const generateForestLayout = () => {
     // const trees = [];
     const allItems = [
-      ...records.map(r => ({ ...r, type: 'record', icon: 'fa-seedling', color: '#7FB069' })),
-      ...notes.map(n => ({ ...n, type: 'note', icon: 'fa-leaf', color: '#A8D5BA' })),
-      ...sops.map(s => ({ ...s, type: 'sop', icon: 'fa-tree', color: '#4A7C59' }))
+      ...records.map(r => ({ ...r, type: 'record', icon: 'fa-seedling', color: 'var(--forest-secondary)' })),
+      ...notes.map(n => ({ ...n, type: 'note', icon: 'fa-leaf', color: 'var(--forest-accent)' })),
+      ...sops.map(s => ({ ...s, type: 'sop', icon: 'fa-tree', color: 'var(--forest-primary)' }))
     ];
-    
+
     // 按创建时间排序，模拟森林生长过程
     allItems.sort((a, b) => {
       // 使用类型安全的方式获取日期
@@ -84,18 +84,18 @@ export default function MyForest() {
         }
         return new Date(0); // 默认日期
       };
-      
+
       const aDate = getItemDate(a);
       const bDate = getItemDate(b);
       return aDate.getTime() - bDate.getTime();
     });
-    
+
     return allItems.map((item, index) => {
       // 使用伪随机但固定的位置
       const seed = item.id.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
       const x = (seed % 80) + 10; // 10-90%
       const y = ((seed * 17) % 60) + 20; // 20-80%
-      
+
       return {
         ...item,
         x,
@@ -109,47 +109,47 @@ export default function MyForest() {
   const forestTrees = generateForestLayout();
 
   return (
-    <div className="min-h-screen bg-[#F7FDF0] text-[#555555]">
+    <div className="min-h-screen bg-earth-beige text-text-main">
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
-      
+
       <div className={sidebarCollapsed ? 'ml-16' : 'ml-64'}>
-        <Header 
-          title="我的实验森林" 
+        <Header
+          title="我的实验森林"
           sidebarCollapsed={sidebarCollapsed}
         />
-        
+
         <main className="container mx-auto px-4 py-6">
           {/* 森林统计信息 */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-gradient-to-br from-[#A8D5BA]/30 to-[#7FB069]/20 rounded-xl p-6 text-center">
-              <i className="fa-solid fa-tree text-[#4A7C59] text-3xl mb-3"></i>
-              <h3 className="text-2xl font-bold text-[#4A7C59]">{forestStats.totalTrees}</h3>
-              <p className="text-[#666666] text-sm">总树木数量</p>
+            <div className="bg-gradient-to-br from-forest-accent/30 to-forest-secondary/20 rounded-xl p-6 text-center">
+              <i className="fa-solid fa-tree text-forest-primary text-3xl mb-3"></i>
+              <h3 className="text-2xl font-bold text-forest-primary">{forestStats.totalTrees}</h3>
+              <p className="text-text-soft text-sm">总树木数量</p>
             </div>
-            
-            <div className="bg-gradient-to-br from-[#7FB069]/30 to-[#4A7C59]/20 rounded-xl p-6 text-center">
-              <i className="fa-solid fa-seedling text-[#7FB069] text-3xl mb-3"></i>
-              <h3 className="text-2xl font-bold text-[#4A7C59]">{forestStats.seedlings}</h3>
-              <p className="text-[#666666] text-sm">实验幼苗</p>
+
+            <div className="bg-gradient-to-br from-forest-secondary/30 to-forest-primary/20 rounded-xl p-6 text-center">
+              <i className="fa-solid fa-seedling text-forest-secondary text-3xl mb-3"></i>
+              <h3 className="text-2xl font-bold text-forest-primary">{forestStats.seedlings}</h3>
+              <p className="text-text-soft text-sm">实验幼苗</p>
             </div>
-            
-            <div className="bg-gradient-to-br from-[#4A7C59]/30 to-[#8B4513]/20 rounded-xl p-6 text-center">
-              <i className="fa-solid fa-leaf text-[#A8D5BA] text-3xl mb-3"></i>
-              <h3 className="text-2xl font-bold text-[#4A7C59]">{forestStats.saplings}</h3>
-              <p className="text-[#666666] text-sm">知识枝叶</p>
+
+            <div className="bg-gradient-to-br from-forest-primary/30 to-earth-brown/20 rounded-xl p-6 text-center">
+              <i className="fa-solid fa-leaf text-forest-accent text-3xl mb-3"></i>
+              <h3 className="text-2xl font-bold text-forest-primary">{forestStats.saplings}</h3>
+              <p className="text-text-soft text-sm">知识枝叶</p>
             </div>
-            
-            <div className="bg-gradient-to-br from-[#8B4513]/30 to-[#4A7C59]/20 rounded-xl p-6 text-center">
-              <i className="fa-solid fa-percentage text-[#4A7C59] text-3xl mb-3"></i>
-              <h3 className="text-2xl font-bold text-[#4A7C59]">{forestStats.forestCoverage}%</h3>
-              <p className="text-[#666666] text-sm">森林覆盖率</p>
+
+            <div className="bg-gradient-to-br from-earth-brown/30 to-forest-primary/20 rounded-xl p-6 text-center">
+              <i className="fa-solid fa-percentage text-forest-primary text-3xl mb-3"></i>
+              <h3 className="text-2xl font-bold text-forest-primary">{forestStats.forestCoverage}%</h3>
+              <p className="text-text-soft text-sm">森林覆盖率</p>
             </div>
           </div>
 
           {/* 成就展示 */}
-          <div className="bg-white/70 rounded-xl shadow-md border border-[#A8D5BA]/30 p-6 mb-8">
-            <h2 className="text-xl font-bold text-[#4A7C59] mb-4 flex items-center">
-              <i className="fa-solid fa-trophy text-[#FFD700] mr-3"></i>
+          <div className="bg-white/70 rounded-xl shadow-md border border-forest-accent/30 p-6 mb-8">
+            <h2 className="text-xl font-bold text-forest-primary mb-4 flex items-center">
+              <i className="fa-solid fa-trophy text-status-warning mr-3"></i>
               森林成就
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -160,26 +160,23 @@ export default function MyForest() {
                 { name: '森林之主', icon: 'fa-crown', condition: forestStats.totalTrees >= 20, description: '拥有20棵树木' },
                 { name: '生态建设师', icon: 'fa-city', condition: projects.length >= 3, description: '管理3个课题项目' }
               ].map((achievement) => (
-                <div 
+                <div
                   key={achievement.name}
-                  className={`p-4 rounded-lg text-center transition-all duration-300 ${
-                    achievement.condition 
-                      ? 'bg-gradient-to-br from-[#FFD700]/20 to-[#FFD700]/10 border border-[#FFD700]/30' 
-                      : 'bg-gray-100 border border-gray-200 opacity-50'
-                  }`}
+                  className={`p-4 rounded-lg text-center transition-all duration-300 ${achievement.condition
+                    ? 'bg-gradient-to-br from-status-warning/20 to-status-warning/10 border border-status-warning/30'
+                    : 'bg-gray-100 border border-gray-200 opacity-50'
+                    }`}
                 >
-                  <i className={`fa-solid ${achievement.icon} text-2xl mb-2 ${
-                    achievement.condition ? 'text-[#FFD700]' : 'text-gray-400'
-                  }`}></i>
-                  <h4 className={`text-sm font-medium mb-1 ${
-                    achievement.condition ? 'text-[#4A7C59]' : 'text-gray-400'
-                  }`}>
+                  <i className={`fa-solid ${achievement.icon} text-2xl mb-2 ${achievement.condition ? 'text-status-warning' : 'text-gray-400'
+                    }`}></i>
+                  <h4 className={`text-sm font-medium mb-1 ${achievement.condition ? 'text-forest-primary' : 'text-gray-400'
+                    }`}>
                     {achievement.name}
                   </h4>
                   <p className="text-xs text-gray-500">{achievement.description}</p>
                   {achievement.condition && (
                     <div className="mt-2">
-                      <span className="inline-block w-2 h-2 bg-[#FFD700] rounded-full animate-pulse"></span>
+                      <span className="inline-block w-2 h-2 bg-status-warning rounded-full animate-pulse"></span>
                     </div>
                   )}
                 </div>
@@ -188,15 +185,15 @@ export default function MyForest() {
           </div>
 
           {/* 互动森林画布 */}
-          <div className="bg-gradient-to-b from-[#87CEEB]/30 via-[#F7FDF0] to-[#8B4513]/20 rounded-xl shadow-lg border border-[#A8D5BA]/30 overflow-hidden">
-            <div className="p-6 border-b border-[#A8D5BA]/30">
-              <h2 className="text-xl font-bold text-[#4A7C59] flex items-center">
-                <i className="fa-solid fa-seedling mr-3 text-[#7FB069]"></i>
+          <div className="bg-gradient-to-b from-status-info/30 via-forest-light to-earth-brown/20 rounded-xl shadow-lg border border-forest-accent/30 overflow-hidden">
+            <div className="p-6 border-b border-forest-accent/30">
+              <h2 className="text-xl font-bold text-forest-primary flex items-center">
+                <i className="fa-solid fa-seedling mr-3 text-forest-secondary"></i>
                 森林生态图
               </h2>
-              <p className="text-[#666666] text-sm mt-1">点击任意树木查看详细信息</p>
+              <p className="text-text-soft text-sm mt-1">点击任意树木查看详细信息</p>
             </div>
-            
+
             <div className="relative h-96 p-6">
               {/* 背景装饰 */}
               <div className="absolute inset-0 overflow-hidden">
@@ -205,39 +202,39 @@ export default function MyForest() {
                   <motion.i
                     key={`cloud-${i}`}
                     className="fa-solid fa-cloud text-white/40 absolute top-4"
-                    style={{ 
+                    style={{
                       fontSize: `${16 + i * 4}px`,
                       left: `${20 + i * 30}%`,
                       top: `${10 + i * 5}%`
                     }}
                     animate={{ x: [0, 10, 0] }}
-                    transition={{ 
+                    transition={{
                       duration: 3 + i,
                       repeat: Infinity,
                       ease: "easeInOut"
                     }}
                   />
                 ))}
-                
+
                 {/* 太阳 */}
                 <motion.i
-                  className="fa-solid fa-sun text-[#FFD700] absolute top-4 right-8 text-2xl"
+                  className="fa-solid fa-sun text-status-warning absolute top-4 right-8 text-2xl"
                   animate={{ rotate: 360 }}
                   transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
                 />
               </div>
-              
+
               {/* 森林树木 */}
               <div className="relative w-full h-full">
                 {forestTrees.length === 0 ? (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center text-[#888888]">
+                    <div className="text-center text-text-muted">
                       <i className="fa-solid fa-seedling text-6xl mb-4 opacity-30"></i>
                       <h3 className="text-lg font-medium mb-2">森林等待您的第一颗种子</h3>
                       <p className="text-sm mb-6">开始创建实验记录，种下您的第一棵树吧！</p>
-                      <Link 
+                      <Link
                         to="/records/new"
-                        className="bg-[#4A7C59] hover:bg-[#7FB069] text-white px-6 py-3 rounded-lg transition-colors"
+                        className="bg-forest-primary hover:bg-forest-secondary text-white px-6 py-3 rounded-lg transition-colors"
                       >
                         <i className="fa-solid fa-seedling mr-2"></i>
                         种下第一棵树
@@ -249,13 +246,13 @@ export default function MyForest() {
                     <motion.div
                       key={tree.id}
                       className="absolute cursor-pointer transform -translate-x-1/2 -translate-y-1/2 group"
-                      style={{ 
-                        left: `${tree.x}%`, 
-                        top: `${tree.y}%` 
+                      style={{
+                        left: `${tree.x}%`,
+                        top: `${tree.y}%`
                       }}
                       initial={{ scale: 0, opacity: 0 }}
                       animate={{ scale: 1, opacity: 1 }}
-                      transition={{ 
+                      transition={{
                         duration: 0.5,
                         delay: tree.delay,
                         type: "spring"
@@ -265,23 +262,23 @@ export default function MyForest() {
                     >
                       {/* 树木图标 */}
                       <div className="relative">
-                        <i 
+                        <i
                           className={`fa-solid ${tree.icon} transition-all duration-300`}
-                          style={{ 
+                          style={{
                             color: tree.color,
                             fontSize: tree.size === 'large' ? '28px' : tree.size === 'medium' ? '20px' : '16px'
                           }}
                         />
-                        
+
                         {/* 树干 */}
-                        <div 
-                          className="absolute top-full left-1/2 transform -translate-x-1/2 bg-[#8B4513] transition-all duration-300"
+                        <div
+                          className="absolute top-full left-1/2 transform -translate-x-1/2 bg-earth-brown transition-all duration-300"
                           style={{
                             width: tree.size === 'large' ? '4px' : tree.size === 'medium' ? '3px' : '2px',
                             height: tree.size === 'large' ? '12px' : tree.size === 'medium' ? '8px' : '6px'
                           }}
                         />
-                        
+
                         {/* Hover提示 */}
                         <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-black/80 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
                           {tree.title}
@@ -309,34 +306,34 @@ export default function MyForest() {
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-bold text-[#4A7C59] flex items-center">
+                  <h3 className="text-lg font-bold text-forest-primary flex items-center">
                     <i className={`fa-solid ${selectedTree.icon} mr-2`} style={{ color: selectedTree.color }}></i>
                     {selectedTree.title}
                   </h3>
-                  <button 
+                  <button
                     onClick={() => setSelectedTree(null)}
                     className="text-gray-400 hover:text-gray-600"
                   >
                     <i className="fa-solid fa-times"></i>
                   </button>
                 </div>
-                
+
                 <div className="space-y-3">
                   <div>
                     <span className="text-sm text-gray-600">类型: </span>
                     <span className="text-sm font-medium">
-                      {selectedTree.type === 'record' ? '实验记录 🌱' : 
-                       selectedTree.type === 'note' ? '实验笔记 🍃' : 'SOP文档 🌳'}
+                      {selectedTree.type === 'record' ? '实验记录 🌱' :
+                        selectedTree.type === 'note' ? '实验笔记 🍃' : 'SOP文档 🌳'}
                     </span>
                   </div>
-                  
+
                   <div>
                     <span className="text-sm text-gray-600">种植时间: </span>
                     <span className="text-sm font-medium">
                       {new Date(selectedTree.createdAt || selectedTree.lastUpdated).toLocaleDateString('zh-CN')}
                     </span>
                   </div>
-                  
+
                   {selectedTree.content && (
                     <div>
                       <span className="text-sm text-gray-600">描述: </span>
@@ -346,9 +343,9 @@ export default function MyForest() {
                     </div>
                   )}
                 </div>
-                
+
                 <div className="flex justify-end mt-6 space-x-3">
-                  <button 
+                  <button
                     onClick={() => setSelectedTree(null)}
                     className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                   >
@@ -356,7 +353,7 @@ export default function MyForest() {
                   </button>
                   <Link
                     to={`/${selectedTree.type === 'record' ? 'records' : selectedTree.type === 'note' ? 'notes' : 'sops'}/${selectedTree.id}`}
-                    className="px-4 py-2 bg-[#4A7C59] text-white rounded-lg hover:bg-[#7FB069] transition-colors"
+                    className="px-4 py-2 bg-forest-primary text-white rounded-lg hover:bg-forest-secondary transition-colors"
                   >
                     查看详情
                   </Link>

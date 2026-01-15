@@ -1,11 +1,11 @@
-import { 
-  ChatSession, 
-  ChatMessage, 
-  ChatContext, 
-  ChatAttachment, 
-  AIAssistantConfig, 
+import {
+  ChatSession,
+  ChatMessage,
+  ChatContext,
+  ChatAttachment,
+  AIAssistantConfig,
   ExperimentCategory,
-  AISettings 
+  AISettings
 } from '../types';
 
 // AI聊天服务类
@@ -112,8 +112,8 @@ export class AIChatService {
 
   // 发送消息并获取AI回复
   async sendMessage(
-    sessionId: string, 
-    content: string, 
+    sessionId: string,
+    content: string,
     context?: ChatContext,
     attachments?: ChatAttachment[]
   ): Promise<ChatMessage> {
@@ -140,7 +140,7 @@ export class AIChatService {
     try {
       // 获取AI回复
       const aiResponse = await this.getAIResponse(session, content, context, attachments);
-      
+
       // 创建AI回复消息
       const aiMessage: ChatMessage = {
         id: this.generateId(),
@@ -180,10 +180,10 @@ export class AIChatService {
 
   // 获取AI回复
   private async getAIResponse(
-    session: ChatSession, 
-    userMessage: string, 
+    _session: ChatSession,
+    userMessage: string,
     context?: ChatContext,
-    attachments?: ChatAttachment[]
+    _attachments?: ChatAttachment[]
   ): Promise<{ content: string; suggestions?: string[] }> {
     const settings = this.getAISettings();
 
@@ -204,10 +204,10 @@ export class AIChatService {
   // 调用AI API（简化版）
   private async callAIAPI(userMessage: string, settings: AISettings): Promise<{ content: string; suggestions?: string[] }> {
     // 获取系统提示词
-    const systemPrompt = settings.systemPrompt && settings.systemPrompt.trim() 
-      ? settings.systemPrompt.trim() 
+    const systemPrompt = settings.systemPrompt && settings.systemPrompt.trim()
+      ? settings.systemPrompt.trim()
       : '你是一个乐于助人的AI助手。请提供有用、准确的信息和建议。';
-    
+
     const messages = [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userMessage }
@@ -232,7 +232,7 @@ export class AIChatService {
       temperature: this.config.temperature,
       max_tokens: this.config.maxTokens
     };
-    
+
     // 只有当指定了模型时才添加模型字段
     if (modelName) {
       requestBody.model = modelName;
@@ -272,7 +272,7 @@ export class AIChatService {
 
       if (!response.ok) {
         let errorMessage = `API请求失败 (${response.status}): ${response.statusText}`;
-        
+
         // 根据错误类型提供具体建议
         if (response.status === 401) {
           errorMessage = 'API密钥验证失败，请检查密钥是否正确或是否有足够权限';
@@ -283,12 +283,12 @@ export class AIChatService {
         } else if (response.status >= 500) {
           errorMessage = 'API服务暂时不可用，请稍后重试';
         }
-        
+
         throw new Error(errorMessage);
       }
 
       const data = await response.json();
-      
+
       if (data.choices && data.choices.length > 0 && data.choices[0].message) {
         return {
           content: data.choices[0].message.content,
@@ -299,7 +299,7 @@ export class AIChatService {
       }
     } catch (error) {
       console.error('AI API调用错误:', error);
-      
+
       if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
         throw new Error('网络连接失败，请检查网络连接和API端点地址');
       } else if (error instanceof Error) {
@@ -321,7 +321,7 @@ export class AIChatService {
   }
 
   // 生成上下文相关的回复
-  private generateContextualResponse(userMessage: string, context?: ChatContext): { content: string; suggestions?: string[] } {
+  private generateContextualResponse(_userMessage: string, _context?: ChatContext): { content: string; suggestions?: string[] } {
     // 简单的智能回复，不包含固定的专业能力描述
     const responses = [
       '我理解您的问题，让我为您提供一些建议。',
@@ -330,24 +330,18 @@ export class AIChatService {
       '我很乐意为您提供帮助，请告诉我更多细节。',
       '让我为您详细解答这个问题。'
     ];
-    
+
     const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-    
-    return { 
+
+    return {
       content: randomResponse,
       suggestions: [] // 移除所有建议
     };
   }
 
-  // 简化的消息类型分析（实际不再需要复杂分析）
-  private analyzeMessageType(message: string): string {
-    return 'general';
-  }
 
-  // 检查关键词
-  private containsKeywords(text: string, keywords: string[]): boolean {
-    return keywords.some(keyword => text.includes(keyword));
-  }
+
+
 
   // 更新会话
   updateSession(session: ChatSession): void {

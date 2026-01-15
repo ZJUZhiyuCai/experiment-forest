@@ -53,7 +53,7 @@ export class TopicAgentService {
     }
 
     const { project, records, notes, sops } = this.context;
-    
+
     return `你是一位专业的科研AI助手，专门为课题"${project.title}"提供智能支持。
 
 课题信息：
@@ -135,7 +135,7 @@ ${this.getExperimentTypeSummary(records)}
     try {
       // 获取AI设置
       const aiSettings = this.getAISettings();
-      
+
       let aiResponse: string;
       if (aiSettings.useCustomAPI && aiSettings.apiEndpoint && aiSettings.apiKey) {
         // 使用用户配置的API
@@ -163,7 +163,7 @@ ${this.getExperimentTypeSummary(records)}
     const systemPrompt = settings.systemPrompt && settings.systemPrompt.trim()
       ? settings.systemPrompt.trim()
       : this.getSystemPrompt(); // 使用默认的课题专用提示词
-    
+
     const messages = [
       { role: 'system', content: systemPrompt },
       ...this.conversationHistory.slice(-10), // 保留最近10条对话
@@ -188,7 +188,7 @@ ${this.getExperimentTypeSummary(records)}
       temperature: 0.7,
       max_tokens: 1500
     };
-    
+
     // 只有当指定了模型时才添加模型字段
     if (modelName) {
       requestBody.model = modelName;
@@ -233,7 +233,7 @@ ${this.getExperimentTypeSummary(records)}
           statusText: response.statusText,
           body: errorText
         });
-        
+
         let userFriendlyMessage = '';
         if (response.status === 404) {
           userFriendlyMessage = 'API端点不存在，请检查API地址是否正确。\n\n常见的OpenAI兼容端点格式：\n• https://api.openai.com/v1/chat/completions\n• Azure: https://your-resource.openai.azure.com/openai/deployments/your-model/chat/completions?api-version=2023-05-15\n\n请在设置页面重新配置API端点地址。';
@@ -246,17 +246,17 @@ ${this.getExperimentTypeSummary(records)}
         } else {
           userFriendlyMessage = `API请求失败 (${response.status})：${response.statusText}\n\n详细信息：${errorText || '无额外信息'}\n\n请检查API配置是否正确，或联系服务提供商。`;
         }
-        
+
         throw new Error(userFriendlyMessage);
       }
 
       const data = await response.json();
       console.log('AI API 响应成功:', { hasChoices: !!data.choices, choicesCount: data.choices?.length });
-      
+
       return data.choices?.[0]?.message?.content || '抱歉，AI没有返回有效响应';
     } catch (error) {
       console.error('API 调用错误:', error);
-      
+
       let userFriendlyMessage = '';
       if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
         userFriendlyMessage = '网络连接失败，无法连接到API服务。\n\n可能的原因：\n• 网络连接问题\n• API端点地址不正确\n• 防火墙或代理设置阻止连接\n• 如果在国内，可能需要配置网络代理\n\n请检查网络连接和API配置。';
@@ -265,7 +265,7 @@ ${this.getExperimentTypeSummary(records)}
       } else {
         userFriendlyMessage = '发生未知错误，请检查控制台获取详细信息，或重新配置API设置。';
       }
-      
+
       throw new Error(userFriendlyMessage);
     }
   }
@@ -285,13 +285,13 @@ ${this.getExperimentTypeSummary(records)}
   private enhanceMessageWithContext(message: string): string {
     if (!this.context) return message;
 
-    const { records, notes, sops } = this.context;
-    
+    const { records, sops } = this.context;
+
     let contextInfo = '';
 
     // 如果用户询问与实验相关的问题，添加相关实验记录信息
     if (this.isExperimentRelatedQuery(message) && records.length > 0) {
-      const recentRecords = records.slice(-3).map(r => 
+      const recentRecords = records.slice(-3).map(r =>
         `实验记录: ${r.title} (${this.translateExperimentType(r.category)}, 状态: ${r.status})`
       ).join('\n');
       contextInfo += `\n最近的实验记录:\n${recentRecords}\n`;
@@ -299,7 +299,7 @@ ${this.getExperimentTypeSummary(records)}
 
     // 如果询问SOP相关问题，添加SOP信息
     if (this.isSOPRelatedQuery(message) && sops.length > 0) {
-      const recentSOPs = sops.slice(-3).map(s => 
+      const recentSOPs = sops.slice(-3).map(s =>
         `SOP文档: ${s.title} (版本: ${s.version}, 状态: ${s.approvalStatus})`
       ).join('\n');
       contextInfo += `\n相关SOP文档:\n${recentSOPs}\n`;
@@ -341,7 +341,7 @@ ${this.getExperimentTypeSummary(records)}
   // 提取操作建议
   private extractActionItems(response: string): ActionItem[] {
     const items: ActionItem[] = [];
-    
+
     // 简单的模式匹配来提取建议
     if (response.includes('建议') || response.includes('推荐')) {
       if (response.includes('实验') || response.includes('检测')) {
@@ -369,13 +369,13 @@ ${this.getExperimentTypeSummary(records)}
   // 提取建议问题
   private extractSuggestions(response: string): string[] {
     const suggestions: string[] = [];
-    
+
     // 根据响应内容生成相关问题
     if (response.includes('细胞培养')) {
       suggestions.push('培养基的选择和配制要注意什么？');
       suggestions.push('如何优化细胞传代的条件？');
     }
-    
+
     if (response.includes('实验设计')) {
       suggestions.push('对照组的设置需要考虑哪些因素？');
       suggestions.push('样本数量的计算方法是什么？');
@@ -392,11 +392,11 @@ ${this.getExperimentTypeSummary(records)}
   // 提取相关资源
   private extractRelatedResources(response: string): ResourceLink[] {
     const resources: ResourceLink[] = [];
-    
+
     if (!this.context) return resources;
 
     // 根据响应内容推荐相关资源
-    const { records, notes, sops } = this.context;
+    const { records, sops } = this.context;
 
     if (response.includes('实验记录') && records.length > 0) {
       const latestRecord = records[records.length - 1];

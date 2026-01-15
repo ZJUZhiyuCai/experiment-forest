@@ -35,18 +35,18 @@ export const FullscreenEditor: React.FC<FullscreenEditorProps> = ({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (!isOpen) return;
-      
+
       // Ctrl/Cmd + S 保存并关闭
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
         e.preventDefault();
         onClose();
       }
-      
+
       // Escape 键关闭
       if (e.key === 'Escape') {
         onClose();
       }
-      
+
       // Ctrl/Cmd + P 切换预览
       if ((e.ctrlKey || e.metaKey) && e.key === 'p') {
         e.preventDefault();
@@ -80,35 +80,34 @@ export const FullscreenEditor: React.FC<FullscreenEditorProps> = ({
           {/* 顶部工具栏 */}
           <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-emerald-50 to-teal-50 border-b border-gray-200">
             <div className="flex items-center space-x-4">
-              <h2 className="text-xl font-bold text-[#4A7C59] flex items-center">
+              <h2 className="text-xl font-bold text-forest-primary flex items-center">
                 <i className="fa-solid fa-expand mr-2 text-emerald-500"></i>
                 {title}
               </h2>
               <span className="text-sm text-gray-500">全屏编辑模式</span>
             </div>
-            
+
             <div className="flex items-center space-x-3">
               {/* 预览切换按钮 */}
               <button
                 onClick={() => setShowPreview(!showPreview)}
-                className={`px-3 py-2 rounded-lg transition-all duration-200 ${
-                  showPreview 
-                    ? 'bg-emerald-500 text-white' 
+                className={`px-3 py-2 rounded-lg transition-all duration-200 ${showPreview
+                    ? 'bg-emerald-500 text-white'
                     : 'bg-white text-gray-600 hover:bg-gray-50'
-                }`}
+                  }`}
                 title="切换预览 (Ctrl+P)"
               >
                 <i className={`fa-solid ${showPreview ? 'fa-edit' : 'fa-eye'} mr-1`}></i>
                 {showPreview ? '编辑' : '预览'}
               </button>
-              
+
               {/* 快捷键提示 */}
               <div className="text-xs text-gray-500 hidden md:block">
                 <span>Ctrl+S 保存</span> <span className="mx-2">•</span>
                 <span>Ctrl+P 预览</span> <span className="mx-2">•</span>
                 <span>Esc 退出</span>
               </div>
-              
+
               {/* 关闭按钮 */}
               <button
                 onClick={onClose}
@@ -131,13 +130,13 @@ export const FullscreenEditor: React.FC<FullscreenEditorProps> = ({
                   onChange={(e) => onChange(e.target.value)}
                   placeholder={placeholder}
                   className="w-full h-full resize-none border-none outline-none text-gray-800 leading-relaxed text-base font-mono bg-transparent"
-                  style={{ 
+                  style={{
                     fontFamily: 'JetBrains Mono, Consolas, Monaco, "Courier New", monospace',
                     lineHeight: '1.6'
                   }}
                 />
               </div>
-              
+
               {/* 底部状态栏 */}
               <div className="px-6 py-3 bg-gray-50 border-t border-gray-200 flex items-center justify-between text-sm text-gray-500">
                 <div className="flex items-center space-x-4">

@@ -15,14 +15,14 @@ export default function CreateTopic() {
   const navigate = useNavigate();
   const params = useParams<{ id: string }>();
   const location = useLocation();
-  
+
   // 获取项目ID，支持不同的路由格式
   // /projects/:id/edit 或 /projects/edit/:id 或 /topics/:id/edit 或 /topics/edit/:id
   const getProjectId = (): string | undefined => {
     if (params.id) {
       return params.id;
     }
-    
+
     // 从路径中解析ID
     const pathParts = location.pathname.split('/');
     if (pathParts.includes('edit')) {
@@ -36,15 +36,15 @@ export default function CreateTopic() {
         return pathParts[editIndex - 1];
       }
     }
-    
+
     return undefined;
   };
-  
+
   const projectId = getProjectId();
-  
+
   // 检测是否为编辑模式
   const isEditMode = Boolean(projectId) && location.pathname.includes('edit');
-  
+
   // 调试信息
   console.log('CreateTopic Debug:', {
     pathname: location.pathname,
@@ -53,29 +53,29 @@ export default function CreateTopic() {
     isEditMode,
     allProjects: projectService.getAll().map(p => ({ id: p.id, title: p.title }))
   });
-  
+
   // 表单状态
   const [formData, setFormData] = useState({
     title: '',
     description: ''
   });
-  
+
   // 错误状态
   const [errors, setErrors] = useState({
     title: ''
   });
-  
+
   // 加载现有项目（如果是编辑模式）
   useEffect(() => {
     console.log('useEffect triggered:', { isEditMode, projectId });
-    
+
     if (isEditMode && projectId) {
       setLoading(true);
       try {
         console.log('Attempting to load project with ID:', projectId);
         const foundProject = projectService.getById(projectId);
         console.log('Found project:', foundProject);
-        
+
         if (foundProject) {
           setProject(foundProject);
           setFormData({
@@ -103,49 +103,49 @@ export default function CreateTopic() {
       }
     }
   }, [projectId, isEditMode, navigate]);
-  
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    
+
     // 清除对应字段的错误提示
     if (errors[name as keyof typeof errors]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
-  
-   // 表单验证
-   const validateForm = (): boolean => {
+
+  // 表单验证
+  const validateForm = (): boolean => {
     const newErrors: typeof errors = { title: '' };
     let isValid = true;
-    
+
     if (!formData.title.trim()) {
       newErrors.title = '课题标题不能为空';
-      isValid = false;  
+      isValid = false;
     }
-    
+
     setErrors(newErrors);
     return isValid;
   };
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // 表单验证
     if (!validateForm()) {
       return;
     }
-    
+
     try {
       setIsSubmitting(true);
-      
+
       if (isEditMode && project) {
         // 更新现有课题
         projectService.update(project.id, {
           title: formData.title,
           description: formData.description
         });
-        
+
         toast.success('课题更新成功');
       } else {
         // 创建新课题
@@ -162,10 +162,10 @@ export default function CreateTopic() {
           milestones: [],
           startDate: new Date().toISOString().split('T')[0]
         });
-        
+
         toast.success('课题创建成功');
       }
-      
+
       // 延迟导航以确保用户看到成功提示
       setTimeout(() => {
         navigate('/projects');
@@ -175,14 +175,14 @@ export default function CreateTopic() {
       setIsSubmitting(false);
     }
   };
-  
+
   return (
-    <div className="min-h-screen bg-[#F9F6F2] text-[#555555]">  
+    <div className="min-h-screen bg-earth-beige text-text-main">
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
-      
+
       <div className={sidebarCollapsed ? 'ml-16' : 'ml-64'}>
-        <Header 
-          title={isEditMode ? '编辑课题' : '创建课题'} 
+        <Header
+          title={isEditMode ? '编辑课题' : '创建课题'}
           sidebarCollapsed={sidebarCollapsed}
           actions={
             <Button onClick={() => navigate('/projects')}>
@@ -191,7 +191,7 @@ export default function CreateTopic() {
             </Button>
           }
         />
-        
+
         <main className="container mx-auto px-4 py-6">
           {loading ? (
             <div className="text-center py-12">
@@ -200,71 +200,70 @@ export default function CreateTopic() {
             </div>
           ) : (
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 max-w-2xl mx-auto transition-all duration-300 hover:shadow-md">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  课题标题 <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="title"
-                  value={formData.title}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 ${
-                    errors.title 
-                      ? 'border-red-500 dark:border-red-500 bg-red-50 dark:bg-red-900/20' 
-                      : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700'
-                  } text-gray-800 dark:text-gray-200`}
-                  placeholder="输入课题标题"
-                  aria-invalid={!!errors.title}
-                  disabled={isSubmitting}
-                />
-                {errors.title && (
-                  <p className="mt-1 text-sm text-red-500 dark:text-red-400 flex items-center">
-                    <i className="fa-solid fa-exclamation-circle mr-1"></i> {errors.title}
-                  </p>
-                )}
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  课题描述
-                </label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 min-h-[200px]"
-                  placeholder="输入课题描述（可选）"
-                  disabled={isSubmitting}
-                ></textarea>
-              </div>
-              
-              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <Button 
-                  type="button" 
-                  variant="outline"
-                  onClick={() => navigate('/projects')}
-                  disabled={isSubmitting}
-                >
-                  取消
-                </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    <>
-                      <i className="fa-solid fa-spinner fa-spin mr-2"></i>
-                      {isEditMode ? '更新中...' : '创建中...'}
-                    </>
-                  ) : (
-                    <>
-                      <i className="fa-solid fa-save mr-2"></i>
-                      {isEditMode ? '更新课题' : '创建课题'}
-                    </>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    课题标题 <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    name="title"
+                    value={formData.title}
+                    onChange={handleChange}
+                    className={`w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 ${errors.title
+                        ? 'border-red-500 dark:border-red-500 bg-red-50 dark:bg-red-900/20'
+                        : 'border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700'
+                      } text-gray-800 dark:text-gray-200`}
+                    placeholder="输入课题标题"
+                    aria-invalid={!!errors.title}
+                    disabled={isSubmitting}
+                  />
+                  {errors.title && (
+                    <p className="mt-1 text-sm text-red-500 dark:text-red-400 flex items-center">
+                      <i className="fa-solid fa-exclamation-circle mr-1"></i> {errors.title}
+                    </p>
                   )}
-                </Button>
-              </div>
-            </form>
-          </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    课题描述
+                  </label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 min-h-[200px]"
+                    placeholder="输入课题描述（可选）"
+                    disabled={isSubmitting}
+                  ></textarea>
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => navigate('/projects')}
+                    disabled={isSubmitting}
+                  >
+                    取消
+                  </Button>
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? (
+                      <>
+                        <i className="fa-solid fa-spinner fa-spin mr-2"></i>
+                        {isEditMode ? '更新中...' : '创建中...'}
+                      </>
+                    ) : (
+                      <>
+                        <i className="fa-solid fa-save mr-2"></i>
+                        {isEditMode ? '更新课题' : '创建课题'}
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </div>
           )}
         </main>
       </div>

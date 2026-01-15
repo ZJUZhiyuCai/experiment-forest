@@ -7,8 +7,7 @@ import { Project } from '@/types';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
 import { Button } from '@/components/Button';
-import { EnhancedFormContainer, EnhancedInput } from '@/components/EnhancedForm';
-import { FullscreenTextarea } from '@/components/FullscreenTextarea';
+import { EnhancedInput } from '@/components/EnhancedForm';
 import { useLocation } from 'react-router-dom';
 import { TreePlantingCelebration } from '@/components/TreePlantingCelebration';
 import { sopTemplates, getSOPTemplateById } from '@/utils/sopTemplates';
@@ -18,12 +17,12 @@ export default function CreateSOP() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-   const [formStep, setFormStep] = useState(1); // 多步骤表单控制
-   const location = useLocation();
-   const [topicId, setTopicId] = useState('');
-   const [showTreeCelebration, setShowTreeCelebration] = useState(false);
-   
-   // 从URL参数获取课题ID
+  const [formStep, setFormStep] = useState(1); // 多步骤表单控制
+  const location = useLocation();
+  const [topicId, setTopicId] = useState('');
+  const [showTreeCelebration, setShowTreeCelebration] = useState(false);
+
+  // 从URL参数获取课题ID
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const topicIdParam = searchParams.get('topicId');
@@ -33,16 +32,16 @@ export default function CreateSOP() {
       console.log('已关联课题ID:', topicIdParam);
     }
   }, [location.search]);
-  
+
   // 表单状态和验证错误
   // 获取所有课题
   const [topics, setTopics] = useState<Project[]>([]);
-  
+
   useEffect(() => {
     const allTopics = topicService.getAll();
     setTopics(allTopics);
   }, []);
-  
+
   // 表单状态
   const [formData, setFormData] = useState({
     title: '',
@@ -57,11 +56,11 @@ export default function CreateSOP() {
     references: '',
     projectId: ''
   });
-  
+
   // 模板选择状态
   const [selectedTemplate, setSelectedTemplate] = useState('');
   const [showTemplates, setShowTemplates] = useState(false);
-  
+
   const [errors, setErrors] = useState({
     title: '',
     author: '',
@@ -70,52 +69,52 @@ export default function CreateSOP() {
     purpose: '',
     content: ''
   });
-  
+
   // 获取实验类型分组
   const experimentCategories = getExperimentCategoriesByGroup();
-  
+
   // SOP分类选项（更新为新的分类系统）
   const categories = [
     { id: '', name: '请选择分类' },
-    ...Object.entries(experimentCategories).flatMap(([group, cats]) => 
+    ...Object.entries(experimentCategories).flatMap(([group, cats]) =>
       cats.map(({ category, name }) => ({ id: category, name: `${group} - ${name}` }))
     ),
     { id: 'other', name: '其他' }
   ];
-  
+
   // 默认作者名（实际应用中可能从用户信息获取）
   useEffect(() => {
-    setFormData(prev => ({ 
-      ...prev, 
+    setFormData(prev => ({
+      ...prev,
       author: '实验管理员',
       department: '研发部'
     }));
   }, []);
-  
+
   // 表单验证 - 根据当前步骤验证不同字段
   const validateStep = (step: number): boolean => {
-    const newErrors: typeof errors = { 
-      title: '', author: '', department: '', category: '', purpose: '', content: '' 
+    const newErrors: typeof errors = {
+      title: '', author: '', department: '', category: '', purpose: '', content: ''
     };
     let isValid = true;
-    
+
     if (step === 1) {
       // 基本信息验证
       if (!formData.title.trim()) {
         newErrors.title = '文档标题不能为空';
         isValid = false;
       }
-      
+
       if (!formData.author.trim()) {
         newErrors.author = '作者名称不能为空';
         isValid = false;
       }
-      
+
       if (!formData.department.trim()) {
         newErrors.department = '部门不能为空';
         isValid = false;
       }
-      
+
       if (!formData.category.trim()) {
         newErrors.category = '请选择分类';
         isValid = false;
@@ -133,21 +132,21 @@ export default function CreateSOP() {
         isValid = false;
       }
     }
-    
+
     setErrors(newErrors);
     return isValid;
   };
-  
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    
+
     // 清除对应字段的错误提示
     if (errors[name as keyof typeof errors]) {
       setErrors(prev => ({ ...prev, [name as keyof typeof errors]: '' }));
     }
   };
-  
+
   // 应用SOP模板
   const applyTemplate = (templateId: string) => {
     const template = getSOPTemplateById(templateId);
@@ -168,7 +167,7 @@ export default function CreateSOP() {
       toast.success(`已应用模板：${template.title}`);
     }
   };
-  
+
   // 清除模板选择
   const clearTemplate = () => {
     setFormData({
@@ -187,7 +186,7 @@ export default function CreateSOP() {
     setSelectedTemplate('');
     toast.info('已清除模板内容');
   };
-  
+
   // 处理步骤导航
   const handleNextStep = () => {
     if (validateStep(formStep)) {
@@ -196,22 +195,22 @@ export default function CreateSOP() {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
-  
+
   const handlePrevStep = () => {
     setFormStep(prev => prev - 1);
     // 滚动到顶部
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-  
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // 验证当前步骤
     if (!validateStep(formStep)) return;
-    
+
     try {
       setIsSubmitting(true);
-      
+
       // 创建新SOP文档 - 合并所有表单数据
       const newSOP = sopService.create({
         title: formData.title,
@@ -223,16 +222,16 @@ export default function CreateSOP() {
         scope: formData.scope,
         content: formData.content,
         approvalStatus: formData.approvalStatus as 'draft' | 'pending' | 'approved' | 'rejected',
-                       references: formData.references,
-                       projectId: formData.projectId
+        references: formData.references,
+        projectId: formData.projectId
       });
-      
+
       if (newSOP) {
         toast.success('SOP文档创建成功');
-        
+
         // 显示种树庆祝动画
         setShowTreeCelebration(true);
-        
+
         // 延迟导航以确保用户看到成功提示
         setTimeout(() => {
           navigate('/sops');
@@ -247,12 +246,12 @@ export default function CreateSOP() {
       setIsSubmitting(false);
     }
   };
-  
+
   // 渲染步骤指示器
   const renderStepIndicator = () => (
     <div className="mb-8">
       <div className="flex justify-between items-center mb-2">
-        <h3 className="text-lg font-semibold text-[#4A7C59]">
+        <h3 className="text-lg font-semibold text-forest-primary">
           {formStep === 1 && '基本信息'}
           {formStep === 2 && '目的与范围'}
           {formStep === 3 && '操作流程'}
@@ -262,7 +261,7 @@ export default function CreateSOP() {
         </span>
       </div>
       <div className="w-full bg-gray-200 rounded-full h-2">
-        <div 
+        <div
           className="bg-emerald-600 h-2 rounded-full transition-all duration-300 ease-out"
           style={{ width: `${(formStep / 3) * 100}%` }}
         ></div>
@@ -280,17 +279,17 @@ export default function CreateSOP() {
       </div>
     </div>
   );
-  
+
   // 渲染表单内容
   const renderFormContent = () => {
-    switch(formStep) {
+    switch (formStep) {
       case 1:
         return (
           <div className="space-y-6 animate-fadeIn">
             {/* SOP模板选择区域 */}
             <div className="bg-emerald-50 rounded-lg p-4 border border-emerald-200">
               <div className="flex justify-between items-center mb-3">
-                <h4 className="text-sm font-medium text-[#4A7C59] flex items-center">
+                <h4 className="text-sm font-medium text-forest-primary flex items-center">
                   <i className="fa-solid fa-magic mr-2 text-emerald-500"></i>
                   使用SOP模板（可选）
                 </h4>
@@ -302,21 +301,20 @@ export default function CreateSOP() {
                   {showTemplates ? '隐藏模板' : '显示模板'}
                 </button>
               </div>
-              
+
               {showTemplates && (
                 <div className="space-y-3">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-60 overflow-y-auto">
                     {sopTemplates.map(template => (
                       <div
                         key={template.id}
-                        className={`p-3 border rounded-lg cursor-pointer transition-all ${
-                          selectedTemplate === template.id
-                            ? 'border-emerald-500 bg-emerald-100'
-                            : 'border-gray-200 hover:border-emerald-300'
-                        }`}
+                        className={`p-3 border rounded-lg cursor-pointer transition-all ${selectedTemplate === template.id
+                          ? 'border-emerald-500 bg-emerald-100'
+                          : 'border-gray-200 hover:border-emerald-300'
+                          }`}
                         onClick={() => applyTemplate(template.id)}
                       >
-                        <h5 className="font-medium text-sm text-[#555555] mb-1">
+                        <h5 className="font-medium text-sm text-text-main mb-1">
                           {template.title}
                         </h5>
                         <p className="text-xs text-gray-600 mb-2">
@@ -335,7 +333,7 @@ export default function CreateSOP() {
                       </div>
                     ))}
                   </div>
-                  
+
                   {selectedTemplate && (
                     <div className="flex justify-between items-center pt-3 border-t border-emerald-200">
                       <span className="text-sm text-emerald-700">
@@ -353,9 +351,9 @@ export default function CreateSOP() {
                 </div>
               )}
             </div>
-            
+
             <div>
-              <label className="block text-sm font-medium text-[#555555] mb-1">
+              <label className="block text-sm font-medium text-text-main mb-1">
                 文档标题 <span className="text-red-500">*</span>
               </label>
               <input
@@ -363,11 +361,10 @@ export default function CreateSOP() {
                 name="title"
                 value={formData.title}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-200 ${
-                  errors.title 
-                    ? 'border-red-500 bg-red-50' 
-                    : 'border-gray-300 bg-white'
-                } text-[#555555]`}
+                className={`w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-forest-secondary transition-all duration-200 ${errors.title
+                  ? 'border-red-500 bg-red-50'
+                  : 'border-gray-300 bg-white'
+                  } text-text-main`}
                 placeholder="输入SOP文档标题"
                 aria-invalid={!!errors.title}
               />
@@ -377,10 +374,10 @@ export default function CreateSOP() {
                 </p>
               )}
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-[#555555] mb-1">
+                <label className="block text-sm font-medium text-text-main mb-1">
                   版本号
                 </label>
                 <input
@@ -388,16 +385,16 @@ export default function CreateSOP() {
                   name="version"
                   value={formData.version}
                   onChange={handleChange}
-                  className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-[#555555] focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-200"
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-text-main focus:outline-none focus:ring-2 focus:ring-forest-secondary transition-all duration-200"
                   placeholder="例如: 1.0"
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   SOP文档的版本号，用于版本控制
                 </p>
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium text-[#555555] mb-1">
+                <label className="block text-sm font-medium text-text-main mb-1">
                   作者 <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -405,11 +402,10 @@ export default function CreateSOP() {
                   name="author"
                   value={formData.author}
                   onChange={handleChange}
-                  className={`w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-200 ${
-                    errors.author 
-                      ? 'border-red-500 bg-red-50' 
-                      : 'border-gray-300 bg-white'
-                  } text-[#555555]`}
+                  className={`w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-forest-secondary transition-all duration-200 ${errors.author
+                    ? 'border-red-500 bg-red-50'
+                    : 'border-gray-300 bg-white'
+                    } text-text-main`}
                   placeholder="输入作者名称"
                   aria-invalid={!!errors.author}
                 />
@@ -420,10 +416,10 @@ export default function CreateSOP() {
                 )}
               </div>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-[#555555] mb-1">
+                <label className="block text-sm font-medium text-text-main mb-1">
                   部门 <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -431,11 +427,10 @@ export default function CreateSOP() {
                   name="department"
                   value={formData.department}
                   onChange={handleChange}
-                  className={`w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-200 ${
-                    errors.department 
-                      ? 'border-red-500 bg-red-50' 
-                      : 'border-gray-300 bg-white'
-                  } text-[#555555]`}
+                  className={`w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-forest-secondary transition-all duration-200 ${errors.department
+                    ? 'border-red-500 bg-red-50'
+                    : 'border-gray-300 bg-white'
+                    } text-text-main`}
                   placeholder="输入部门名称"
                   aria-invalid={!!errors.department}
                 />
@@ -445,20 +440,19 @@ export default function CreateSOP() {
                   </p>
                 )}
               </div>
-              
+
               <div>
-                <label className="block text-sm font-medium text-[#555555] mb-1">
+                <label className="block text-sm font-medium text-text-main mb-1">
                   分类 <span className="text-red-500">*</span>
                 </label>
                 <select
                   name="category"
                   value={formData.category}
                   onChange={handleChange}
-                  className={`w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-200 ${
-                    errors.category 
-                      ? 'border-red-500 bg-red-50' 
-                      : 'border-gray-300 bg-white'
-                  } text-[#555555]`}
+                  className={`w-full px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-forest-secondary transition-all duration-200 ${errors.category
+                    ? 'border-red-500 bg-red-50'
+                    : 'border-gray-300 bg-white'
+                    } text-text-main`}
                   aria-invalid={!!errors.category}
                 >
                   {categories.map(category => (
@@ -472,28 +466,28 @@ export default function CreateSOP() {
                     <i className="fa-solid fa-exclamation-circle mr-1"></i> {errors.category}
                   </p>
                 )}
-               </div>
-               
-               <div>
-                 <label className="block text-sm font-medium text-[#555555] mb-1">
-                   关联课题
-                 </label>
-                 <select
-                   name="projectId"
-                   value={formData.projectId}
-                   onChange={handleChange}
-                   className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-[#555555] focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-200"
-                 >
-                   <option value="">-- 不关联课题 --</option>
-                   {topics.map(topic => (
-                     <option key={topic.id} value={topic.id}>{topic.title}</option>
-                   ))}
-                 </select>
-               </div>
-             </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-text-main mb-1">
+                  关联课题
+                </label>
+                <select
+                  name="projectId"
+                  value={formData.projectId}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-text-main focus:outline-none focus:ring-2 focus:ring-forest-secondary transition-all duration-200"
+                >
+                  <option value="">-- 不关联课题 --</option>
+                  {topics.map(topic => (
+                    <option key={topic.id} value={topic.id}>{topic.title}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
         );
-        
+
       case 2:
         return (
           <div className="space-y-6 animate-fadeIn">
@@ -508,7 +502,7 @@ export default function CreateSOP() {
               placeholder="描述本SOP的目的和预期目标..."
               wysiwygMode="both"
             />
-            
+
             <EnhancedInput
               label="适用范围"
               type="wysiwyg"
@@ -518,7 +512,7 @@ export default function CreateSOP() {
               placeholder="描述本SOP适用的场景、人员和设备..."
               wysiwygMode="both"
             />
-            
+
             <EnhancedInput
               label="参考资料"
               type="wysiwyg"
@@ -530,7 +524,7 @@ export default function CreateSOP() {
             />
           </div>
         );
-        
+
       case 3:
         return (
           <div className="space-y-6 animate-fadeIn">
@@ -539,7 +533,7 @@ export default function CreateSOP() {
                 <i className="fa-solid fa-lightbulb mr-1"></i> 提示: 使用编号列表描述操作步骤，使流程更清晰。支持Markdown格式和所见即所得编辑。
               </p>
             </div>
-            
+
             <EnhancedInput
               label="操作流程"
               type="wysiwyg"
@@ -551,16 +545,16 @@ export default function CreateSOP() {
               placeholder="1. 准备工作：检查设备状态和所需材料...\n2. 操作步骤：详细描述每一步操作...\n   a. 子步骤1...\n   b. 子步骤2...\n3. 注意事项：列出操作过程中的安全注意事项...\n4. 收尾工作：清理工作区域和设备..."
               wysiwygMode="both"
             />
-            
+
             <div>
-              <label className="block text-sm font-medium text-[#555555] mb-1">
+              <label className="block text-sm font-medium text-text-main mb-1">
                 审批状态
               </label>
               <select
                 name="approvalStatus"
                 value={formData.approvalStatus}
                 onChange={handleChange}
-                className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-[#555555] focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all duration-200"
+                className="w-full px-4 py-2 rounded-lg border border-gray-300 bg-white text-text-main focus:outline-none focus:ring-2 focus:ring-forest-secondary transition-all duration-200"
               >
                 <option value="draft">草稿</option>
                 <option value="pending">待审批</option>
@@ -570,19 +564,19 @@ export default function CreateSOP() {
             </div>
           </div>
         );
-        
+
       default:
         return null;
     }
   };
-  
+
   return (
-    <div className="min-h-screen bg-[#F9F6F2] text-[#555555]">
+    <div className="min-h-screen bg-earth-beige text-text-main">
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
-      
+
       <div className={sidebarCollapsed ? 'ml-16' : 'ml-64'}>
-        <Header 
-          title="创建SOP文档" 
+        <Header
+          title="创建SOP文档"
           sidebarCollapsed={sidebarCollapsed}
           actions={
             <Button onClick={() => navigate('/sops')} variant="outline" className="transition-all duration-200">
@@ -591,9 +585,9 @@ export default function CreateSOP() {
             </Button>
           }
         />
-        
+
         <main className="container mx-auto px-4 py-6">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3 }}
@@ -602,15 +596,15 @@ export default function CreateSOP() {
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* 步骤指示器 */}
               {renderStepIndicator()}
-              
+
               {/* 表单内容 */}
               {renderFormContent()}
-              
+
               {/* 导航按钮 */}
               <div className="flex justify-between pt-6 border-t border-gray-200">
                 {formStep > 1 ? (
-                  <Button 
-                    type="button" 
+                  <Button
+                    type="button"
                     variant="outline"
                     onClick={handlePrevStep}
                     disabled={isSubmitting}
@@ -622,10 +616,10 @@ export default function CreateSOP() {
                 ) : (
                   <div></div> // 占位元素，保持按钮对齐
                 )}
-                
+
                 {formStep < 3 ? (
-                  <Button 
-                    type="button" 
+                  <Button
+                    type="button"
                     onClick={handleNextStep}
                     disabled={isSubmitting}
                     className="transition-all duration-200 ml-auto"
@@ -634,7 +628,7 @@ export default function CreateSOP() {
                     <i className="fa-solid fa-arrow-right ml-2"></i>
                   </Button>
                 ) : (
-                  <Button 
+                  <Button
                     type="submit"
                     disabled={isSubmitting}
                     className="transition-all duration-200 ml-auto"
@@ -657,7 +651,7 @@ export default function CreateSOP() {
           </motion.div>
         </main>
       </div>
-          
+
       {/* 种树庆祝动画 */}
       <TreePlantingCelebration
         isVisible={showTreeCelebration}

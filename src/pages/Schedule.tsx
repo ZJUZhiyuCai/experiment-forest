@@ -25,7 +25,7 @@ export default function Schedule() {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<ScheduleEvent | null>(null);
   const [viewMode, setViewMode] = useState<'day' | 'week' | 'month'>('week');
-  
+
   // 表单数据
   const [formData, setFormData] = useState<Partial<ScheduleEvent>>({
     title: '',
@@ -60,7 +60,7 @@ export default function Schedule() {
   // 创建或更新事件
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.title || !formData.startTime || !formData.endTime) {
       toast.error('请填写必填字段');
       return;
@@ -80,7 +80,7 @@ export default function Schedule() {
     };
 
     if (editingEvent) {
-      const updatedEvents = events.map(event => 
+      const updatedEvents = events.map(event =>
         event.id === editingEvent.id ? eventData : event
       );
       saveEvents(updatedEvents);
@@ -148,7 +148,7 @@ export default function Schedule() {
   // 获取类型颜色
   const getTypeColor = (type: ScheduleEvent['type']) => {
     switch (type) {
-      case 'experiment': return 'bg-emerald-100 text-emerald-700';
+      case 'experiment': return 'bg-forest-accent/40 text-forest-primary';
       case 'meeting': return 'bg-blue-100 text-blue-700';
       case 'deadline': return 'bg-red-100 text-red-700';
       default: return 'bg-gray-100 text-gray-700';
@@ -166,12 +166,12 @@ export default function Schedule() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F7FDF0] text-[#555555]">
+    <div className="min-h-screen bg-earth-beige text-text-main">
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
-      
+
       <div className={sidebarCollapsed ? 'ml-16' : 'ml-64'}>
-        <Header 
-          title="日程管理" 
+        <Header
+          title="日程管理"
           sidebarCollapsed={sidebarCollapsed}
           actions={
             <Button onClick={() => setIsFormOpen(true)}>
@@ -180,7 +180,7 @@ export default function Schedule() {
             </Button>
           }
         />
-        
+
         <main className="container mx-auto px-4 py-6">
           {/* 视图切换和日期选择 */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
@@ -191,28 +191,27 @@ export default function Schedule() {
                     <button
                       key={mode}
                       onClick={() => setViewMode(mode as any)}
-                      className={`px-3 py-1 text-sm rounded transition-colors ${
-                        viewMode === mode
-                          ? 'bg-emerald-500 text-white'
-                          : 'text-gray-600 hover:bg-gray-200'
-                      }`}
+                      className={`px-3 py-1 text-sm rounded transition-colors ${viewMode === mode
+                        ? 'bg-forest-secondary text-white'
+                        : 'text-gray-600 hover:bg-gray-200'
+                        }`}
                     >
                       {mode === 'day' ? '日' : mode === 'week' ? '周' : '月'}
                     </button>
                   ))}
                 </div>
-                
+
                 <input
                   type="date"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-secondary"
                 />
               </div>
-              
+
               <div className="flex items-center space-x-2 text-sm text-gray-600">
                 <span className="flex items-center">
-                  <div className="w-3 h-3 bg-emerald-500 rounded mr-1"></div>
+                  <div className="w-3 h-3 bg-forest-secondary rounded mr-1"></div>
                   实验
                 </span>
                 <span className="flex items-center">
@@ -230,15 +229,15 @@ export default function Schedule() {
           {/* 当日事件列表 */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
-              <i className="fa-solid fa-calendar-day mr-2 text-emerald-500"></i>
-              {new Date(selectedDate).toLocaleDateString('zh-CN', { 
-                year: 'numeric', 
-                month: 'long', 
+              <i className="fa-solid fa-calendar-day mr-2 text-forest-secondary"></i>
+              {new Date(selectedDate).toLocaleDateString('zh-CN', {
+                year: 'numeric',
+                month: 'long',
                 day: 'numeric',
-                weekday: 'long' 
+                weekday: 'long'
               })}
             </h2>
-            
+
             {getEventsForDate(selectedDate).length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 <i className="fa-solid fa-calendar-plus text-4xl mb-4"></i>
@@ -253,9 +252,8 @@ export default function Schedule() {
                 {getEventsForDate(selectedDate).map((event) => (
                   <motion.div
                     key={event.id}
-                    className={`p-4 rounded-lg border-l-4 ${getPriorityColor(event.priority)} ${
-                      event.completed ? 'bg-gray-50 opacity-75' : 'bg-white'
-                    } shadow-sm hover:shadow-md transition-shadow`}
+                    className={`p-4 rounded-lg border-l-4 ${getPriorityColor(event.priority)} ${event.completed ? 'bg-gray-50 opacity-75' : 'bg-white'
+                      } shadow-sm hover:shadow-md transition-shadow`}
                     whileHover={{ scale: 1.01 }}
                   >
                     <div className="flex items-start justify-between">
@@ -263,11 +261,10 @@ export default function Schedule() {
                         <div className="flex items-center space-x-2 mb-2">
                           <button
                             onClick={() => toggleCompleted(event.id)}
-                            className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                              event.completed
-                                ? 'bg-emerald-500 border-emerald-500 text-white'
-                                : 'border-gray-300 hover:border-emerald-500'
-                            }`}
+                            className={`w-5 h-5 rounded border-2 flex items-center justify-center ${event.completed
+                              ? 'bg-forest-secondary border-forest-secondary text-white'
+                              : 'border-gray-300 hover:border-forest-secondary'
+                              }`}
                           >
                             {event.completed && <i className="fa-solid fa-check text-xs"></i>}
                           </button>
@@ -276,37 +273,36 @@ export default function Schedule() {
                           </h3>
                           <span className={`px-2 py-1 text-xs rounded-full ${getTypeColor(event.type)}`}>
                             {event.type === 'experiment' ? '实验' :
-                             event.type === 'meeting' ? '会议' :
-                             event.type === 'deadline' ? '截止日期' : '其他'}
+                              event.type === 'meeting' ? '会议' :
+                                event.type === 'deadline' ? '截止日期' : '其他'}
                           </span>
                         </div>
-                        
+
                         <div className="flex items-center space-x-4 text-sm text-gray-600 mb-2">
                           <span>
                             <i className="fa-solid fa-clock mr-1"></i>
                             {event.startTime} - {event.endTime}
                           </span>
-                          <span className={`px-2 py-1 rounded text-xs ${
-                            event.priority === 'urgent' ? 'bg-red-100 text-red-700' :
+                          <span className={`px-2 py-1 rounded text-xs ${event.priority === 'urgent' ? 'bg-red-100 text-red-700' :
                             event.priority === 'high' ? 'bg-orange-100 text-orange-700' :
-                            event.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                            'bg-green-100 text-green-700'
-                          }`}>
+                              event.priority === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                                'bg-green-100 text-green-700'
+                            }`}>
                             {event.priority === 'urgent' ? '紧急' :
-                             event.priority === 'high' ? '高' :
-                             event.priority === 'medium' ? '中' : '低'}优先级
+                              event.priority === 'high' ? '高' :
+                                event.priority === 'medium' ? '中' : '低'}优先级
                           </span>
                         </div>
-                        
+
                         {event.description && (
                           <p className="text-sm text-gray-600">{event.description}</p>
                         )}
                       </div>
-                      
+
                       <div className="flex items-center space-x-2 ml-4">
                         <button
                           onClick={() => openEditForm(event)}
-                          className="p-2 text-gray-500 hover:text-emerald-600 transition-colors"
+                          className="p-2 text-gray-500 hover:text-forest-primary transition-colors"
                         >
                           <i className="fa-solid fa-edit"></i>
                         </button>
@@ -340,7 +336,7 @@ export default function Schedule() {
                 <h3 className="text-lg font-bold mb-4">
                   {editingEvent ? '编辑日程' : '新建日程'}
                 </h3>
-                
+
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -351,7 +347,7 @@ export default function Schedule() {
                       name="title"
                       value={formData.title}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-secondary"
                       placeholder="输入日程标题"
                       required
                     />
@@ -367,11 +363,11 @@ export default function Schedule() {
                         name="startTime"
                         value={formData.startTime}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-secondary"
                         required
                       />
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         结束时间 *
@@ -381,7 +377,7 @@ export default function Schedule() {
                         name="endTime"
                         value={formData.endTime}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-secondary"
                         required
                       />
                     </div>
@@ -396,7 +392,7 @@ export default function Schedule() {
                       name="date"
                       value={formData.date}
                       onChange={handleChange}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-secondary"
                     />
                   </div>
 
@@ -409,7 +405,7 @@ export default function Schedule() {
                         name="type"
                         value={formData.type}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-secondary"
                       >
                         <option value="experiment">实验</option>
                         <option value="meeting">会议</option>
@@ -417,7 +413,7 @@ export default function Schedule() {
                         <option value="other">其他</option>
                       </select>
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         优先级
@@ -426,7 +422,7 @@ export default function Schedule() {
                         name="priority"
                         value={formData.priority}
                         onChange={handleChange}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-secondary"
                       >
                         <option value="low">低</option>
                         <option value="medium">中</option>
@@ -445,7 +441,7 @@ export default function Schedule() {
                       value={formData.description}
                       onChange={handleChange}
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-secondary"
                       placeholder="输入日程描述（可选）"
                     />
                   </div>
@@ -460,7 +456,7 @@ export default function Schedule() {
                     </button>
                     <button
                       type="submit"
-                      className="flex-1 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors"
+                      className="flex-1 px-4 py-2 bg-forest-secondary hover:bg-forest-primary text-white rounded-lg transition-colors"
                     >
                       {editingEvent ? '更新' : '创建'}
                     </button>

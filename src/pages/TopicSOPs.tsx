@@ -14,13 +14,13 @@ export default function TopicSOPs() {
   const [topic, setTopic] = useState<Project | null>(null);
   const [relatedSOPs, setRelatedSOPs] = useState<SOP[]>([]);
   const [loading, setLoading] = useState(true);
-  
+
   useEffect(() => {
     if (id) {
       // 获取课题详情
       const foundTopic = topicService.getById(id);
       setTopic(foundTopic);
-      
+
       // 获取关联的SOP文档
       const allSOPs = sopService.getAll();
       const sops = allSOPs.filter(sop => sop.projectId === id);
@@ -29,7 +29,7 @@ export default function TopicSOPs() {
     }
     setLoading(false);
   }, [id]);
-  
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
@@ -40,22 +40,22 @@ export default function TopicSOPs() {
       </div>
     );
   }
-  
+
   return (
-    <div className="min-h-screen bg-[#F9F6F2] text-[#555555]">
+    <div className="min-h-screen bg-earth-beige text-text-main">
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
-      
+
       <div className={sidebarCollapsed ? 'ml-16' : 'ml-64'}>
-        <Header 
-          title={`${topic?.title || '课题'} - SOP文档`} 
+        <Header
+          title={`${topic?.title || '课题'} - SOP文档`}
           sidebarCollapsed={sidebarCollapsed}
           actions={
             <div className="flex space-x-2">
-               <Button asChild variant="outline" size="sm">
-                 <Link to={`/sops/new?projectId=${id}`}>
-                   <i className="fa-solid fa-plus mr-1"></i>添加课题SOP
-                 </Link>
-               </Button>
+              <Button asChild variant="outline" size="sm">
+                <Link to={`/sops/new?projectId=${id}`}>
+                  <i className="fa-solid fa-plus mr-1"></i>添加课题SOP
+                </Link>
+              </Button>
               <Button asChild>
                 <Link to={`/topics/${id}`}>
                   <i className="fa-solid fa-arrow-left mr-2"></i>
@@ -65,11 +65,11 @@ export default function TopicSOPs() {
             </div>
           }
         />
-        
+
         <main className="container mx-auto px-4 py-6">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-all duration-300 hover:shadow-md">
             <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6">课题SOP文档</h2>
-            
+
             {topic ? (
               <div className="space-y-6">
                 <div className="prose prose-sm dark:prose-invert max-w-none">
@@ -77,7 +77,7 @@ export default function TopicSOPs() {
                     查看和管理课题 "{topic.title}" 相关的标准操作流程文档。
                   </p>
                 </div>
-                
+
                 {relatedSOPs.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {relatedSOPs.map(sop => (
@@ -99,7 +99,7 @@ export default function TopicSOPs() {
                           <i className="fa-solid fa-plus mr-2"></i>创建SOP文档
                         </Link>
                       </Button>
-                      <Button 
+                      <Button
                         variant="outline"
                         onClick={() => {
                           // 打开选择SOP的模态框或导航到SOP列表选择要关联的SOP
