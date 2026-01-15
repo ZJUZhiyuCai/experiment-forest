@@ -5,42 +5,39 @@
     /* 特点：低饱和度、高级灰调、柔和静谧 */
 
     /* 主色调 - 鼠尾草绿系 (Sage Green Series) */
-    --forest-primary: #798E7B;
-    /* 主色：灰绿色 */
-    --forest-secondary: #9DB4A5;
-    /* 辅色：浅灰绿 */
-    --forest-accent: #C4D2C9;
-    /* 点缀：极浅灰绿 */
-    --forest-light: #E8EDEA;
-    /* 背景：淡雾绿 */
+    --forest-primary: hsl(128, 20%, 48%);
+    /* 提亮饱和度: 从 8% -> 20% */
+    --forest-secondary: hsl(140, 25%, 60%);
+    /* 提亮饱和度: 从 13% -> 25% */
+    --forest-accent: hsl(145, 20%, 75%);
+    /* 提亮饱和度: 从 10% -> 20% */
+    --forest-light: hsl(150, 15%, 92%);
+    /* 背景也微调 */
 
     /* 大地色调 - 暖灰/亚麻系 (Linen/Taupe Series) */
-    --earth-brown: #AFA69A;
-    /* 边框/深色块：暖褐灰 */
-    --earth-beige: #F4F3F0;
-    /* 全局背景：带有温度的米灰 */
-    --earth-warm: #E6E2DD;
-    /* 卡片背景：浅灰褐 */
+    --earth-brown: hsl(34, 15%, 60%);
+    /* 保持沉稳但带一点暖色 */
+    --earth-beige: hsl(40, 20%, 96%);
+    /* 背景更干净 */
+    --earth-warm: hsl(35, 15%, 88%);
 
     /* 文字颜色 - 柔和炭灰 */
-    --text-main: #58595B;
-    /* 正文：深炭灰 */
-    --text-soft: #86888A;
-    /* 说明：中灰 */
-    --text-muted: #B0B3B6;
-    /* 弱化：浅灰 */
+    --text-main: #4A4B4D;
+    /* 稍微加深文字对比度 */
+    --text-soft: #737577;
+    --text-muted: #A0A3A6;
     --text-inverse: #FFFFFF;
     /* 反白 */
 
-    /* 状态颜色 - 莫兰迪状态色 */
-    --status-success: #98AFA0;
-    /* 灰薄荷 */
-    --status-warning: #DCC6A0;
-    /* 枯叶黄 */
-    --status-error: #C69FA0;
-    /* 干玫瑰 */
-    --status-info: #9AA7B1;
-    /* 雾霾蓝 */
+    /* 状态颜色 - 提升饱和度以强化视觉反馈 */
+    --status-success: hsl(145, 35%, 60%);
+    /* 成功色更明快 */
+    --status-warning: hsl(40, 60%, 70%);
+    /* 警告色更明显 */
+    --status-error: hsl(358, 45%, 65%);
+    /* 错误色更醒目 */
+    --status-info: hsl(205, 30%, 65%);
+    /* 信息色更清透 */
 
     /* 字体系统 */
     --font-header: 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
