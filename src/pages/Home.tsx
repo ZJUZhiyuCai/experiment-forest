@@ -335,7 +335,7 @@ export default function Home() {
           <footer className="relative z-10 mt-20 pt-8 border-t border-timber-soft text-center">
             <p className="text-grass text-sm">🌲 实验小森林 - 让每一次发现都生根发芽 🌱</p>
             <p className="mt-2 text-xs text-grass/70">
-              作者：Zhiyu Cai 邮箱：3210102604@zju.edu.cn
+              作者：Zhiyu Cai 邮箱：22519085@zju.edu.cn
             </p>
           </footer>
         </main>

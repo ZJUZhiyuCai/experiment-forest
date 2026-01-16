@@ -278,7 +278,7 @@ experiment-forest/
 ## 👨‍💻 作者
 
 **蔡志宇 (Zhiyu Cai)**
-- 📧 邮箱: 3210102604@zju.edu.cn
+- 📧 邮箱: 22519085@zju.edu.cn
 - 🏫 学校: 浙江大学
 - 🔗 GitHub: [@caizhiyu](https://github.com/caizhiyu)
 
