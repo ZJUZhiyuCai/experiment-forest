@@ -9,6 +9,7 @@ import { Header } from '@/components/Header';
 import { LoadingSkeleton } from '@/components/LoadingSkeleton';
 import { VirtualGrid } from '@/components/VirtualScroll';
 import { usePerformanceProfiler } from '@/hooks/usePerformance';
+import { cn } from '@/lib/utils';
 
 // 虚拟滚动阈值 - 当项目数量超过此值时启用虚拟滚动
 const VIRTUAL_SCROLL_THRESHOLD = 20;
@@ -305,26 +306,26 @@ export default function Projects() {
     }
   };
 
-  // 获取状态颜色
+  // 获取状态颜色 - 有机自然配色
   const getStatusColor = (status: ProjectStatus) => {
     switch (status) {
-      case 'planning': return 'bg-yellow-100 text-yellow-600';
-      case 'active': return 'bg-green-100 text-green-600';
-      case 'paused': return 'bg-orange-100 text-orange-600';
-      case 'completed': return 'bg-emerald-100 text-emerald-600';
-      case 'archived': return 'bg-gray-100 text-gray-600';
-      default: return 'bg-gray-100 text-gray-600';
+      case 'planning': return 'bg-terracotta-light text-terracotta';
+      case 'active': return 'bg-moss-soft text-moss';
+      case 'paused': return 'bg-terracotta/15 text-terracotta';
+      case 'completed': return 'bg-status-success/15 text-status-success';
+      case 'archived': return 'bg-organic-stone text-grass';
+      default: return 'bg-organic-stone text-grass';
     }
   };
 
-  // 获取优先级颜色
+  // 获取优先级颜色 - 有机自然配色
   const getPriorityColor = (priority: ProjectPriority) => {
     switch (priority) {
-      case 'low': return 'bg-gray-100 text-gray-600';
-      case 'medium': return 'bg-emerald-100 text-emerald-600';
-      case 'high': return 'bg-orange-100 text-orange-600';
-      case 'urgent': return 'bg-red-100 text-red-600';
-      default: return 'bg-gray-100 text-gray-600';
+      case 'low': return 'bg-organic-stone text-grass';
+      case 'medium': return 'bg-moss-soft text-moss';
+      case 'high': return 'bg-terracotta-light text-terracotta';
+      case 'urgent': return 'bg-status-error/15 text-status-error';
+      default: return 'bg-organic-stone text-grass';
     }
   };
 
@@ -351,27 +352,38 @@ export default function Projects() {
     }
   };
 
+  // 不对称圆角变体
+  const cardRadiusVariants = [
+    'rounded-[2rem_1rem_2.5rem_1.5rem]',
+    'rounded-[1.5rem_2.5rem_1rem_2rem]',
+    'rounded-[2.5rem_1.5rem_2rem_1rem]',
+    'rounded-[1rem_2rem_1.5rem_2.5rem]',
+  ];
+
   // 项目卡片渲染函数（用于虚拟滚动）
   const renderProjectCard = (project: Project, index: number) => (
     <motion.div
       key={project.id}
-      className="group bg-white rounded-2xl shadow-sm border border-forest-accent/30 overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-1 h-full flex flex-col"
+      className={cn(
+        'organic-card group overflow-hidden hover:shadow-float transition-all duration-300 hover:-translate-y-2 h-full flex flex-col',
+        cardRadiusVariants[index % 4]
+      )}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: index * 0.05 }}
+      transition={{ duration: 0.4, delay: index * 0.05 }}
     >
       {/* 顶部状态条 */}
-      <div className={`h-1.5 ${project.priority === 'urgent' ? 'bg-status-error' : project.priority === 'high' ? 'bg-status-warning' : 'bg-forest-secondary'}`} />
+      <div className={`h-1.5 ${project.priority === 'urgent' ? 'bg-status-error' : project.priority === 'high' ? 'bg-terracotta' : 'bg-moss'}`} />
 
       <div className="p-5 flex-1 flex flex-col">
         {/* 头部区域 */}
         <div className="flex justify-between items-start mb-3">
           <div className="flex-1 min-w-0">
-            <h3 className="text-lg font-bold text-text-main mb-1 truncate group-hover:text-forest-primary transition-colors">
+            <h3 className="text-lg font-heading font-bold text-loam mb-1 truncate group-hover:text-moss transition-colors">
               {project.title}
             </h3>
-            <div className="flex items-center text-sm text-text-soft">
-              <i className="fa-solid fa-user-circle mr-1.5 text-forest-secondary"></i>
+            <div className="flex items-center text-sm text-grass">
+              <i className="fa-solid fa-user-circle mr-1.5 text-moss"></i>
               <span className="truncate">{project.leader}</span>
             </div>
           </div>
@@ -386,7 +398,7 @@ export default function Projects() {
         </div>
 
         {/* 描述 */}
-        <p className="text-text-soft text-sm mb-4 line-clamp-2 flex-1">
+        <p className="text-bark text-sm mb-4 line-clamp-2 flex-1">
           {project.description.substring(0, 80)}{project.description.length > 80 ? '...' : ''}
         </p>
 
@@ -394,21 +406,21 @@ export default function Projects() {
         {project.tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-4">
             {project.tags.slice(0, 3).map((tag, idx) => (
-              <span key={idx} className="bg-forest-accent/40 text-forest-primary px-2 py-0.5 text-xs rounded-md">
+              <span key={idx} className="bg-organic-stone text-bark px-2 py-0.5 text-xs rounded-md">
                 #{tag}
               </span>
             ))}
             {project.tags.length > 3 && (
-              <span className="text-text-muted text-xs">+{project.tags.length - 3}</span>
+              <span className="text-grass text-xs">+{project.tags.length - 3}</span>
             )}
           </div>
         )}
 
         {/* 底部操作区 */}
-        <div className="flex justify-between items-center pt-3 border-t border-forest-accent/20">
+        <div className="flex justify-between items-center pt-3 border-t border-timber-soft">
           <Link
             to={`/projects/${project.id}`}
-            className="inline-flex items-center px-3 py-1.5 bg-forest-secondary/10 text-forest-primary hover:bg-forest-secondary/20 font-medium text-sm rounded-lg transition-colors"
+            className="inline-flex items-center px-4 py-1.5 bg-moss-soft text-moss hover:bg-moss hover:text-moss-light font-medium text-sm rounded-full transition-colors"
           >
             <i className="fa-solid fa-arrow-right mr-1.5"></i>
             查看详情
@@ -417,14 +429,14 @@ export default function Projects() {
           <div className="flex items-center gap-1">
             <button
               onClick={(e) => { e.stopPropagation(); openEditForm(project); }}
-              className="p-2 text-text-soft hover:text-forest-primary hover:bg-forest-accent/20 rounded-lg transition-colors"
+              className="p-2 text-grass hover:text-moss hover:bg-moss-soft rounded-lg transition-colors"
               title="编辑"
             >
               <i className="fa-solid fa-pen-to-square"></i>
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); openDeleteConfirm(project); }}
-              className="p-2 text-text-soft hover:text-status-error hover:bg-status-error/10 rounded-lg transition-colors"
+              className="p-2 text-grass hover:text-status-error hover:bg-status-error/10 rounded-lg transition-colors"
               title="删除"
             >
               <i className="fa-solid fa-trash-can"></i>
@@ -436,17 +448,17 @@ export default function Projects() {
   );
 
   return (
-    <div ref={performanceRef} className="min-h-screen bg-earth-beige text-text-main">
+    <div ref={performanceRef} className="min-h-screen bg-organic-rice-paper text-loam">
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
 
-      <div className={sidebarCollapsed ? 'ml-16' : 'ml-64'}>
+      <div className={cn('transition-all duration-500', sidebarCollapsed ? 'ml-16' : 'ml-64')}>
         <Header
           title="课题管理"
           sidebarCollapsed={sidebarCollapsed}
           actions={
             <button
               onClick={openCreateForm}
-              className="bg-gradient-to-r from-forest-secondary to-forest-primary hover:from-forest-primary hover:to-earth-brown text-white px-4 py-2 rounded-lg font-semibold transition-all duration-300 shadow-md hover:shadow-lg"
+              className="organic-btn organic-btn--primary text-sm px-5 py-2.5"
             >
               <i className="fa-solid fa-plus mr-2"></i>
               新建课题
@@ -454,7 +466,13 @@ export default function Projects() {
           }
         />
 
-        <main className="container mx-auto px-4 py-6">
+        <main className="container mx-auto px-6 py-8 relative">
+          {/* 环境 Blob 背景 */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="organic-blob organic-blob--moss w-[450px] h-[450px] -top-20 -right-20 opacity-20" />
+            <div className="organic-blob organic-blob--sand w-[350px] h-[350px] bottom-10 -left-20 opacity-15" />
+          </div>
+
           {/* 删除确认对话框 */}
           <AnimatePresence>
             {deleteConfirm.isOpen && (

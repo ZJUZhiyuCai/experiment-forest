@@ -1,6 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import { useState, Suspense, lazy, useEffect } from "react";
 import { AuthContext } from '@/contexts/authContext';
+import { ThemeProvider } from '@/contexts/themeContext';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { LoadingSkeleton } from '@/components/LoadingSkeleton';
 import { cacheManager } from '@/lib/cachedStorage';
@@ -28,7 +29,7 @@ const TopicDetail = lazy(() => import("@/pages/TopicDetail"));
 const CreateTopic = lazy(() => import("@/pages/CreateTopic"));
 
 // Settings 组件懒加载
-const Settings = lazy(() => 
+const Settings = lazy(() =>
   import("@/pages/Settings").catch(error => {
     console.error('Settings 组件加载失败:', error);
     // 返回一个简单的回退组件
@@ -85,47 +86,49 @@ export default function App() {
   };
 
   return (
-    <AuthContext.Provider
-      value={{ isAuthenticated, setIsAuthenticated, logout }}
-    >
-      <ErrorBoundary>
-        <Suspense fallback={<LazyFallback />}>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/forest" element={<MyForest />} />
-            <Route path="/chat" element={<AIChat />} />
-            <Route path="/topics" element={<Topics />} />
-            <Route path="/topics/new" element={<CreateTopic />} />
-            <Route path="/topics/:id" element={<TopicDetail />} />
-            <Route path="/topics/:id/edit" element={<CreateTopic />} />
-            <Route path="/projects" element={<Projects />} />
-            <Route path="/projects/:id" element={<ProjectDetail />} />
-            <Route path="/projects/:id/edit" element={<CreateTopic />} />
-            <Route path="/projects/edit/:id" element={<CreateTopic />} />
-            <Route path="/projects/:id/records" element={<ExperimentRecords />} />
-            <Route path="/projects/:id/notes" element={<Notes />} />
-            <Route path="/projects/:id/sops" element={<SOPs />} />
-            <Route path="/records" element={<ExperimentRecords />} />
-            <Route path="/records/new" element={<CreateRecord />} />
-            <Route path="/records/edit/:id" element={<CreateRecord />} />
-            <Route path="/records/:id" element={<RecordDetail />} />
-            <Route path="/notes" element={<Notes />} />
-            <Route path="/notes/new" element={<CreateNote />} />
-            <Route path="/notes/edit/:id" element={<CreateNote />} />
-            <Route path="/notes/:id" element={<NoteDetail />} />
-            <Route path="/sops" element={<SOPs />} />
-            <Route path="/sops/new" element={<CreateSOP />} />
-            <Route path="/sops/:id" element={<SOPDetail />} />
-            <Route path="/samples" element={<SampleManagement />} />
-            <Route path="/calendar" element={<Calendar />} />
-            <Route path="/settings" element={<Settings />} />
-            {/* 课题相关功能路由 */}
-            <Route path="/topics/:id/mindmap" element={<TopicMindMap />} />
-            <Route path="*" element={<div className="text-center text-xl">页面未找到</div>} />
-          </Routes>
-        </Suspense>
-      </ErrorBoundary>
-    </AuthContext.Provider>
+    <ThemeProvider>
+      <AuthContext.Provider
+        value={{ isAuthenticated, setIsAuthenticated, logout }}
+      >
+        <ErrorBoundary>
+          <Suspense fallback={<LazyFallback />}>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/forest" element={<MyForest />} />
+              <Route path="/chat" element={<AIChat />} />
+              <Route path="/topics" element={<Topics />} />
+              <Route path="/topics/new" element={<CreateTopic />} />
+              <Route path="/topics/:id" element={<TopicDetail />} />
+              <Route path="/topics/:id/edit" element={<CreateTopic />} />
+              <Route path="/projects" element={<Projects />} />
+              <Route path="/projects/:id" element={<ProjectDetail />} />
+              <Route path="/projects/:id/edit" element={<CreateTopic />} />
+              <Route path="/projects/edit/:id" element={<CreateTopic />} />
+              <Route path="/projects/:id/records" element={<ExperimentRecords />} />
+              <Route path="/projects/:id/notes" element={<Notes />} />
+              <Route path="/projects/:id/sops" element={<SOPs />} />
+              <Route path="/records" element={<ExperimentRecords />} />
+              <Route path="/records/new" element={<CreateRecord />} />
+              <Route path="/records/edit/:id" element={<CreateRecord />} />
+              <Route path="/records/:id" element={<RecordDetail />} />
+              <Route path="/notes" element={<Notes />} />
+              <Route path="/notes/new" element={<CreateNote />} />
+              <Route path="/notes/edit/:id" element={<CreateNote />} />
+              <Route path="/notes/:id" element={<NoteDetail />} />
+              <Route path="/sops" element={<SOPs />} />
+              <Route path="/sops/new" element={<CreateSOP />} />
+              <Route path="/sops/:id" element={<SOPDetail />} />
+              <Route path="/samples" element={<SampleManagement />} />
+              <Route path="/calendar" element={<Calendar />} />
+              <Route path="/settings" element={<Settings />} />
+              {/* 课题相关功能路由 */}
+              <Route path="/topics/:id/mindmap" element={<TopicMindMap />} />
+              <Route path="*" element={<div className="text-center text-xl">页面未找到</div>} />
+            </Routes>
+          </Suspense>
+        </ErrorBoundary>
+      </AuthContext.Provider>
+    </ThemeProvider>
   );
 }

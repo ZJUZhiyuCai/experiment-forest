@@ -4,8 +4,8 @@ import { sopService } from '@/lib/cachedStorage';
 import { SOP } from '@/types';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
-import { Button } from '@/components/Button';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
+import { cn } from '@/lib/utils';
 
 export default function SOPDetail() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -47,7 +47,6 @@ export default function SOPDetail() {
     navigate('/sops');
   };
 
-  // 获取分类显示名称
   const getCategoryName = (categoryId: string) => {
     const categories = {
       'chemical': '化学实验',
@@ -59,26 +58,25 @@ export default function SOPDetail() {
     return categories[categoryId as keyof typeof categories] || '未分类';
   };
 
-  // 获取审批状态样式和文本
   const getApprovalStatus = (status: string) => {
-    switch(status) {
+    switch (status) {
       case 'approved':
-        return { class: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400', text: '已批准' };
+        return { class: 'bg-moss/15 text-moss', text: '已批准' };
       case 'pending':
-        return { class: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400', text: '待审批' };
+        return { class: 'bg-sand/30 text-bark', text: '待审批' };
       case 'rejected':
-        return { class: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400', text: '已拒绝' };
+        return { class: 'bg-status-error/15 text-status-error', text: '已拒绝' };
       default:
-        return { class: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300', text: status };
+        return { class: 'bg-timber-soft text-grass', text: status };
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">加载中...</p>
+      <div className="min-h-screen bg-organic-rice-paper flex items-center justify-center">
+        <div className="organic-card p-8 rounded-[2rem_1rem_2.5rem_1.5rem] text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-moss mb-4"></div>
+          <p className="text-loam">加载中...</p>
         </div>
       </div>
     );
@@ -86,122 +84,128 @@ export default function SOPDetail() {
 
   if (error || !sop) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm">
-          <h2 className="text-xl font-bold text-red-600 dark:text-red-400 mb-2">
-            <i className="fa-solid fa-exclamation-circle mr-2"></i>错误
-          </h2>
-          <p className="text-gray-600 dark:text-gray-300 mb-6">{error || 'SOP文档不存在'}</p>
-          <Button onClick={handleBack}>
+      <div className="min-h-screen bg-organic-rice-paper flex items-center justify-center">
+        <div className="organic-card p-8 rounded-[2rem_1.5rem_2.5rem_1rem] text-center max-w-md">
+          <div className="w-14 h-14 rounded-xl bg-status-error/15 text-status-error flex items-center justify-center mx-auto mb-4 text-xl">
+            <i className="fa-solid fa-exclamation-circle"></i>
+          </div>
+          <h2 className="text-xl font-heading font-bold text-loam mb-2">加载失败</h2>
+          <p className="text-grass mb-6">{error || 'SOP文档不存在'}</p>
+          <button onClick={handleBack} className="organic-btn organic-btn--primary">
             <i className="fa-solid fa-arrow-left mr-2"></i>返回列表
-          </Button>
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <div className="min-h-screen bg-organic-rice-paper text-loam">
+      {/* 环境 Blob 背景 */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="organic-blob organic-blob--moss w-[400px] h-[400px] -top-20 -right-20 opacity-15" />
+        <div className="organic-blob organic-blob--sand w-[300px] h-[300px] bottom-10 -left-20 opacity-10" />
+      </div>
+
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
-      
-      <div className={sidebarCollapsed ? 'ml-16' : 'ml-64'}>
-        <Header 
-          title="SOP文档详情" 
+
+      <div className={cn('transition-all duration-500 relative z-10', sidebarCollapsed ? 'ml-16' : 'ml-64')}>
+        <Header
+          title="SOP文档详情"
           sidebarCollapsed={sidebarCollapsed}
           actions={
             <div className="flex space-x-2">
-              <Button onClick={handleEdit} variant="outline">
+              <button onClick={handleEdit} className="organic-btn organic-btn--outline text-sm">
                 <i className="fa-solid fa-edit mr-2"></i>编辑
-              </Button>
-              <Button onClick={handleBack}>
+              </button>
+              <button onClick={handleBack} className="organic-btn organic-btn--ghost text-sm">
                 <i className="fa-solid fa-arrow-left mr-2"></i>返回
-              </Button>
+              </button>
             </div>
           }
         />
-        
-        <main className="container mx-auto px-4 py-6">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-all duration-300 hover:shadow-md">
+
+        <main className="container mx-auto px-6 py-6">
+          <div className="organic-card p-6 rounded-[2rem_1rem_2.5rem_1.5rem]">
             <div className="flex flex-wrap justify-between items-start mb-6 gap-4">
               <div>
                 <div className="flex items-center">
-                  <h1 className="text-2xl font-bold text-gray-800 dark:text-white mr-3">{sop.title}</h1>
-                  <span className="text-sm bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-2 py-0.5 rounded">
+                  <h1 className="text-2xl font-heading font-bold text-loam mr-3">{sop.title}</h1>
+                  <span className="text-sm bg-timber-soft text-grass px-2 py-0.5 rounded-full">
                     v{sop.version}
                   </span>
                 </div>
-                
-                <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-gray-600 dark:text-gray-400">
+
+                <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-grass">
                   <div className="flex items-center">
                     <i className="fa-solid fa-user mr-1"></i>
                     <span>{sop.author}</span>
                   </div>
-                  
+
                   {sop.department && (
                     <div className="flex items-center">
                       <i className="fa-solid fa-building mr-1"></i>
                       <span>{sop.department}</span>
                     </div>
                   )}
-                  
+
                   <div className="flex items-center">
                     <i className="fa-solid fa-folder mr-1"></i>
                     <span>{getCategoryName(sop.category)}</span>
                   </div>
-                  
+
                   <div className="flex items-center">
                     <i className="fa-solid fa-calendar-alt mr-1"></i>
                     <span>{new Date(sop.lastUpdated).toLocaleDateString()}</span>
                   </div>
                 </div>
               </div>
-              
+
               <div>
                 <span className={`px-3 py-1 rounded-full text-sm font-medium ${getApprovalStatus(sop.approvalStatus).class}`}>
                   {getApprovalStatus(sop.approvalStatus).text}
                 </span>
               </div>
             </div>
-            
+
             {sop.purpose && (
               <div className="mb-6">
-                <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">目的</h2>
-                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-inner">
+                <h2 className="text-lg font-heading font-semibold text-loam mb-2">目的</h2>
+                <div className="bg-timber-soft/50 p-4 rounded-xl">
                   <MarkdownRenderer content={sop.purpose} className="sop-purpose" />
                 </div>
               </div>
             )}
-            
+
             {sop.scope && (
               <div className="mb-6">
-                <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">适用范围</h2>
-                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-inner">
+                <h2 className="text-lg font-heading font-semibold text-loam mb-2">适用范围</h2>
+                <div className="bg-timber-soft/50 p-4 rounded-xl">
                   <MarkdownRenderer content={sop.scope} className="sop-scope" />
                 </div>
               </div>
             )}
-            
+
             <div className="mb-6">
-              <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-3">操作流程</h2>
-              <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-inner">
-                <MarkdownRenderer 
-                  content={sop.content} 
+              <h2 className="text-lg font-heading font-semibold text-loam mb-3">操作流程</h2>
+              <div className="bg-timber-soft/50 p-4 rounded-xl">
+                <MarkdownRenderer
+                  content={sop.content}
                   className="sop-procedure"
                   tableCaption={"操作步骤"}
                 />
               </div>
-              
-              {/* 添加提示语，帮助用户了解新功能 */}
-              <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 flex items-center">
-                <i className="fa-solid fa-lightbulb mr-1 text-yellow-500"></i>
+
+              <div className="mt-2 text-xs text-grass flex items-center">
+                <i className="fa-solid fa-lightbulb mr-1 text-sand"></i>
                 <span>提示: 支持 LaTeX 数学公式 (使用 $...$ 或 $$...$$) 和代码高亮功能</span>
               </div>
             </div>
-            
+
             {sop.references && (
               <div className="mb-6">
-                <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-2">参考资料</h2>
-                <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-inner">
+                <h2 className="text-lg font-heading font-semibold text-loam mb-2">参考资料</h2>
+                <div className="bg-timber-soft/50 p-4 rounded-xl">
                   <MarkdownRenderer content={sop.references} className="sop-references" />
                 </div>
               </div>

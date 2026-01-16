@@ -5,6 +5,7 @@ import { projectService, experimentRecordService, experimentNoteService, sopServ
 import { Project, ExperimentRecord, ExperimentNote, SOP, ProjectStats } from '@/types';
 import { Sidebar } from '@/components/Sidebar';
 import { Header } from '@/components/Header';
+import { cn } from '@/lib/utils';
 
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
@@ -57,10 +58,10 @@ export default function ProjectDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-earth-beige/50 flex items-center justify-center">
-        <div className="text-center">
-          <i className="fa-solid fa-spinner fa-spin text-4xl text-forest-primary mb-4"></i>
-          <p className="text-text-main">加载课题详情中...</p>
+      <div className="min-h-screen bg-organic-rice-paper flex items-center justify-center">
+        <div className="organic-card p-8 rounded-[2rem_1rem_2.5rem_1.5rem] text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-moss mb-4"></div>
+          <p className="text-loam">加载课题详情中...</p>
         </div>
       </div>
     );
@@ -70,12 +71,12 @@ export default function ProjectDetail() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'planning': return 'bg-status-warning/10 text-status-warning';
-      case 'active': return 'bg-status-answer/10 text-status-answer';
-      case 'paused': return 'bg-status-info/10 text-status-info';
-      case 'completed': return 'bg-status-success/10 text-status-success';
-      case 'archived': return 'bg-text-muted/10 text-text-muted';
-      default: return 'bg-text-muted/10 text-text-muted';
+      case 'planning': return 'bg-sand/30 text-bark';
+      case 'active': return 'bg-moss/15 text-moss';
+      case 'paused': return 'bg-terracotta/15 text-terracotta';
+      case 'completed': return 'bg-moss/20 text-moss';
+      case 'archived': return 'bg-timber-soft text-grass';
+      default: return 'bg-timber-soft text-grass';
     }
   };
 
@@ -91,10 +92,16 @@ export default function ProjectDetail() {
   };
 
   return (
-    <div className="min-h-screen bg-earth-beige text-text-main">
+    <div className="min-h-screen bg-organic-rice-paper text-loam">
+      {/* 环境 Blob 背景 */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="organic-blob organic-blob--moss w-[400px] h-[400px] -top-20 -right-20 opacity-15" />
+        <div className="organic-blob organic-blob--terracotta w-[300px] h-[300px] bottom-10 -left-20 opacity-10" />
+      </div>
+
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
 
-      <div className={sidebarCollapsed ? 'ml-16' : 'ml-64'}>
+      <div className={cn('transition-all duration-500 relative z-10', sidebarCollapsed ? 'ml-16' : 'ml-64')}>
         <Header
           title={project.title}
           sidebarCollapsed={sidebarCollapsed}
@@ -109,7 +116,7 @@ export default function ProjectDetail() {
               </span>
               <button
                 onClick={() => navigate('/projects')}
-                className="text-text-main hover:text-forest-primary transition-colors border border-forest-accent/30 px-3 py-1 rounded-xl hover:bg-forest-accent/10"
+                className="organic-btn organic-btn--ghost text-sm"
               >
                 <i className="fa-solid fa-arrow-left mr-2"></i>
                 返回列表
@@ -118,9 +125,9 @@ export default function ProjectDetail() {
           }
         />
 
-        <main className="container mx-auto px-4 py-6">
+        <main className="container mx-auto px-6 py-6">
           {/* 课题基本信息 */}
-          <div className="bg-white rounded-2xl shadow-sm border border-forest-accent/30 p-6 mb-6">
+          <div className="organic-card p-6 mb-6 rounded-[2rem_1rem_2.5rem_1.5rem]">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <div>
                 <h2 className="text-xl font-bold text-forest-primary mb-4">课题描述</h2>

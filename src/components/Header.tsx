@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useTheme } from '@/hooks/useTheme';
-import { GlobalSearch } from './GlobalSearch';
-import { Link } from 'react-router-dom';
 
 interface BreadcrumbItem {
   label: string;
@@ -11,106 +10,121 @@ interface BreadcrumbItem {
 
 interface HeaderProps {
   title: string;
-  sidebarCollapsed: boolean;
-  actions?: React.ReactNode;
   breadcrumb?: BreadcrumbItem[];
+  sidebarCollapsed?: boolean;
+  actions?: React.ReactNode;
 }
 
-export function Header({ title, sidebarCollapsed, actions, breadcrumb }: HeaderProps) {
-  const { theme, toggleTheme } = useTheme();
-  const [showGlobalSearch, setShowGlobalSearch] = useState(false);
+/**
+ * 🌿 有机头部组件 (Organic Header)
+ * 浮动药丸导航 + 毛玻璃效果
+ */
+export function Header({ title, sidebarCollapsed, breadcrumb, actions }: HeaderProps) {
+  const [scrolled, setScrolled] = useState(false);
+  const { isDark, toggleTheme } = useTheme();
 
-  // 全局快捷键支持
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Ctrl+K 或 Cmd+K 打开全局搜索
-      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-        e.preventDefault();
-        setShowGlobalSearch(true);
-      }
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
-    <header className="bg-white/70 backdrop-blur-xl border-b border-forest-accent/20 sticky top-0 z-20 shadow-nature transition-all duration-300">
-      <div className={cn('container mx-auto px-4 py-3', sidebarCollapsed ? 'ml-16' : 'ml-64')}>
-        {/* 面包屑导航 */}
-        {breadcrumb && breadcrumb.length > 0 && (
-          <div className="mb-2">
-            <nav className="flex items-center space-x-2 text-sm text-gray-600">
+    <header className={cn(
+      'sticky top-0 z-20 transition-all duration-500',
+      scrolled
+        ? 'py-3'
+        : 'py-6'
+    )}>
+      <div className={cn(
+        'mx-4 transition-all duration-500',
+        scrolled && 'bg-organic-card/80 backdrop-blur-md rounded-full border border-timber-soft shadow-moss px-6 py-2'
+      )}>
+        <div className="flex flex-col space-y-1">
+          {/* 面包屑导航 - 柔和有机风格 */}
+          {breadcrumb && breadcrumb.length > 0 && !scrolled && (
+            <nav className="flex items-center space-x-2 text-xs text-grass">
               {breadcrumb.map((item, index) => (
                 <div key={index} className="flex items-center space-x-2">
-                  {index > 0 && <i className="fa-solid fa-chevron-right text-xs"></i>}
+                  {index > 0 && <span className="text-timber">/</span>}
                   {item.href ? (
-                    <Link to={item.href} className="hover:text-forest-primary transition-colors">
+                    <Link
+                      to={item.href}
+                      className="hover:text-moss transition-colors duration-300"
+                    >
                       {item.label}
                     </Link>
                   ) : (
-                    <span className="text-forest-secondary font-bold">{item.label}</span>
+                    <span className="text-bark font-medium">{item.label}</span>
                   )}
                 </div>
               ))}
             </nav>
-          </div>
-        )}
+          )}
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <h1 className="text-2xl font-header font-bold text-forest-primary">{title}</h1>
-          </div>
+          <div className="flex items-center justify-between">
+            {/* 标题 - Fraunces 衬线字体 */}
+            <h1 className={cn(
+              'font-heading font-bold tracking-tight text-loam transition-all duration-300',
+              scrolled ? 'text-xl' : 'text-3xl'
+            )}>
+              {title}
+            </h1>
 
-          <div className="flex items-center space-x-4">
-            {/* 全局搜索按钮 */}
-            <button
-              onClick={() => setShowGlobalSearch(true)}
-              className="relative hidden md:flex items-center space-x-2 px-4 py-2 rounded-xl border border-forest-accent/50 bg-forest-light/50 text-text-soft hover:bg-forest-light hover:text-forest-primary transition-all group shadow-sm"
-            >
-              <i className="fa-solid fa-search"></i>
-              <span className="text-sm font-medium">搜索实验数据...</span>
-              <div className="flex items-center space-x-1 ml-2 opacity-50">
-                <kbd className="px-1.5 py-0.5 text-[10px] bg-white border border-forest-accent/30 rounded shadow-sm font-sans">
-                  ⌘
-                </kbd>
-                <kbd className="px-1.5 py-0.5 text-[10px] bg-white border border-forest-accent/30 rounded shadow-sm font-sans">
-                  K
-                </kbd>
+            <div className="flex items-center space-x-3">
+              {/* 有机搜索框 */}
+              <div className={cn(
+                'relative group hidden md:block',
+                scrolled && 'hidden lg:block'
+              )}>
+                <i className="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-xs text-grass group-focus-within:text-moss transition-colors"></i>
+                <input
+                  type="text"
+                  placeholder="搜索..."
+                  className={cn(
+                    'bg-organic-stone/50 border border-timber-soft',
+                    'rounded-full pl-10 pr-4 py-2 text-sm',
+                    'placeholder:text-grass text-bark',
+                    'outline-none transition-all duration-300',
+                    'w-40 focus:w-56 focus:border-moss focus:bg-organic-card',
+                    'focus:shadow-[0_0_0_3px_rgba(93,112,82,0.1)]'
+                  )}
+                />
               </div>
-            </button>
 
-            {/* 移动端搜索按钮 */}
-            <button
-              onClick={() => setShowGlobalSearch(true)}
-              className="md:hidden p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              aria-label="搜索"
-            >
-              <i className="fa-solid fa-search text-gray-600 dark:text-gray-300"></i>
-            </button>
+              {actions && <div className="flex items-center space-x-2">{actions}</div>}
 
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              aria-label={theme === 'light' ? '切换到深色模式' : '切换到浅色模式'}
-            >
-              {theme === 'light' ? (
-                <i className="fa-solid fa-moon text-gray-600 dark:text-gray-300"></i>
-              ) : (
-                <i className="fa-solid fa-sun text-yellow-400"></i>
-              )}
-            </button>
+              {/* 主题切换按钮 - 有机圆形 */}
+              <button
+                onClick={toggleTheme}
+                className={cn(
+                  'w-10 h-10 rounded-full',
+                  'bg-organic-stone/50 border border-timber-soft',
+                  'flex items-center justify-center text-sm text-grass',
+                  'hover:bg-moss hover:text-moss-light hover:border-moss hover:shadow-moss',
+                  'transition-all duration-300'
+                )}
+              >
+                <i className={cn('fa-solid', isDark ? 'fa-sun' : 'fa-moon')}></i>
+              </button>
 
-            {actions}
+              {/* 通知按钮 */}
+              <button className={cn(
+                'w-10 h-10 rounded-full',
+                'bg-organic-stone/50 border border-timber-soft',
+                'flex items-center justify-center text-sm text-grass',
+                'hover:bg-terracotta hover:text-white hover:border-terracotta hover:shadow-clay',
+                'transition-all duration-300'
+              )}>
+                <i className="fa-solid fa-bell"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
-
-      {/* 全局搜索模态框 */}
-      <GlobalSearch
-        isOpen={showGlobalSearch}
-        onClose={() => setShowGlobalSearch(false)}
-      />
     </header>
   );
 }

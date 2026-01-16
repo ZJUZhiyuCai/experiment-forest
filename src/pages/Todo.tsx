@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
-import { Button } from '@/components/Button';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 interface TodoItem {
   id: string;
@@ -213,75 +213,81 @@ export default function Todo() {
   };
 
   return (
-    <div className="min-h-screen bg-earth-beige text-text-main">
+    <div className="min-h-screen bg-organic-rice-paper text-loam">
+      {/* 环境 Blob 背景 */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="organic-blob organic-blob--moss w-[400px] h-[400px] -top-20 -right-20 opacity-15" />
+        <div className="organic-blob organic-blob--terracotta w-[300px] h-[300px] bottom-10 -left-20 opacity-10" />
+      </div>
+
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
 
-      <div className={sidebarCollapsed ? 'ml-16' : 'ml-64'}>
+      <div className={cn('transition-all duration-500 relative z-10', sidebarCollapsed ? 'ml-16' : 'ml-64')}>
         <Header
           title="待办事项"
           sidebarCollapsed={sidebarCollapsed}
           actions={
-            <Button onClick={() => setIsFormOpen(true)}>
+            <button onClick={() => setIsFormOpen(true)} className="organic-btn organic-btn--primary text-sm">
               <i className="fa-solid fa-plus mr-2"></i>
               新建任务
-            </Button>
+            </button>
           }
         />
 
-        <main className="container mx-auto px-4 py-6">
+        <main className="container mx-auto px-6 py-6">
           {/* 统计卡片 */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+            <div className="organic-card p-4 rounded-[1.5rem_1rem_2rem_1.2rem]">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">总任务</p>
-                  <p className="text-2xl font-bold text-gray-800">{stats.total}</p>
+                  <p className="text-sm text-grass">总任务</p>
+                  <p className="text-2xl font-heading font-bold text-loam">{stats.total}</p>
                 </div>
-                <div className="w-10 h-10 bg-forest-accent/30 rounded-full flex items-center justify-center">
-                  <i className="fa-solid fa-tasks text-forest-primary"></i>
+                <div className="w-10 h-10 bg-moss/15 rounded-xl flex items-center justify-center">
+                  <i className="fa-solid fa-tasks text-moss"></i>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+            <div className="organic-card p-4 rounded-[1rem_1.5rem_1.2rem_2rem]">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">已完成</p>
-                  <p className="text-2xl font-bold text-forest-primary">{stats.completed}</p>
+                  <p className="text-sm text-grass">已完成</p>
+                  <p className="text-2xl font-heading font-bold text-moss">{stats.completed}</p>
                 </div>
-                <div className="w-10 h-10 bg-forest-accent/30 rounded-full flex items-center justify-center">
-                  <i className="fa-solid fa-check text-forest-primary"></i>
+                <div className="w-10 h-10 bg-moss/15 rounded-xl flex items-center justify-center">
+                  <i className="fa-solid fa-check text-moss"></i>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+            <div className="organic-card p-4 rounded-[1.2rem_1rem_1.5rem_2rem]">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">紧急任务</p>
-                  <p className="text-2xl font-bold text-red-600">{stats.urgent}</p>
+                  <p className="text-sm text-grass">紧急任务</p>
+                  <p className="text-2xl font-heading font-bold text-status-error">{stats.urgent}</p>
                 </div>
-                <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
-                  <i className="fa-solid fa-exclamation text-red-600"></i>
+                <div className="w-10 h-10 bg-status-error/15 rounded-xl flex items-center justify-center">
+                  <i className="fa-solid fa-exclamation text-status-error"></i>
                 </div>
               </div>
             </div>
 
-            <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+            <div className="organic-card p-4 rounded-[2rem_1.2rem_1rem_1.5rem]">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">过期任务</p>
-                  <p className="text-2xl font-bold text-orange-600">{stats.overdue}</p>
+                  <p className="text-sm text-grass">过期任务</p>
+                  <p className="text-2xl font-heading font-bold text-terracotta">{stats.overdue}</p>
                 </div>
-                <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
-                  <i className="fa-solid fa-clock text-orange-600"></i>
+                <div className="w-10 h-10 bg-terracotta/15 rounded-xl flex items-center justify-center">
+                  <i className="fa-solid fa-clock text-terracotta"></i>
                 </div>
               </div>
             </div>
           </div>
 
           {/* 筛选和搜索 */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+          <div className="organic-card p-4 mb-6 rounded-[1.5rem_1rem_2rem_1.2rem]">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div className="flex flex-wrap gap-2">
                 {[
@@ -293,9 +299,9 @@ export default function Todo() {
                   <button
                     key={item.key}
                     onClick={() => setFilter(item.key as any)}
-                    className={`px-3 py-2 text-sm rounded-lg transition-colors ${filter === item.key
-                      ? 'bg-forest-secondary text-white'
-                      : 'text-gray-600 hover:bg-gray-100'
+                    className={`px-4 py-2 text-sm rounded-full transition-all duration-natural-slow ${filter === item.key
+                      ? 'bg-moss text-white shadow-moss'
+                      : 'text-grass hover:bg-timber-soft'
                       }`}
                   >
                     {item.label} ({item.count})
@@ -304,34 +310,34 @@ export default function Todo() {
               </div>
 
               <div className="relative w-full md:w-64">
-                <i className="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
+                <i className="fa-solid fa-search absolute left-4 top-1/2 transform -translate-y-1/2 text-bark/50"></i>
                 <input
                   type="text"
                   placeholder="搜索任务..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-forest-secondary"
+                  className="organic-input pl-10 w-full"
                 />
               </div>
             </div>
           </div>
 
           {/* 待办事项列表 */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+          <div className="organic-card rounded-[2rem_1rem_2.5rem_1.5rem] overflow-hidden">
             {filteredTodos.length === 0 ? (
               <div className="text-center py-12">
-                <i className="fa-solid fa-clipboard-list text-4xl text-gray-400 mb-4"></i>
-                <h3 className="text-lg font-medium text-gray-600 mb-2">
+                <i className="fa-solid fa-clipboard-list text-4xl text-bark/30 mb-4"></i>
+                <h3 className="text-lg font-heading font-medium text-loam mb-2">
                   {searchQuery ? '未找到匹配的任务' : '暂无待办事项'}
                 </h3>
-                <p className="text-gray-500 mb-4">
+                <p className="text-grass mb-4">
                   {searchQuery ? '尝试其他关键词' : '开始添加您的第一个任务'}
                 </p>
                 {!searchQuery && (
-                  <Button onClick={() => setIsFormOpen(true)}>
+                  <button onClick={() => setIsFormOpen(true)} className="organic-btn organic-btn--secondary">
                     <i className="fa-solid fa-plus mr-2"></i>
                     创建任务
-                  </Button>
+                  </button>
                 )}
               </div>
             ) : (

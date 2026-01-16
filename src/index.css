@@ -1,142 +1,373 @@
 @import './styles/tokens.css';
 
+/* Google Fonts: Fraunces (暖感衬线) + Nunito (圆润无衬线) */
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,800&family=Nunito:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* 优设标题黑补丁 - 尝试加载远程资源或回退 */
-@font-face {
-  font-family: 'YouSheBiaoTiHei';
-  src: url('https://cdn.jsdelivr.net/gh/Leon-An/YouSheBiaoTiHei/YouSheBiaoTiHei-2.ttf') format('truetype');
-  font-display: swap;
-}
+/* ═══════════════════════════════════════════════════════════════════════════
+   🌿 有机自然设计体系 v2.0.0 - Organic/Natural Design System
+   侘寂之美：温暖、不完美、与自然的连接
+═══════════════════════════════════════════════════════════════════════════ */
 
 :root {
   font-family: var(--font-body);
-  line-height: 1.5;
-  font-weight: 300;
-  background-color: var(--earth-beige);
+  line-height: 1.6;
+  font-weight: 400;
+  background-color: var(--bg-rice-paper);
   color: var(--text-main);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-osx-font-smoothing: grayscale;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-h1,
-h2,
-h3,
-.font-header {
-  font-family: var(--font-header);
+/* ═══════════════════════════════════════════════════════════════════════════
+   纸质纹理层 (Paper Grain Texture Overlay)
+   3-4% 透明度，multiply 混合模式，营造手工纸张质感
+═══════════════════════════════════════════════════════════════════════════ */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  opacity: 0.035;
+  pointer-events: none;
+  z-index: 9999;
+  mix-blend-mode: multiply;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
 }
 
 body {
-  background-color: var(--earth-beige);
+  background-color: var(--bg-rice-paper);
   color: var(--text-main);
+  overflow-x: hidden;
 }
 
-/* 自定义滚动条样式 */
+/* ═══════════════════════════════════════════════════════════════════════════
+   字体系统 (Typography System)
+═══════════════════════════════════════════════════════════════════════════ */
+h1,
+h2,
+h3,
+h4,
+.font-heading,
+.font-display {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.font-mono,
+code,
+.data-value {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   有机卡片 (Organic Card)
+   不对称圆角 + 苔藓色调阴影 + 自然悬停动效
+═══════════════════════════════════════════════════════════════════════════ */
+.organic-card {
+  background: var(--bg-card);
+  border: 1px solid var(--timber-soft);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-moss);
+  transition: all var(--transition-natural);
+}
+
+.organic-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-float);
+}
+
+/* 不对称圆角变体 */
+.organic-card--asymmetric-1 {
+  border-radius: 2rem 1rem 2.5rem 1.5rem;
+}
+
+.organic-card--asymmetric-2 {
+  border-radius: 1.5rem 2.5rem 1rem 2rem;
+}
+
+.organic-card--asymmetric-3 {
+  border-radius: 2.5rem 1.5rem 2rem 1rem;
+}
+
+.organic-card--asymmetric-4 {
+  border-radius: 1rem 2rem 1.5rem 2.5rem;
+}
+
+.organic-card--asymmetric-5 {
+  border-radius: 2rem 2.5rem 1.5rem 1rem;
+}
+
+.organic-card--asymmetric-6 {
+  border-radius: 1.5rem 1rem 2rem 2.5rem;
+}
+
+/* 兼容旧类名 */
+.minimal-card {
+  background: var(--bg-card);
+  border: 1px solid var(--timber-soft);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-moss);
+  transition: all var(--transition-natural);
+}
+
+.minimal-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-float);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   有机按钮 (Organic Button)
+   药丸形状 + 带色调阴影 + 自然缩放动效
+═══════════════════════════════════════════════════════════════════════════ */
+.organic-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.75rem 2rem;
+  font-family: var(--font-body);
+  font-weight: 600;
+  border-radius: var(--radius-pill);
+  transition: all var(--transition-natural);
+  cursor: pointer;
+  border: none;
+}
+
+.organic-btn--primary {
+  background-color: var(--moss-green);
+  color: var(--moss-light);
+  box-shadow: var(--shadow-moss);
+}
+
+.organic-btn--primary:hover {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-moss-lg);
+}
+
+.organic-btn--primary:active {
+  transform: scale(0.95);
+}
+
+.organic-btn--secondary {
+  background-color: var(--terracotta);
+  color: white;
+  box-shadow: var(--shadow-clay);
+}
+
+.organic-btn--secondary:hover {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-clay-lg);
+}
+
+.organic-btn--outline {
+  background-color: transparent;
+  color: var(--terracotta);
+  border: 2px solid var(--terracotta);
+}
+
+.organic-btn--outline:hover {
+  background-color: var(--terracotta-light);
+  transform: scale(1.02);
+}
+
+.organic-btn--ghost {
+  background-color: transparent;
+  color: var(--moss-green);
+}
+
+.organic-btn--ghost:hover {
+  background-color: var(--moss-soft);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   有机输入框 (Organic Input)
+   药丸形状 + 半透明背景 + 柔和聚焦环
+═══════════════════════════════════════════════════════════════════════════ */
+.organic-input {
+  width: 100%;
+  height: 3rem;
+  padding: 0 1.5rem;
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  background-color: rgba(255, 255, 255, 0.5);
+  border: 1px solid var(--timber);
+  border-radius: var(--radius-pill);
+  transition: all var(--transition-natural);
+  outline: none;
+}
+
+.organic-input:focus {
+  border-color: var(--moss-green);
+  box-shadow: 0 0 0 3px rgba(93, 112, 82, 0.15);
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+.organic-input::placeholder {
+  color: var(--text-grass);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   环境 Blob 背景 (Ambient Blob Backgrounds)
+   大型模糊有机形状，营造氛围感
+═══════════════════════════════════════════════════════════════════════════ */
+.organic-blob {
+  position: absolute;
+  filter: blur(80px);
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.organic-blob--moss {
+  background: var(--moss-green);
+  border-radius: var(--radius-blob-1);
+}
+
+.organic-blob--clay {
+  background: var(--terracotta);
+  border-radius: var(--radius-blob-2);
+}
+
+.organic-blob--sand {
+  background: var(--sand);
+  border-radius: var(--radius-blob-3);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   文本样式 (Text Styles)
+═══════════════════════════════════════════════════════════════════════════ */
+.gradient-text {
+  background: linear-gradient(135deg, var(--moss-green), var(--terracotta));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-organic-primary {
+  color: var(--moss-green);
+}
+
+.text-organic-secondary {
+  color: var(--terracotta);
+}
+
+.text-organic-muted {
+  color: var(--text-grass);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   自定义滚动条 (Custom Scrollbar) - 有机风格
+═══════════════════════════════════════════════════════════════════════════ */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: #f1f5f9;
-  border-radius: 10px;
+  background: transparent;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, #10b981, #059669);
-  border-radius: 10px;
-  transition: all 0.3s ease;
+  background: var(--timber);
+  border-radius: var(--radius-pill);
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, #059669, #047857);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: var(--moss-green);
 }
 
-/* Firefox 滚动条样式 */
-.custom-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: #10b981 #f1f5f9;
-}
-
-/* 文本截断样式 */
+/* ═══════════════════════════════════════════════════════════════════════════
+   文本截断 (Text Clamp)
+═══════════════════════════════════════════════════════════════════════════ */
 .line-clamp-1 {
-  overflow: hidden;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 1;
-  /* 现代浏览器支持 */
   line-clamp: 1;
+  overflow: hidden;
 }
 
 .line-clamp-2 {
-  overflow: hidden;
   display: -webkit-box;
-  -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
-  /* 现代浏览器支持 */
+  -webkit-box-orient: vertical;
   line-clamp: 2;
+  overflow: hidden;
 }
 
-/* 渐变文字效果 */
-.gradient-text {
-  background: linear-gradient(135deg, #10b981, #3b82f6);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+/* ═══════════════════════════════════════════════════════════════════════════
+   动画系统 (Animation System)
+═══════════════════════════════════════════════════════════════════════════ */
+
+/* 树木生长入场 (Tree Growth Entry) */
+@keyframes growth-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
-/* 毛玻璃效果 */
-.glassmorphism {
-  background: rgba(255, 255, 255, 0.1);
-  /* Safari 支持 */
-  -webkit-backdrop-filter: blur(10px);
-  /* 现代浏览器支持 */
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+.animate-growth {
+  animation: growth-up 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
 
-/* 动画效果 */
-@keyframes float {
+/* 柔和淡入 (Soft Fade In) */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
+}
+
+/* 轻微浮动 (Gentle Float) */
+@keyframes gentle-float {
 
   0%,
   100% {
-    transform: translateY(0px);
+    transform: translateY(0);
   }
 
   50% {
-    transform: translateY(-10px);
+    transform: translateY(-8px);
   }
 }
 
-.float-animation {
-  animation: float 3s ease-in-out infinite;
+.animate-float {
+  animation: gentle-float 4s ease-in-out infinite;
 }
 
-/* 时间线样式 */
-.timeline-marker {
-  position: relative;
-}
-
-.timeline-marker::before {
-  content: '';
-  position: absolute;
-  left: 50%;
-  top: 0;
-  bottom: 0;
-  width: 2px;
-  background: linear-gradient(to bottom, transparent, #e5e7eb, transparent);
-  transform: translateX(-50%);
-}
-
-/* 响应式优化 */
+/* ═══════════════════════════════════════════════════════════════════════════
+   响应式优化 (Responsive)
+═══════════════════════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
   .custom-scrollbar::-webkit-scrollbar {
     width: 4px;
-    height: 4px;
+  }
+
+  .organic-btn {
+    padding: 0.625rem 1.5rem;
   }
 }

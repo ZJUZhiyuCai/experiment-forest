@@ -6,12 +6,12 @@ import { sopService, topicService } from '@/lib/cachedStorage';
 import { Project } from '@/types';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
-import { Button } from '@/components/Button';
 import { EnhancedInput } from '@/components/EnhancedForm';
 import { useLocation } from 'react-router-dom';
 import { TreePlantingCelebration } from '@/components/TreePlantingCelebration';
 import { sopTemplates, getSOPTemplateById } from '@/utils/sopTemplates';
 import { getExperimentCategoriesByGroup } from '@/utils/dataStandardization';
+import { cn } from '@/lib/utils';
 
 export default function CreateSOP() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -571,22 +571,28 @@ export default function CreateSOP() {
   };
 
   return (
-    <div className="min-h-screen bg-earth-beige text-text-main">
+    <div className="min-h-screen bg-organic-rice-paper text-loam">
+      {/* 环境 Blob 背景 */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="organic-blob organic-blob--moss w-[400px] h-[400px] -top-20 -right-20 opacity-15" />
+        <div className="organic-blob organic-blob--sand w-[300px] h-[300px] bottom-10 -left-20 opacity-10" />
+      </div>
+
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
 
-      <div className={sidebarCollapsed ? 'ml-16' : 'ml-64'}>
+      <div className={cn('transition-all duration-500 relative z-10', sidebarCollapsed ? 'ml-16' : 'ml-64')}>
         <Header
           title="创建SOP文档"
           sidebarCollapsed={sidebarCollapsed}
           actions={
-            <Button onClick={() => navigate('/sops')} variant="outline" className="transition-all duration-200">
+            <button onClick={() => navigate('/sops')} className="organic-btn organic-btn--ghost text-sm">
               <i className="fa-solid fa-arrow-left mr-2"></i>
               <span>返回列表</span>
-            </Button>
+            </button>
           }
         />
 
-        <main className="container mx-auto px-4 py-6">
+        <main className="container mx-auto px-6 py-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -601,37 +607,36 @@ export default function CreateSOP() {
               {renderFormContent()}
 
               {/* 导航按钮 */}
-              <div className="flex justify-between pt-6 border-t border-gray-200">
+              <div className="flex justify-between pt-6 border-t border-timber-soft">
                 {formStep > 1 ? (
-                  <Button
+                  <button
                     type="button"
-                    variant="outline"
                     onClick={handlePrevStep}
                     disabled={isSubmitting}
-                    className="transition-all duration-200"
+                    className="organic-btn organic-btn--outline"
                   >
                     <i className="fa-solid fa-arrow-left mr-2"></i>
                     上一步
-                  </Button>
+                  </button>
                 ) : (
-                  <div></div> // 占位元素，保持按钮对齐
+                  <div></div>
                 )}
 
                 {formStep < 3 ? (
-                  <Button
+                  <button
                     type="button"
                     onClick={handleNextStep}
                     disabled={isSubmitting}
-                    className="transition-all duration-200 ml-auto"
+                    className="organic-btn organic-btn--primary ml-auto"
                   >
                     下一步
                     <i className="fa-solid fa-arrow-right ml-2"></i>
-                  </Button>
+                  </button>
                 ) : (
-                  <Button
+                  <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="transition-all duration-200 ml-auto"
+                    className="organic-btn organic-btn--primary ml-auto"
                   >
                     {isSubmitting ? (
                       <>
@@ -644,7 +649,7 @@ export default function CreateSOP() {
                         保存文档
                       </>
                     )}
-                  </Button>
+                  </button>
                 )}
               </div>
             </form>

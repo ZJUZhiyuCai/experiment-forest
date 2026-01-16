@@ -5,6 +5,7 @@ import { Header } from '@/components/Header';
 import SampleList from '@/components/SampleList';
 import SampleDetail from '@/components/SampleDetail';
 import SampleForm from '@/components/SampleForm';
+import { cn } from '@/lib/utils';
 
 const SampleManagement: React.FC = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -17,15 +18,7 @@ const SampleManagement: React.FC = () => {
     setCurrentView('detail');
   };
 
-  // 移动到列表组件中处理
-  // const handleEditSample = (sample?: Sample) => {
-  //   setEditingSample(sample);
-  //   setCurrentView('form');
-  // };
-
   const handleFormSubmit = () => {
-    // 表单提交逻辑在SampleForm组件内处理
-    // 这里只需要切换回列表视图
     setCurrentView('list');
     setEditingSample(undefined);
   };
@@ -79,52 +72,57 @@ const SampleManagement: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-earth-beige text-text-main">
+    <div className="min-h-screen bg-organic-rice-paper text-loam">
+      {/* 环境 Blob 背景 */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="organic-blob organic-blob--moss w-[400px] h-[400px] -top-20 -right-20 opacity-15" />
+        <div className="organic-blob organic-blob--sand w-[300px] h-[300px] bottom-10 -left-20 opacity-12" />
+      </div>
+
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
 
-      <div className={sidebarCollapsed ? 'ml-16' : 'ml-64'}>
+      <div className={cn('transition-all duration-500 relative z-10', sidebarCollapsed ? 'ml-16' : 'ml-64')}>
         <Header
           title="样本管理"
           sidebarCollapsed={sidebarCollapsed}
         />
 
-        <main className="container mx-auto px-4 py-4">
-          <nav className="flex mb-4" aria-label="Breadcrumb">
-            <ol className="flex items-center space-x-4">
+        <main className="container mx-auto px-6 py-6">
+          {/* 面包屑导航 */}
+          <nav className="flex mb-6" aria-label="Breadcrumb">
+            <ol className="flex items-center space-x-3">
               <li>
-                <div className="flex items-center">
-                  <button
-                    onClick={() => setCurrentView('list')}
-                    className={`font-medium ${currentView === 'list'
-                      ? 'text-forest-secondary'
-                      : 'text-gray-500 hover:text-forest-secondary'
-                      }`}
-                  >
-                    样本管理
-                  </button>
-                </div>
+                <button
+                  onClick={() => setCurrentView('list')}
+                  className={cn(
+                    'font-medium transition-colors px-3 py-1.5 rounded-full',
+                    currentView === 'list'
+                      ? 'text-moss bg-moss-soft'
+                      : 'text-grass hover:text-moss hover:bg-moss-soft/50'
+                  )}
+                >
+                  <i className="fa-solid fa-flask mr-2"></i>
+                  样本管理
+                </button>
               </li>
               {currentView === 'detail' && selectedSample && (
                 <>
+                  <li className="text-timber-soft">/</li>
                   <li>
-                    <div className="flex items-center">
-                      <i className="fa-solid fa-chevron-right text-gray-400 mr-4"></i>
-                      <span className="font-medium text-forest-primary">
-                        {selectedSample.name}
-                      </span>
-                    </div>
+                    <span className="font-medium text-loam px-3 py-1.5 bg-organic-stone rounded-full">
+                      {selectedSample.name}
+                    </span>
                   </li>
                 </>
               )}
               {currentView === 'form' && (
                 <>
+                  <li className="text-timber-soft">/</li>
                   <li>
-                    <div className="flex items-center">
-                      <i className="fa-solid fa-chevron-right text-gray-400 mr-4"></i>
-                      <span className="font-medium text-forest-primary">
-                        {editingSample ? '编辑样本' : '新建样本'}
-                      </span>
-                    </div>
+                    <span className="font-medium text-terracotta px-3 py-1.5 bg-terracotta-light rounded-full">
+                      <i className={cn('fa-solid mr-2', editingSample ? 'fa-pen' : 'fa-plus')}></i>
+                      {editingSample ? '编辑样本' : '新建样本'}
+                    </span>
                   </li>
                 </>
               )}

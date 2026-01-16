@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
-import { Button } from '@/components/Button';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 interface ScheduleEvent {
   id: string;
@@ -166,18 +166,24 @@ export default function Schedule() {
   };
 
   return (
-    <div className="min-h-screen bg-earth-beige text-text-main">
+    <div className="min-h-screen bg-organic-rice-paper text-loam">
+      {/* 环境 Blob 背景 */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="organic-blob organic-blob--moss w-[400px] h-[400px] -top-20 -right-20 opacity-15" />
+        <div className="organic-blob organic-blob--sand w-[300px] h-[300px] bottom-10 -left-20 opacity-10" />
+      </div>
+
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
 
-      <div className={sidebarCollapsed ? 'ml-16' : 'ml-64'}>
+      <div className={cn('transition-all duration-500 relative z-10', sidebarCollapsed ? 'ml-16' : 'ml-64')}>
         <Header
           title="日程管理"
           sidebarCollapsed={sidebarCollapsed}
           actions={
-            <Button onClick={() => setIsFormOpen(true)}>
+            <button onClick={() => setIsFormOpen(true)} className="organic-btn organic-btn--primary text-sm">
               <i className="fa-solid fa-plus mr-2"></i>
               新建日程
-            </Button>
+            </button>
           }
         />
 
@@ -239,13 +245,13 @@ export default function Schedule() {
             </h2>
 
             {getEventsForDate(selectedDate).length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <i className="fa-solid fa-calendar-plus text-4xl mb-4"></i>
+              <div className="text-center py-8 text-grass">
+                <i className="fa-solid fa-calendar-plus text-4xl mb-4 text-bark/30"></i>
                 <p>今日暂无安排</p>
-                <Button onClick={() => setIsFormOpen(true)} className="mt-4">
+                <button onClick={() => setIsFormOpen(true)} className="organic-btn organic-btn--secondary mt-4">
                   <i className="fa-solid fa-plus mr-2"></i>
                   添加日程
-                </Button>
+                </button>
               </div>
             ) : (
               <div className="space-y-3">

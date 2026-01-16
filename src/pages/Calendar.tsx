@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
-import { Button } from '@/components/Button';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 interface CalendarEvent {
   id: string;
@@ -194,26 +194,18 @@ export default function Calendar() {
 
     const savedEvents = localStorage.getItem('calendarEvents');
     if (savedEvents) {
-      setEvents(JSON.parse(savedEvents));
+      try {
+        const parsed = JSON.parse(savedEvents);
+        setEvents(parsed);
+      } catch (e) {
+        console.error('Failed to parse calendar events:', e);
+        setEvents([]);
+        localStorage.setItem('calendarEvents', JSON.stringify([]));
+      }
     } else {
-      const today = new Date().toISOString().split('T')[0];
-      const sampleEvents: CalendarEvent[] = [
-        {
-          id: '1',
-          title: '细胞培养实验',
-          description: '进行HEK293细胞的培养和传代实验',
-          startTime: '09:00',
-          endTime: '11:00',
-          date: today,
-          type: 'experiment',
-          priority: 'high',
-          completed: false,
-          isTask: false,
-          createdAt: new Date().toISOString()
-        }
-      ];
-      setEvents(sampleEvents);
-      localStorage.setItem('calendarEvents', JSON.stringify(sampleEvents));
+      // 初始化为空数组，不再创建示例事件
+      setEvents([]);
+      localStorage.setItem('calendarEvents', JSON.stringify([]));
     }
 
     const savedMood = localStorage.getItem('dailyMood');
@@ -451,29 +443,29 @@ export default function Calendar() {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #FFFFFF 0%, #E5EDC1 30%, #48808D 100%)' }}>
+    <div className="min-h-screen bg-organic-rice-paper">
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
 
-      <div className={sidebarCollapsed ? 'ml-16' : 'ml-64'}>
+      <div className={cn('transition-all duration-500', sidebarCollapsed ? 'ml-16' : 'ml-64')}>
         <Header
           title="实验日历"
           sidebarCollapsed={sidebarCollapsed}
           actions={
             <div className="flex space-x-2">
-              <Button
+              <button
                 onClick={() => { setFormData({ ...formData, isTask: true }); setIsFormOpen(true); }}
-                className="bg-blue-500 hover:bg-blue-600 text-white text-sm px-3 py-2"
+                className="organic-btn organic-btn--secondary text-sm"
               >
                 <i className="fa-solid fa-plus mr-1"></i>
                 待办
-              </Button>
-              <Button
+              </button>
+              <button
                 onClick={() => { setFormData({ ...formData, isTask: false }); setIsFormOpen(true); }}
-                className="bg-emerald-500 hover:bg-emerald-600 text-white text-sm px-3 py-2"
+                className="organic-btn organic-btn--primary text-sm"
               >
                 <i className="fa-solid fa-plus mr-1"></i>
                 实验
-              </Button>
+              </button>
             </div>
           }
         />
@@ -553,7 +545,7 @@ export default function Calendar() {
                         <div key={dateStr} className="relative border-r border-gray-200">
                           {/* 日期头 */}
                           <div className={`h-16 px-3 py-2 border-b border-white/30 text-center transition-all ${isTodayDate ? 'bg-white/70 backdrop-blur-sm' :
-                              isWeekend ? 'bg-white/50 backdrop-blur-sm' : 'bg-white/30 backdrop-blur-sm'
+                            isWeekend ? 'bg-white/50 backdrop-blur-sm' : 'bg-white/30 backdrop-blur-sm'
                             }`}>
                             <div className={`text-xs mb-1 ${isTodayDate ? 'font-semibold' : ''
                               }`} style={{ color: isTodayDate ? '#48808D' : '#48808D' }}>
@@ -660,9 +652,9 @@ export default function Calendar() {
                                   <div className="p-3 h-full flex flex-col relative overflow-hidden" style={{ color: getTypeColor(displayEvent!.type).color }}>
                                     {/* 优先级指示器 */}
                                     <div className={`absolute top-1 right-1 w-2 h-2 rounded-full ${displayEvent!.priority === 'urgent' ? 'bg-rose-300' :
-                                        displayEvent!.priority === 'high' ? 'bg-orange-300' :
-                                          displayEvent!.priority === 'medium' ? 'bg-stone-400' :
-                                            'bg-gray-300'
+                                      displayEvent!.priority === 'high' ? 'bg-orange-300' :
+                                        displayEvent!.priority === 'medium' ? 'bg-stone-400' :
+                                          'bg-gray-300'
                                       }`}></div>
 
                                     <div className="text-sm font-semibold truncate mb-1 pr-3">
@@ -764,8 +756,8 @@ export default function Calendar() {
                                 whileTap={{ scale: 0.9 }}
                                 onClick={() => toggleCompleted(task.id)}
                                 className={`w-4 h-4 rounded-md border-2 flex items-center justify-center transition-all ${task.completed
-                                    ? 'bg-stone-500 border-stone-500'
-                                    : 'border-stone-300 hover:border-stone-500'
+                                  ? 'bg-stone-500 border-stone-500'
+                                  : 'border-stone-300 hover:border-stone-500'
                                   }`}
                               >
                                 {task.completed && (
@@ -857,8 +849,8 @@ export default function Calendar() {
                         key={mood.name}
                         onClick={() => setSelectedMood(mood.name)}
                         className={`aspect-square rounded-xl text-2xl flex items-center justify-center transition-all duration-200 ${selectedMood === mood.name
-                            ? 'bg-gradient-to-br from-yellow-100 to-orange-100 scale-110 shadow-lg ring-2 ring-yellow-300'
-                            : 'bg-gray-50/80 hover:bg-gray-100/80 hover:scale-105'
+                          ? 'bg-gradient-to-br from-yellow-100 to-orange-100 scale-110 shadow-lg ring-2 ring-yellow-300'
+                          : 'bg-gray-50/80 hover:bg-gray-100/80 hover:scale-105'
                           }`}
                         whileHover={{ scale: selectedMood === mood.name ? 1.1 : 1.05 }}
                         whileTap={{ scale: 0.95 }}
@@ -1098,8 +1090,8 @@ export default function Calendar() {
                       <button
                         type="submit"
                         className={`flex-1 px-4 py-2 text-white rounded ${formData.isTask
-                            ? 'bg-blue-500 hover:bg-blue-600'
-                            : 'bg-emerald-500 hover:bg-emerald-600'
+                          ? 'bg-blue-500 hover:bg-blue-600'
+                          : 'bg-emerald-500 hover:bg-emerald-600'
                           }`}
                       >
                         {editingEvent ? '更新' : '创建'}

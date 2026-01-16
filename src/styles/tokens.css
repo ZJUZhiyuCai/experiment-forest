@@ -1,63 +1,121 @@
-/* 实验小森林设计令牌 - Design Tokens */
+/* 实验小森林设计令牌 - Design Tokens (v2.0.0 Organic/Natural Wabi-Sabi) */
 
 :root {
-    /* 实验小森林 - 莫兰迪色系 (Morandi Palette) */
-    /* 特点：低饱和度、高级灰调、柔和静谧 */
+    /* ═══════════════════════════════════════════════════════════════════════
+       🌿 有机自然设计体系 (Organic/Natural Design System)
+       拥抱侘寂之美 - 温暖、不完美、与自然的连接
+    ═══════════════════════════════════════════════════════════════════════ */
 
-    /* 主色调 - 鼠尾草绿系 (Sage Green Series) */
-    --forest-primary: hsl(128, 20%, 48%);
-    /* 提亮饱和度: 从 8% -> 20% */
-    --forest-secondary: hsl(140, 25%, 60%);
-    /* 提亮饱和度: 从 13% -> 25% */
-    --forest-accent: hsl(145, 20%, 75%);
-    /* 提亮饱和度: 从 10% -> 20% */
-    --forest-light: hsl(150, 15%, 92%);
-    /* 背景也微调 */
+    /* --- 背景色系：大地质感 (Earth Backgrounds) --- */
+    --bg-rice-paper: #FDFCF8;
+    /* 宣纸白 - 主背景 */
+    --bg-card: #FEFEFA;
+    /* 卡片白 - 极浅米色 */
+    --bg-stone: #F0EBE5;
+    /* 石色 - 次级区域 */
+    --bg-sand: #E6DCCD;
+    /* 沙色 - 强调区域 */
 
-    /* 大地色调 - 暖灰/亚麻系 (Linen/Taupe Series) */
-    --earth-brown: hsl(34, 15%, 60%);
-    /* 保持沉稳但带一点暖色 */
-    --earth-beige: hsl(40, 20%, 96%);
-    /* 背景更干净 */
-    --earth-warm: hsl(35, 15%, 88%);
+    /* --- 主色系：森林调色板 (Forest Palette) --- */
+    --moss-green: #5D7052;
+    /* 苔藓绿 - 主色 */
+    --moss-light: #F3F4F1;
+    /* 浅苔藓 - 主色文字反色 */
+    --moss-soft: rgba(93, 112, 82, 0.1);
+    /* 苔藓绿10% */
+    --terracotta: #C18C5D;
+    /* 陶土色 - 副色 */
+    --terracotta-light: #F5EDE6;
+    /* 浅陶土 */
 
-    /* 文字颜色 - 柔和炭灰 */
-    --text-main: #4A4B4D;
-    /* 稍微加深文字对比度 */
-    --text-soft: #737577;
-    --text-muted: #A0A3A6;
+    /* --- 点缀色系 (Accent Colors) --- */
+    --sand: #E6DCCD;
+    /* 沙色 */
+    --timber: #DED8CF;
+    /* 原木色 - 边框 */
+    --timber-soft: rgba(222, 216, 207, 0.5);
+    /* 半透明原木 */
+
+    /* --- 文字色系：自然墨色 (Natural Ink) --- */
+    --text-loam: #2C2C24;
+    /* 深壤色 - 主文字 */
+    --text-bark: #4A4A40;
+    /* 树皮色 - 次文字 */
+    --text-grass: #78786C;
+    /* 枯草色 - 辅助文字 */
+
+    /* --- 语义化映射 (Semantic Mappings) --- */
+    --forest-primary: var(--moss-green);
+    --forest-secondary: var(--terracotta);
+    --forest-accent: var(--sand);
+    --forest-light: var(--moss-soft);
+    --earth-brown: var(--terracotta);
+    --earth-beige: var(--bg-rice-paper);
+    --text-main: var(--text-loam);
+    --text-soft: var(--text-bark);
+    --text-muted: var(--text-grass);
     --text-inverse: #FFFFFF;
-    /* 反白 */
 
-    /* 状态颜色 - 提升饱和度以强化视觉反馈 */
-    --status-success: hsl(145, 35%, 60%);
-    /* 成功色更明快 */
-    --status-warning: hsl(40, 60%, 70%);
-    /* 警告色更明显 */
-    --status-error: hsl(358, 45%, 65%);
-    /* 错误色更醒目 */
-    --status-info: hsl(205, 30%, 65%);
-    /* 信息色更清透 */
+    /* --- 状态色：柔和自然 (Soft Status Colors) --- */
+    --status-success: #6B8E6B;
+    /* 柔和绿 */
+    --status-error: #A85448;
+    /* 烧赭色 */
+    --status-warning: #D1A054;
+    /* 琥珀色 */
+    --status-info: var(--moss-green);
 
-    /* 字体系统 */
-    --font-header: 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
-    --font-body: 'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', sans-serif;
+    /* --- 字体系统：温暖与圆润 (Warm Typography) --- */
+    --font-heading: 'Fraunces', 'Georgia', serif;
+    --font-body: 'Nunito', 'Quicksand', 'Microsoft YaHei', sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+    /* 兼容旧变量 */
+    --font-display: var(--font-heading);
+    --font-header: var(--font-heading);
 
-    /* 字体权重 */
-    --font-weight-light: 300;
-    --font-weight-normal: 400;
-    --font-weight-semibold: 600;
-    --font-weight-bold: 700;
-    --radius-md: 0.75rem;
-    /* 12px */
-    --radius-lg: 1rem;
+    /* --- 圆角系统：有机形态 (Organic Radii) --- */
+    --radius-sm: 0.5rem;
+    /* 8px */
+    --radius-md: 1rem;
     /* 16px */
-    --radius-xl: 1.5rem;
+    --radius-lg: 1.5rem;
     /* 24px */
-    --radius-full: 9999px;
+    --radius-xl: 2rem;
+    /* 32px */
+    --radius-pill: 9999px;
+    /* 药丸形 */
+    /* Blob 形态圆角 */
+    --radius-blob-1: 60% 40% 30% 70% / 60% 30% 70% 40%;
+    --radius-blob-2: 30% 70% 70% 30% / 30% 30% 70% 70%;
+    --radius-blob-3: 70% 30% 50% 50% / 50% 50% 30% 70%;
 
-    /* --- 过渡动画 (Transitions) --- */
+    /* --- 阴影系统：带色调的柔和阴影 (Tinted Soft Shadows) --- */
+    --shadow-moss: 0 4px 20px -2px rgba(93, 112, 82, 0.15);
+    --shadow-moss-lg: 0 10px 40px -10px rgba(93, 112, 82, 0.2);
+    --shadow-clay: 0 4px 20px -2px rgba(193, 140, 93, 0.15);
+    --shadow-clay-lg: 0 10px 40px -10px rgba(193, 140, 93, 0.2);
+    --shadow-float: 0 20px 40px -10px rgba(93, 112, 82, 0.15);
+    /* 兼容旧变量 */
+    --shadow-nature: var(--shadow-moss);
+    --shadow-nature-lg: var(--shadow-moss-lg);
+    --shadow-minimal: 0 1px 3px rgba(0, 0, 0, 0.02);
 
-    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    /* --- 边框系统 (Borders) --- */
+    --border-timber: var(--timber);
+    --border-timber-soft: var(--timber-soft);
+    --border-ink: rgba(45, 46, 48, 0.08);
+
+    /* --- 过渡系统：自然流畅 (Natural Transitions) --- */
+    --transition-natural: 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    --transition-gentle: 500ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    --transition-fast: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    /* 兼容旧变量 */
+    --transition-subtle: var(--transition-natural);
+
+    /* --- 旧系统兼容 (Legacy Compatibility) --- */
+    --bg-organic: var(--bg-rice-paper);
+    --bg-pure: var(--bg-card);
+    --forest-ink: var(--text-loam);
+    --forest-soft: var(--moss-soft);
+    --water-slate: #7A8B99;
 }

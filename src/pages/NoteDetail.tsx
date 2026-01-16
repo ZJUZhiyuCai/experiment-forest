@@ -4,8 +4,8 @@ import { experimentNoteService, experimentRecordService } from '@/lib/cachedStor
 import { ExperimentNote, ExperimentRecord } from '@/types';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
-import { Button } from '@/components/Button';
 import { MarkdownRenderer } from '@/components/MarkdownRenderer';
+import { cn } from '@/lib/utils';
 
 export default function NoteDetail() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -27,8 +27,7 @@ export default function NoteDetail() {
       const foundNote = experimentNoteService.getById(id);
       if (foundNote) {
         setNote(foundNote);
-        
-        // 如果有关联的实验记录，获取该记录
+
         if (foundNote.relatedRecordId) {
           const record = experimentRecordService.getById(foundNote.relatedRecordId);
           setRelatedRecord(record);
@@ -56,10 +55,10 @@ export default function NoteDetail() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">加载中...</p>
+      <div className="min-h-screen bg-organic-rice-paper flex items-center justify-center">
+        <div className="organic-card p-8 rounded-[2rem_1rem_2.5rem_1.5rem] text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-moss mb-4"></div>
+          <p className="text-loam">加载中...</p>
         </div>
       </div>
     );
@@ -67,67 +66,74 @@ export default function NoteDetail() {
 
   if (error || !note) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center p-6 bg-white dark:bg-gray-800 rounded-xl shadow-sm">
-          <h2 className="text-xl font-bold text-red-600 dark:text-red-400 mb-2">
-            <i className="fa-solid fa-exclamation-circle mr-2"></i>错误
-          </h2>
-          <p className="text-gray-600 dark:text-gray-300 mb-6">{error || '实验笔记不存在'}</p>
-          <Button onClick={handleBack}>
+      <div className="min-h-screen bg-organic-rice-paper flex items-center justify-center">
+        <div className="organic-card p-8 rounded-[2rem_1.5rem_2.5rem_1rem] text-center max-w-md">
+          <div className="w-14 h-14 rounded-xl bg-status-error/15 text-status-error flex items-center justify-center mx-auto mb-4 text-xl">
+            <i className="fa-solid fa-exclamation-circle"></i>
+          </div>
+          <h2 className="text-xl font-heading font-bold text-loam mb-2">加载失败</h2>
+          <p className="text-grass mb-6">{error || '实验笔记不存在'}</p>
+          <button onClick={handleBack} className="organic-btn organic-btn--primary">
             <i className="fa-solid fa-arrow-left mr-2"></i>返回列表
-          </Button>
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <div className="min-h-screen bg-organic-rice-paper text-loam">
+      {/* 环境 Blob 背景 */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="organic-blob organic-blob--terracotta w-[400px] h-[400px] -top-20 -right-20 opacity-15" />
+        <div className="organic-blob organic-blob--sand w-[300px] h-[300px] bottom-10 -left-20 opacity-10" />
+      </div>
+
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
-      
-      <div className={sidebarCollapsed ? 'ml-16' : 'ml-64'}>
-        <Header 
-          title="实验笔记详情" 
+
+      <div className={cn('transition-all duration-500 relative z-10', sidebarCollapsed ? 'ml-16' : 'ml-64')}>
+        <Header
+          title="实验笔记详情"
           sidebarCollapsed={sidebarCollapsed}
           actions={
             <div className="flex space-x-2">
-              <Button onClick={handleEdit} variant="outline">
+              <button onClick={handleEdit} className="organic-btn organic-btn--outline text-sm">
                 <i className="fa-solid fa-edit mr-2"></i>编辑
-              </Button>
-              <Button onClick={handleBack}>
+              </button>
+              <button onClick={handleBack} className="organic-btn organic-btn--ghost text-sm">
                 <i className="fa-solid fa-arrow-left mr-2"></i>返回
-              </Button>
+              </button>
             </div>
           }
         />
-        
-        <main className="container mx-auto px-4 py-6">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 transition-all duration-300 hover:shadow-md">
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">{note.title}</h1>
-            
+
+        <main className="container mx-auto px-6 py-6">
+          <div className="organic-card p-6 rounded-[2rem_1rem_2.5rem_1.5rem]">
+            <h1 className="text-2xl font-heading font-bold text-loam mb-2">{note.title}</h1>
+
             {relatedRecord && (
-              <div className="mb-6 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-100 dark:border-blue-800">
+              <div className="mb-6 p-3 bg-moss/10 rounded-xl border border-moss/20">
                 <div className="flex items-center text-sm">
-                  <i className="fa-solid fa-link text-blue-600 dark:text-blue-400 mr-2"></i>
-                  <span className="text-gray-700 dark:text-gray-300 mr-2">关联实验记录:</span>
-                  <a 
-                    href={`/records/${relatedRecord.id}`} 
-                    className="text-blue-600 dark:text-blue-400 hover:underline"
+                  <i className="fa-solid fa-link text-moss mr-2"></i>
+                  <span className="text-grass mr-2">关联实验记录:</span>
+                  <a
+                    href={`/records/${relatedRecord.id}`}
+                    className="text-moss hover:text-terracotta transition-colors"
                   >
                     {relatedRecord.title}
                   </a>
                 </div>
               </div>
             )}
-            
+
             <div className="mb-6">
-              <h2 className="text-lg font-semibold text-gray-800 dark:text-white mb-3">笔记内容</h2>
-              <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg shadow-inner">
+              <h2 className="text-lg font-heading font-semibold text-loam mb-3">笔记内容</h2>
+              <div className="bg-timber-soft/50 p-4 rounded-xl">
                 <MarkdownRenderer content={note.content} />
               </div>
             </div>
-            
-            <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400 flex justify-between">
+
+            <div className="mt-8 pt-6 border-t border-timber-soft text-sm text-grass flex justify-between">
               <div>
                 <p>创建时间: {new Date(note.createdAt).toLocaleString()}</p>
               </div>

@@ -4,7 +4,19 @@ import { motion } from 'framer-motion';
 import { experimentRecordService, experimentNoteService, sopService } from '@/lib/cachedStorage';
 import { Sidebar } from '@/components/Sidebar';
 import { Header } from '@/components/Header';
+import { cn } from '@/lib/utils';
 
+// 不对称圆角变体
+const cardRadiusVariants = [
+  'rounded-[2rem_1rem_2.5rem_1.5rem]',
+  'rounded-[1.5rem_2.5rem_1rem_2rem]',
+  'rounded-[2.5rem_1.5rem_2rem_1rem]',
+];
+
+/**
+ * 🌿 有机首页 (Organic Home)
+ * 侘寂风格 - 温暖、自然、不完美之美
+ */
 export default function Home() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [stats, setStats] = useState({ records: 0, notes: 0, sops: 0 });
@@ -22,81 +34,156 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-earth-beige text-text-main">
+    <div className="min-h-screen bg-organic-rice-paper text-loam">
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
 
-      <div className={sidebarCollapsed ? 'ml-16' : 'ml-64'}>
+      <div className={cn('transition-all duration-500', sidebarCollapsed ? 'ml-16' : 'ml-64')}>
         <Header
           title="实验管理系统"
           sidebarCollapsed={sidebarCollapsed}
         />
 
-        <main className="container mx-auto px-4 py-6">
-          <section className="mb-10">
-            <div className="bg-gradient-to-br from-forest-light to-forest-accent/30 rounded-2xl shadow-nature border border-forest-accent/30 overflow-hidden p-8">
-              <motion.h1 className="text-3xl md:text-4xl font-header font-bold text-forest-primary mb-4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>欢迎来到实验小森林</motion.h1>
-              <p className="text-text-soft mb-6 text-lg">高效管理实验记录、笔记和标准操作流程，让科研工作更轻松</p>
+        <main className="container mx-auto px-6 py-8 relative">
+          {/* 环境 Blob 背景 */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="organic-blob organic-blob--moss w-[500px] h-[500px] -top-20 -right-20 opacity-30" />
+            <div className="organic-blob organic-blob--clay w-[400px] h-[400px] top-1/2 -left-40 opacity-20" />
+          </div>
+
+          {/* 英雄区 - 有机卡片 */}
+          <section className="mb-12 relative z-10">
+            <motion.div
+              className={cn(
+                'organic-card organic-card--asymmetric-1 p-8 md:p-10',
+                'bg-gradient-to-br from-organic-card to-organic-stone/30'
+              )}
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, ease: [0.2, 0.8, 0.2, 1] }}
+            >
+              <h1 className="text-4xl md:text-5xl font-heading font-bold text-loam mb-4 leading-tight">
+                欢迎来到
+                <span className="gradient-text"> 实验小森林</span>
+              </h1>
+              <p className="text-bark text-lg mb-8 max-w-2xl">
+                高效管理实验记录、笔记和标准操作流程，让每一次科研发现都生根发芽 🌱
+              </p>
               <div className="flex flex-wrap gap-4">
-                <Link to="/records/new" className="bg-gradient-to-r from-forest-secondary to-forest-primary hover:from-forest-primary hover:to-earth-brown text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 shadow-nature hover:shadow-nature-lg"><i className="fa-solid fa-plus mr-2"></i>创建实验记录</Link>
-                <Link to="/calendar" className="border-2 border-forest-secondary text-forest-primary bg-white/50 backdrop-blur-sm hover:bg-forest-light px-6 py-3 rounded-xl font-semibold transition-all duration-300 shadow-sm"><i className="fa-solid fa-calendar mr-2"></i>查看实验日历</Link>
+                <Link
+                  to="/records/new"
+                  className={cn(
+                    'organic-btn organic-btn--primary',
+                    'inline-flex items-center gap-2'
+                  )}
+                >
+                  <i className="fa-solid fa-plus"></i>
+                  创建实验记录
+                </Link>
+                <Link
+                  to="/calendar"
+                  className="organic-btn organic-btn--outline inline-flex items-center gap-2"
+                >
+                  <i className="fa-solid fa-calendar"></i>
+                  查看实验日历
+                </Link>
               </div>
-            </div>
+            </motion.div>
           </section>
 
-          {/* 统计数据卡片 */}
-          <section className="mb-10">
+          {/* 统计卡片 - 不对称圆角 */}
+          <section className="mb-12 relative z-10">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-              <motion.div className="bg-white/70 backdrop-blur-md rounded-2xl shadow-nature border border-forest-accent/20 p-4 transition-all duration-300 hover:shadow-nature-lg hover:-translate-y-1" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.1 }}>
-                <div className="flex justify-between items-start mb-4">
-                  <div><p className="text-text-muted text-sm">实验记录 🌱</p><h3 className="text-3xl font-header font-bold text-forest-secondary">{stats.records}</h3></div>
-                  <div className="w-12 h-12 rounded-full bg-forest-light flex items-center justify-center shadow-sm"><i className="fa-solid fa-seedling text-forest-secondary text-xl"></i></div>
-                </div>
-                <Link to="/records" className="block w-full text-center border border-forest-accent text-forest-primary hover:bg-forest-light px-4 py-2 rounded-xl transition-all duration-300 text-sm font-medium">查看幼苗</Link>
-              </motion.div>
-
-              <motion.div className="bg-white/70 backdrop-blur-md rounded-2xl shadow-nature border border-forest-accent/20 p-4 transition-all duration-300 hover:shadow-nature-lg hover:-translate-y-1" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.2 }}>
-                <div className="flex justify-between items-start mb-4">
-                  <div><p className="text-text-muted text-sm">实验笔记 🍃</p><h3 className="text-3xl font-header font-bold text-forest-primary">{stats.notes}</h3></div>
-                  <div className="w-12 h-12 rounded-full bg-forest-accent/30 flex items-center justify-center shadow-sm"><i className="fa-solid fa-leaf text-forest-secondary text-xl"></i></div>
-                </div>
-                <Link to="/notes" className="block w-full text-center border border-forest-accent text-forest-primary hover:bg-forest-light px-4 py-2 rounded-xl transition-all duration-300 text-sm font-medium">查看枝叶</Link>
-              </motion.div>
-
-              <motion.div className="bg-white/70 backdrop-blur-md rounded-2xl shadow-nature border border-forest-accent/20 p-4 transition-all duration-300 hover:shadow-nature-lg hover:-translate-y-1" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.3 }}>
-                <div className="flex justify-between items-start mb-4">
-                  <div><p className="text-text-muted text-sm">SOP文档 🌳</p><h3 className="text-3xl font-header font-bold text-earth-brown">{stats.sops}</h3></div>
-                  <div className="w-12 h-12 rounded-full bg-earth-brown/10 flex items-center justify-center shadow-sm"><i className="fa-solid fa-tree text-forest-primary text-xl"></i></div>
-                </div>
-                <Link to="/sops" className="block w-full text-center border border-earth-brown/30 text-forest-primary hover:bg-forest-light px-4 py-2 rounded-xl transition-all duration-300 text-sm font-medium">查看大树</Link>
-              </motion.div>
+              {[
+                { label: '实验记录', emoji: '🌱', count: stats.records, path: '/records', color: 'moss', btnText: '查看幼苗' },
+                { label: '实验笔记', emoji: '🍃', count: stats.notes, path: '/notes', color: 'terracotta', btnText: '查看枝叶' },
+                { label: 'SOP文档', emoji: '🌳', count: stats.sops, path: '/sops', color: 'moss', btnText: '查看大树' },
+              ].map((item, index) => (
+                <motion.div
+                  key={item.label}
+                  className={cn(
+                    'organic-card p-6',
+                    cardRadiusVariants[index],
+                    'hover:-translate-y-2 hover:shadow-float'
+                  )}
+                  initial={{ opacity: 0, y: 24 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.1 * (index + 1) }}
+                >
+                  <div className="flex justify-between items-start mb-5">
+                    <div>
+                      <p className="text-grass text-sm mb-1">{item.label} {item.emoji}</p>
+                      <h3 className={cn(
+                        'text-4xl font-heading font-bold',
+                        item.color === 'moss' ? 'text-moss' : 'text-terracotta'
+                      )}>
+                        {item.count}
+                      </h3>
+                    </div>
+                    <div className={cn(
+                      'w-14 h-14 rounded-2xl flex items-center justify-center',
+                      item.color === 'moss' ? 'bg-moss-soft' : 'bg-terracotta-light',
+                      'shadow-minimal'
+                    )}>
+                      <i className={cn(
+                        'fa-solid text-2xl',
+                        index === 0 ? 'fa-seedling text-moss' :
+                          index === 1 ? 'fa-leaf text-terracotta' :
+                            'fa-tree text-moss'
+                      )}></i>
+                    </div>
+                  </div>
+                  <Link
+                    to={item.path}
+                    className={cn(
+                      'block w-full text-center py-2.5 rounded-full',
+                      'border-2 transition-all duration-300',
+                      item.color === 'moss'
+                        ? 'border-moss/30 text-moss hover:bg-moss hover:text-moss-light hover:border-moss'
+                        : 'border-terracotta/30 text-terracotta hover:bg-terracotta hover:text-white hover:border-terracotta',
+                      'text-sm font-semibold'
+                    )}
+                  >
+                    {item.btnText}
+                  </Link>
+                </motion.div>
+              ))}
             </div>
           </section>
 
-          {/* 我的实验森林 */}
-          <section className="mb-10">
-            <div className="bg-gradient-to-br from-forest-light to-forest-accent/20 rounded-xl shadow-nature border border-forest-accent/30 overflow-hidden">
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-6">
+          {/* 我的实验森林 - 有机风格 */}
+          <section className="mb-12 relative z-10">
+            <motion.div
+              className="organic-card organic-card--asymmetric-2 overflow-hidden"
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
+              <div className="p-8">
+                <div className="flex justify-between items-center mb-8">
                   <div>
-                    <h2 className="text-2xl font-bold text-forest-primary mb-2 flex items-center">
-                      <i className="fa-solid fa-seedling mr-3 text-forest-secondary"></i>
+                    <h2 className="text-2xl font-heading font-bold text-loam mb-2 flex items-center gap-3">
+                      <span className="w-10 h-10 rounded-xl bg-moss flex items-center justify-center shadow-moss">
+                        <i className="fa-solid fa-seedling text-moss-light"></i>
+                      </span>
                       我的实验森林
                     </h2>
-                    <p className="text-text-soft">每一次实验都是森林中的新生命 🌿</p>
+                    <p className="text-bark">每一次实验都是森林中的新生命 🌿</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-text-muted">森林覆盖率</p>
-                    <p className="text-2xl font-bold text-forest-primary">{Math.min(100, Math.round((stats.records + stats.notes + stats.sops) * 3.33))}%</p>
+                    <p className="text-sm text-grass mb-1">森林覆盖率</p>
+                    <p className="text-3xl font-heading font-bold text-moss">
+                      {Math.min(100, Math.round((stats.records + stats.notes + stats.sops) * 3.33))}%
+                    </p>
                   </div>
                 </div>
 
                 {/* 森林可视化区域 */}
-                <div className="relative h-48 bg-gradient-to-t from-earth-brown/10 to-status-info/20 rounded-lg overflow-hidden mb-6">
+                <div className="relative h-52 bg-gradient-to-t from-terracotta/10 via-organic-stone/30 to-moss-soft/20 rounded-3xl overflow-hidden mb-8">
                   {/* 地面 */}
-                  <div className="absolute bottom-0 w-full h-8 bg-gradient-to-t from-earth-brown/20 to-transparent"></div>
+                  <div className="absolute bottom-0 w-full h-10 bg-gradient-to-t from-terracotta/20 to-transparent"></div>
 
                   {/* 动态生成的树木 */}
-                  <div className="absolute inset-0 flex items-end justify-center space-x-4 px-8">
+                  <div className="absolute inset-0 flex items-end justify-center space-x-5 px-8 pb-4">
                     {/* 实验记录 - 幼苗 */}
                     {Array.from({ length: Math.min(stats.records, 8) }, (_, i) => (
                       <motion.div
@@ -105,10 +192,10 @@ export default function Home() {
                         initial={{ scale: 0, y: 20 }}
                         animate={{ scale: 1, y: 0 }}
                         transition={{ duration: 0.5, delay: i * 0.1 }}
-                        whileHover={{ scale: 1.1 }}
+                        whileHover={{ scale: 1.15, y: -4 }}
                       >
-                        <i className="fa-solid fa-seedling text-forest-secondary text-lg group-hover:text-forest-primary transition-colors"></i>
-                        <div className="w-1 h-2 bg-earth-brown group-hover:bg-earth-brown/80 transition-colors"></div>
+                        <i className="fa-solid fa-seedling text-moss text-xl group-hover:text-terracotta transition-colors duration-300"></i>
+                        <div className="w-1 h-3 bg-terracotta/60 rounded-full mt-1"></div>
                       </motion.div>
                     ))}
 
@@ -120,10 +207,10 @@ export default function Home() {
                         initial={{ scale: 0, y: 30 }}
                         animate={{ scale: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: (stats.records * 0.1) + (i * 0.15) }}
-                        whileHover={{ scale: 1.1 }}
+                        whileHover={{ scale: 1.15, y: -4 }}
                       >
-                        <i className="fa-solid fa-leaf text-forest-accent text-xl group-hover:text-forest-secondary transition-colors"></i>
-                        <div className="w-1 h-4 bg-earth-brown group-hover:bg-earth-brown/80 transition-colors"></div>
+                        <i className="fa-solid fa-leaf text-moss/70 text-2xl group-hover:text-moss transition-colors duration-300"></i>
+                        <div className="w-1.5 h-5 bg-terracotta/60 rounded-full mt-1"></div>
                       </motion.div>
                     ))}
 
@@ -135,35 +222,35 @@ export default function Home() {
                         initial={{ scale: 0, y: 40 }}
                         animate={{ scale: 1, y: 0 }}
                         transition={{ duration: 0.7, delay: (stats.records * 0.1) + (stats.notes * 0.15) + (i * 0.2) }}
-                        whileHover={{ scale: 1.1 }}
+                        whileHover={{ scale: 1.15, y: -4 }}
                       >
-                        <i className="fa-solid fa-tree text-forest-primary text-2xl group-hover:text-forest-secondary transition-colors"></i>
-                        <div className="w-2 h-6 bg-earth-brown group-hover:bg-earth-brown/80 transition-colors"></div>
+                        <i className="fa-solid fa-tree text-moss text-3xl group-hover:text-terracotta transition-colors duration-300"></i>
+                        <div className="w-2 h-7 bg-terracotta/70 rounded-full mt-1"></div>
                       </motion.div>
                     ))}
                   </div>
 
                   {/* 天空中的云朵 */}
-                  <div className="absolute top-4 right-8">
+                  <div className="absolute top-5 right-10">
                     <motion.i
-                      className="fa-solid fa-cloud text-white/40 text-xl"
-                      animate={{ x: [0, 10, 0] }}
-                      transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                    ></motion.i>
-                  </div>
-                  <div className="absolute top-8 left-12">
-                    <motion.i
-                      className="fa-solid fa-cloud text-white/30 text-sm"
-                      animate={{ x: [0, -8, 0] }}
+                      className="fa-solid fa-cloud text-organic-card/60 text-2xl"
+                      animate={{ x: [0, 12, 0] }}
                       transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
                     ></motion.i>
                   </div>
+                  <div className="absolute top-10 left-14">
+                    <motion.i
+                      className="fa-solid fa-cloud text-organic-card/40 text-lg"
+                      animate={{ x: [0, -10, 0] }}
+                      transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                    ></motion.i>
+                  </div>
 
-                  {/* 如果没有内容，显示空旷的土地 */}
+                  {/* 空状态 */}
                   {(stats.records + stats.notes + stats.sops) === 0 && (
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-center text-text-muted">
-                        <i className="fa-solid fa-seedling text-4xl mb-4 opacity-30"></i>
+                      <div className="text-center text-grass">
+                        <i className="fa-solid fa-seedling text-5xl mb-4 opacity-30"></i>
                         <p className="text-sm">开始您的第一个实验，种下第一棵树苗吧！</p>
                       </div>
                     </div>
@@ -172,50 +259,85 @@ export default function Home() {
 
                 {/* 森林成就 */}
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                  <div className="bg-white/50 rounded-lg p-3 text-center">
-                    <i className="fa-solid fa-award text-status-warning text-lg mb-1"></i>
-                    <p className="text-xs text-text-soft">播种者</p>
-                    <p className="text-sm font-medium text-forest-primary">{stats.records > 0 ? '已解锁' : '待解锁'}</p>
-                  </div>
-                  <div className="bg-white/50 rounded-lg p-3 text-center">
-                    <i className="fa-solid fa-medal text-text-muted text-lg mb-1"></i>
-                    <p className="text-xs text-text-soft">园丁</p>
-                    <p className="text-sm font-medium text-forest-primary">{stats.notes >= 5 ? '已解锁' : `${stats.notes}/5`}</p>
-                  </div>
-                  <div className="bg-white/50 rounded-lg p-3 text-center">
-                    <i className="fa-solid fa-crown text-status-warning text-lg mb-1"></i>
-                    <p className="text-xs text-text-soft">森林守护者</p>
-                    <p className="text-sm font-medium text-forest-primary">{stats.sops >= 3 ? '已解锁' : `${stats.sops}/3`}</p>
-                  </div>
+                  {[
+                    { icon: 'fa-award', label: '播种者', condition: stats.records > 0, progress: null },
+                    { icon: 'fa-medal', label: '园丁', condition: stats.notes >= 5, progress: stats.notes < 5 ? `${stats.notes}/5` : null },
+                    { icon: 'fa-crown', label: '森林守护者', condition: stats.sops >= 3, progress: stats.sops < 3 ? `${stats.sops}/3` : null },
+                  ].map((badge, index) => (
+                    <div
+                      key={badge.label}
+                      className={cn(
+                        'rounded-2xl p-4 text-center transition-all duration-300',
+                        badge.condition
+                          ? 'bg-moss-soft border border-moss/20'
+                          : 'bg-organic-stone/50 border border-timber-soft'
+                      )}
+                    >
+                      <i className={cn(
+                        'fa-solid text-2xl mb-2',
+                        badge.icon,
+                        badge.condition ? 'text-terracotta' : 'text-grass/50'
+                      )}></i>
+                      <p className="text-xs text-grass mb-1">{badge.label}</p>
+                      <p className={cn(
+                        'text-sm font-semibold',
+                        badge.condition ? 'text-moss' : 'text-bark'
+                      )}>
+                        {badge.condition ? '已解锁' : badge.progress}
+                      </p>
+                    </div>
+                  ))}
                 </div>
               </div>
-            </div>
+            </motion.div>
           </section>
 
           {/* 今日种树提醒 */}
-          <section className="mb-10">
-            <div className="bg-gradient-to-r from-forest-accent/20 to-forest-secondary/20 rounded-xl border border-forest-accent/40 p-6">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <i className="fa-solid fa-calendar-day text-forest-primary text-2xl mr-4"></i>
+          <section className="mb-12 relative z-10">
+            <motion.div
+              className={cn(
+                'organic-card organic-card--asymmetric-3 p-6',
+                'bg-gradient-to-r from-moss-soft/50 to-terracotta-light/30'
+              )}
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.5 }}
+            >
+              <div className="flex items-center justify-between flex-wrap gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-terracotta flex items-center justify-center shadow-clay">
+                    <i className="fa-solid fa-calendar-day text-white text-xl"></i>
+                  </div>
                   <div>
-                    <h3 className="text-lg font-bold text-forest-primary">今日种树目标</h3>
-                    <p className="text-text-soft text-sm">完成一个实验记录，为森林添加新绿意</p>
+                    <h3 className="text-lg font-heading font-bold text-loam">今日种树目标</h3>
+                    <p className="text-bark text-sm">完成一个实验记录，为森林添加新绿意</p>
                   </div>
                 </div>
-                <div className="flex space-x-3">
-                  <Link to="/records" className="bg-forest-primary hover:bg-forest-secondary text-white px-4 py-2 rounded-lg transition-colors text-sm">
-                    <i className="fa-solid fa-seedling mr-1"></i>种下幼苗
+                <div className="flex gap-3">
+                  <Link
+                    to="/records"
+                    className="organic-btn organic-btn--primary text-sm px-5 py-2"
+                  >
+                    <i className="fa-solid fa-seedling mr-2"></i>种下幼苗
                   </Link>
-                  <Link to="/notes" className="bg-forest-secondary hover:bg-forest-accent text-white px-4 py-2 rounded-lg transition-colors text-sm">
-                    <i className="fa-solid fa-leaf mr-1"></i>添加枝叶
+                  <Link
+                    to="/notes"
+                    className="organic-btn organic-btn--secondary text-sm px-5 py-2"
+                  >
+                    <i className="fa-solid fa-leaf mr-2"></i>添加枝叶
                   </Link>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </section>
 
-          <footer className="mt-16 pt-6 border-t border-forest-light text-center text-sm text-text-muted"><p>🌲 实验小森林 - 让每一次发现都生根发芽 🌱</p><p className="mt-1 text-xs">作者：Zhiyu Cai 邮箱：3210102604@zju.edu.cn</p></footer>
+          {/* 页脚 */}
+          <footer className="relative z-10 mt-20 pt-8 border-t border-timber-soft text-center">
+            <p className="text-grass text-sm">🌲 实验小森林 - 让每一次发现都生根发芽 🌱</p>
+            <p className="mt-2 text-xs text-grass/70">
+              作者：Zhiyu Cai 邮箱：3210102604@zju.edu.cn
+            </p>
+          </footer>
         </main>
       </div>
     </div>

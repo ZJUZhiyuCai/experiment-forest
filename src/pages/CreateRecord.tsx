@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
-import { Button } from '@/components/Button';
 import { ExperimentRecordForm } from '@/components/ExperimentRecordForm';
 import { ExperimentRecord } from '@/types';
 import { experimentRecordService } from '@/lib/cachedStorage';
+import { cn } from '@/lib/utils';
 
 
 export default function CreateRecord() {
@@ -18,10 +18,8 @@ export default function CreateRecord() {
   const location = useLocation();
   const { id } = useParams<{ id: string }>();
 
-  // 检测是否为编辑模式
   const isEditMode = Boolean(id);
 
-  // 加载现有记录（如果是编辑模式）
   useEffect(() => {
     if (isEditMode && id) {
       setLoading(true);
@@ -41,7 +39,6 @@ export default function CreateRecord() {
     }
   }, [id, isEditMode]);
 
-  // 从URL获取日期参数
   const getInitialDate = () => {
     const params = new URLSearchParams(location.search);
     const dateParam = params.get('date');
@@ -49,69 +46,71 @@ export default function CreateRecord() {
   };
 
   const handleSubmit = () => {
-    // 这里只是处理表单提交成功后的逻辑
-    // 实际的保存逻辑在ExperimentRecordForm中处理
     setIsSubmitting(false);
-    // 延迟导航以确保用户看到成功提示和动画
     setTimeout(() => {
       navigate('/projects');
-    }, 3000); // 增加到3秒，让用户有充足时间看到成功动画
+    }, 3000);
   };
 
   const handleCancel = () => {
     navigate('/projects');
   };
 
-  // 加载中状态
   if (loading) {
     return (
-      <div className="min-h-screen bg-earth-beige/50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-forest-primary mb-4"></div>
-          <p className="text-text-main">加载中...</p>
+      <div className="min-h-screen bg-organic-rice-paper flex items-center justify-center">
+        <div className="organic-card p-8 rounded-[2rem_1rem_2.5rem_1.5rem] text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-moss mb-4"></div>
+          <p className="text-loam">加载中...</p>
         </div>
       </div>
     );
   }
 
-  // 错误状态
   if (error) {
     return (
-      <div className="min-h-screen bg-earth-beige/50 flex items-center justify-center">
-        <div className="text-center p-6 bg-white rounded-2xl shadow-sm border border-forest-accent/20">
-          <h2 className="text-xl font-bold text-status-error mb-2">
-            <i className="fa-solid fa-exclamation-circle mr-2"></i>错误
-          </h2>
-          <p className="text-text-main mb-6">{error}</p>
-          <Button onClick={handleCancel}>
+      <div className="min-h-screen bg-organic-rice-paper flex items-center justify-center">
+        <div className="organic-card p-8 rounded-[2rem_1.5rem_2.5rem_1rem] text-center max-w-md">
+          <div className="w-14 h-14 rounded-xl bg-status-error/15 text-status-error flex items-center justify-center mx-auto mb-4 text-xl">
+            <i className="fa-solid fa-exclamation-circle"></i>
+          </div>
+          <h2 className="text-xl font-heading font-bold text-loam mb-2">加载失败</h2>
+          <p className="text-grass mb-6">{error}</p>
+          <button onClick={handleCancel} className="organic-btn organic-btn--primary">
             <i className="fa-solid fa-arrow-left mr-2"></i>返回列表
-          </Button>
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-earth-beige text-text-main">
+    <div className="min-h-screen bg-organic-rice-paper text-loam">
+      {/* 环境 Blob 背景 */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="organic-blob organic-blob--moss w-[400px] h-[400px] -top-20 -right-20 opacity-15" />
+        <div className="organic-blob organic-blob--terracotta w-[300px] h-[300px] bottom-10 -left-20 opacity-10" />
+      </div>
+
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
 
-      <div className={sidebarCollapsed ? 'ml-16' : 'ml-64'}>
+      <div className={cn('transition-all duration-500 relative z-10', sidebarCollapsed ? 'ml-16' : 'ml-64')}>
         <Header
           title={isEditMode ? '编辑实验记录' : '创建实验记录'}
           sidebarCollapsed={sidebarCollapsed}
           actions={
-            <Button
+            <button
               onClick={() => navigate('/projects')}
-              variant="outline"
               disabled={isSubmitting}
+              className="organic-btn organic-btn--ghost text-sm"
             >
               <i className="fa-solid fa-arrow-left mr-2"></i>
               <span>返回列表</span>
-            </Button>
+            </button>
           }
         />
 
-        <main className="container mx-auto px-4 py-6">
+        <main className="container mx-auto px-6 py-6">
           <ExperimentRecordForm
             record={isEditMode ? record : null}
             defaultDate={getInitialDate()}

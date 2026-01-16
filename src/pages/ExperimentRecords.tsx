@@ -8,16 +8,26 @@ import { Sidebar } from '@/components/Sidebar';
 import { Header } from '@/components/Header';
 import { ExperimentRecordForm } from '@/components/ExperimentRecordForm';
 import { LoadingSkeleton } from '@/components/LoadingSkeleton';
+import { cn } from '@/lib/utils';
 import {
   getExperimentCategoriesByGroup,
   getExperimentCategoryDisplayName
 } from '@/utils/dataStandardization';
 
+// 不对称圆角变体
+const cardRadiusVariants = [
+  'rounded-[2rem_1rem_2.5rem_1.5rem]',
+  'rounded-[1.5rem_2.5rem_1rem_2rem]',
+  'rounded-[2.5rem_1.5rem_2rem_1rem]',
+  'rounded-[1rem_2rem_1.5rem_2.5rem]',
+  'rounded-[2rem_2.5rem_1.5rem_1rem]',
+  'rounded-[1.5rem_1rem_2rem_2.5rem]',
+];
+
 export default function ExperimentRecords() {
   const { id: routeProjectId } = useParams<{ id: string }>();
   const location = useLocation();
 
-  // 从URL查询参数或路由参数获取projectId
   const getProjectId = () => {
     const searchParams = new URLSearchParams(location.search);
     const queryProjectId = searchParams.get('project');
@@ -39,24 +49,18 @@ export default function ExperimentRecords() {
   const [showBulkActions, setShowBulkActions] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // 获取实验类型分组
   const experimentCategories = getExperimentCategoriesByGroup();
 
   useEffect(() => {
     setLoading(true);
     try {
       const allRecords = experimentRecordService.getAll();
-
       if (projectId) {
-        // 如果在课题上下文中，只显示该课题的记录
         const projectRecords = allRecords.filter(record => record.projectId === projectId);
         setRecords(projectRecords);
-
-        // 获取课题信息
         const projectData = projectService.getById(projectId);
         setProject(projectData);
       } else {
-        // 显示所有记录
         setRecords(allRecords);
       }
     } catch (error) {
@@ -68,136 +72,79 @@ export default function ExperimentRecords() {
     }
   }, [projectId, location.search]);
 
-  // 过滤记录
   const filteredRecords = records.filter(record => {
     const matchesSearch =
       record.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       record.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
       record.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
-
     const matchesStatus = statusFilter === 'all' || record.status === statusFilter;
-
     const matchesCategory = categoryFilter === 'all' || record.category === categoryFilter;
-
     const matchesDate = (() => {
       if (dateFilter === 'all') return true;
       const recordDate = new Date(record.date);
       const today = new Date();
-
       switch (dateFilter) {
-        case 'today':
-          return recordDate.toDateString() === today.toDateString();
-        case 'week':
-          const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-          return recordDate >= weekAgo;
-        case 'month':
-          const monthAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
-          return recordDate >= monthAgo;
-        default:
-          return true;
+        case 'today': return recordDate.toDateString() === today.toDateString();
+        case 'week': return recordDate >= new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+        case 'month': return recordDate >= new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+        default: return true;
       }
     })();
-
     return matchesSearch && matchesStatus && matchesCategory && matchesDate;
   });
 
-  // 打开创建表单
-  const openCreateForm = () => {
-    setCurrentRecord(null);
-    setIsFormOpen(true);
-  };
+  const openCreateForm = () => { setCurrentRecord(null); setIsFormOpen(true); };
+  const openEditForm = (record: ExperimentRecord) => { setCurrentRecord(record); setIsFormOpen(true); };
+  const closeForm = () => { setIsFormOpen(false); setCurrentRecord(null); setIsSubmitting(false); };
 
-  // 打开编辑表单
-  const openEditForm = (record: ExperimentRecord) => {
-    setCurrentRecord(record);
-    setIsFormOpen(true);
-  };
-
-  // 关闭表单
-  const closeForm = () => {
-    setIsFormOpen(false);
-    setCurrentRecord(null);
-    setIsSubmitting(false);
-  };
-
-  // 选择/取消选择记录
   const toggleRecordSelection = (recordId: string) => {
     const newSelected = new Set(selectedRecords);
-    if (newSelected.has(recordId)) {
-      newSelected.delete(recordId);
-    } else {
-      newSelected.add(recordId);
-    }
+    if (newSelected.has(recordId)) { newSelected.delete(recordId); }
+    else { newSelected.add(recordId); }
     setSelectedRecords(newSelected);
     setShowBulkActions(newSelected.size > 0);
   };
 
-  // 全选/取消全选
   const toggleSelectAll = () => {
     if (selectedRecords.size === filteredRecords.length) {
       setSelectedRecords(new Set());
       setShowBulkActions(false);
     } else {
-      const allIds = new Set(filteredRecords.map(record => record.id));
-      setSelectedRecords(allIds);
+      setSelectedRecords(new Set(filteredRecords.map(r => r.id)));
       setShowBulkActions(true);
     }
   };
 
-  // 批量删除
   const bulkDelete = () => {
-    if (window.confirm(`确定要删除选中的 ${selectedRecords.size} 条记录吗？此操作不可撤销。`)) {
+    if (window.confirm(`确定要删除选中的 ${selectedRecords.size} 条记录吗？`)) {
       try {
-        selectedRecords.forEach(recordId => {
-          experimentRecordService.delete(recordId);
-        });
-
-        const updatedRecords = experimentRecordService.getAll();
-        if (projectId) {
-          // 如果在课题上下文中，只显示该课题的记录
-          const projectRecords = updatedRecords.filter(record => record.projectId === projectId);
-          setRecords(projectRecords);
-        } else {
-          setRecords(updatedRecords);
-        }
+        selectedRecords.forEach(id => experimentRecordService.delete(id));
+        const updated = experimentRecordService.getAll();
+        setRecords(projectId ? updated.filter(r => r.projectId === projectId) : updated);
         setSelectedRecords(new Set());
         setShowBulkActions(false);
         toast.success(`已删除 ${selectedRecords.size} 条记录`);
-      } catch (error) {
-        toast.error('批量删除失败，请重试');
-      }
+      } catch { toast.error('批量删除失败'); }
     }
   };
 
-  // 删除记录
   const handleDelete = (id: string) => {
-    if (window.confirm('确定要删除这条实验记录吗？此操作不可撤销。')) {
+    if (window.confirm('确定要删除这条实验记录吗？')) {
       try {
-        const success = experimentRecordService.delete(id);
-        if (success) {
-          const updatedRecords = experimentRecordService.getAll();
-          if (projectId) {
-            // 如果在课题上下文中，只显示该课题的记录
-            const projectRecords = updatedRecords.filter(record => record.projectId === projectId);
-            setRecords(projectRecords);
-          } else {
-            setRecords(updatedRecords);
-          }
+        if (experimentRecordService.delete(id)) {
+          const updated = experimentRecordService.getAll();
+          setRecords(projectId ? updated.filter(r => r.projectId === projectId) : updated);
           toast.success('实验记录已删除');
-        } else {
-          toast.error('删除失败，请重试');
         }
-      } catch (error) {
-        toast.error('删除失败，请重试');
-      }
+      } catch { toast.error('删除失败'); }
     }
   };
 
   return (
-    <div className="min-h-screen bg-earth-beige text-text-main">
+    <div className="min-h-screen bg-organic-rice-paper text-loam">
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
 
-      <div className={sidebarCollapsed ? 'ml-16' : 'ml-64'}>
+      <div className={cn('transition-all duration-500', sidebarCollapsed ? 'ml-16' : 'ml-64')}>
         <Header
           title={projectId && project ? `${project.title} - 实验记录` : '实验记录'}
           sidebarCollapsed={sidebarCollapsed}
@@ -209,7 +156,7 @@ export default function ExperimentRecords() {
           actions={
             <button
               onClick={openCreateForm}
-              className="bg-forest-secondary hover:bg-forest-primary text-white px-4 py-2 rounded-lg font-semibold transition-colors duration-300 shadow-sm"
+              className="organic-btn organic-btn--primary text-sm px-5 py-2.5"
             >
               <i className="fa-solid fa-plus mr-2"></i>
               新建记录
@@ -217,7 +164,13 @@ export default function ExperimentRecords() {
           }
         />
 
-        <main className="container mx-auto px-4 py-6">
+        <main className="container mx-auto px-6 py-8 relative">
+          {/* 环境 Blob 背景 */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="organic-blob organic-blob--moss w-[400px] h-[400px] -top-20 -right-20 opacity-20" />
+            <div className="organic-blob organic-blob--sand w-[300px] h-[300px] bottom-20 -left-20 opacity-15" />
+          </div>
+
           {/* 创建/编辑表单 */}
           <AnimatePresence>
             {isFormOpen && (
@@ -225,7 +178,7 @@ export default function ExperimentRecords() {
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="mb-6"
+                className="mb-8 relative z-10"
               >
                 <ExperimentRecordForm
                   record={currentRecord}
@@ -245,29 +198,35 @@ export default function ExperimentRecords() {
             )}
           </AnimatePresence>
 
-          {/* 高级筛选区域 */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+          {/* 筛选区域 - 有机卡片风格 */}
+          <motion.div
+            className="organic-card p-6 mb-8 relative z-10"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              {/* 搜索框 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">搜索实验记录</label>
+                <label className="block text-sm font-medium text-bark mb-2">搜索实验记录</label>
                 <div className="relative">
                   <input
                     type="text"
                     placeholder="搜索标题、内容或标签..."
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-forest-accent/30 bg-earth-beige/50 focus:outline-none focus:ring-2 focus:ring-forest-secondary/50 focus:border-forest-secondary"
+                    className="organic-input pl-10"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
-                  <i className="fa-solid fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-text-muted"></i>
+                  <i className="fa-solid fa-search absolute left-4 top-1/2 -translate-y-1/2 text-grass text-sm"></i>
                 </div>
               </div>
 
+              {/* 类型筛选 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">实验类型</label>
+                <label className="block text-sm font-medium text-bark mb-2">实验类型</label>
                 <select
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-forest-accent/30 bg-earth-beige/50 focus:outline-none focus:ring-2 focus:ring-forest-secondary/50"
+                  className="organic-input"
                 >
                   <option value="all">所有类型</option>
                   {Object.entries(experimentCategories).map(([group, categories]) => (
@@ -280,12 +239,13 @@ export default function ExperimentRecords() {
                 </select>
               </div>
 
+              {/* 状态筛选 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">状态筛选</label>
+                <label className="block text-sm font-medium text-bark mb-2">状态筛选</label>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-forest-accent/30 bg-earth-beige/50 focus:outline-none focus:ring-2 focus:ring-forest-secondary/50"
+                  className="organic-input"
                 >
                   <option value="all">所有状态</option>
                   <option value="draft">草稿</option>
@@ -294,12 +254,13 @@ export default function ExperimentRecords() {
                 </select>
               </div>
 
+              {/* 日期筛选 */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">日期筛选</label>
+                <label className="block text-sm font-medium text-bark mb-2">日期筛选</label>
                 <select
                   value={dateFilter}
                   onChange={(e) => setDateFilter(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-forest-accent/30 bg-earth-beige/50 focus:outline-none focus:ring-2 focus:ring-forest-secondary/50"
+                  className="organic-input"
                 >
                   <option value="all">所有日期</option>
                   <option value="today">今天</option>
@@ -308,6 +269,7 @@ export default function ExperimentRecords() {
                 </select>
               </div>
 
+              {/* 重置按钮 */}
               <div className="flex items-end">
                 <button
                   onClick={() => {
@@ -316,14 +278,14 @@ export default function ExperimentRecords() {
                     setDateFilter('all');
                     setCategoryFilter('all');
                   }}
-                  className="w-full border border-forest-accent/30 text-text-main hover:bg-forest-accent/10 px-4 py-2.5 rounded-xl transition-colors"
+                  className="organic-btn organic-btn--outline w-full text-sm"
                 >
                   <i className="fa-solid fa-refresh mr-2"></i>
                   重置筛选
                 </button>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* 批量操作栏 */}
           <AnimatePresence>
@@ -332,26 +294,25 @@ export default function ExperimentRecords() {
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
-                className="bg-forest-main/5 border border-forest-accent/20 rounded-xl p-4 mb-6"
+                className={cn(
+                  'organic-card p-4 mb-6 relative z-10',
+                  'bg-gradient-to-r from-moss-soft/50 to-terracotta-light/30'
+                )}
               >
                 <div className="flex justify-between items-center">
-                  <span className="text-forest-secondary font-medium">
+                  <span className="text-moss font-semibold">
                     已选中 {selectedRecords.size} 条记录
                   </span>
-                  <div className="flex space-x-3">
+                  <div className="flex gap-3">
                     <button
                       onClick={bulkDelete}
-                      className="bg-status-error hover:bg-red-700 text-white px-4 py-2 rounded-xl transition-colors shadow-sm"
+                      className="px-4 py-2 rounded-full bg-status-error text-white text-sm font-medium hover:opacity-90 transition-opacity"
                     >
-                      <i className="fa-solid fa-trash mr-2"></i>
-                      批量删除
+                      <i className="fa-solid fa-trash mr-2"></i>批量删除
                     </button>
                     <button
-                      onClick={() => {
-                        setSelectedRecords(new Set());
-                        setShowBulkActions(false);
-                      }}
-                      className="border border-forest-accent/30 text-text-main hover:bg-forest-accent/10 px-4 py-2 rounded-xl transition-colors"
+                      onClick={() => { setSelectedRecords(new Set()); setShowBulkActions(false); }}
+                      className="organic-btn organic-btn--ghost text-sm"
                     >
                       取消选择
                     </button>
@@ -363,146 +324,153 @@ export default function ExperimentRecords() {
 
           {/* 记录列表 */}
           {loading ? (
-            <div>
-              <div className="mb-4 flex justify-between items-center">
-                <div className="h-6 bg-gray-200 rounded w-32 animate-pulse"></div>
-                <div className="h-6 bg-gray-200 rounded w-16 animate-pulse"></div>
-              </div>
+            <div className="relative z-10">
               <LoadingSkeleton type="card" count={6} />
             </div>
           ) : (
-            <>
-              <div className="mb-4 flex justify-between items-center">
-                <h2 className="text-lg font-semibold text-gray-800">
+            <div className="relative z-10">
+              <div className="mb-6 flex justify-between items-center">
+                <h2 className="text-xl font-heading font-bold text-loam">
                   实验记录 ({filteredRecords.length})
                 </h2>
                 {filteredRecords.length > 0 && (
-                  <label className="flex items-center space-x-2 cursor-pointer">
+                  <label className="flex items-center gap-2 cursor-pointer text-sm text-bark hover:text-moss transition-colors">
                     <input
                       type="checkbox"
                       checked={selectedRecords.size === filteredRecords.length}
                       onChange={toggleSelectAll}
-                      className="rounded border-forest-accent/50 text-forest-secondary focus:ring-forest-secondary"
+                      className="w-4 h-4 rounded border-timber text-moss focus:ring-moss/30"
                     />
-                    <span className="text-sm text-text-soft">全选</span>
+                    全选
                   </label>
                 )}
               </div>
 
               {filteredRecords.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="w-24 h-24 bg-earth-beige rounded-full flex items-center justify-center mx-auto mb-4 border border-forest-accent/20">
-                    <i className="fa-solid fa-flask text-3xl text-forest-secondary/50"></i>
+                <motion.div
+                  className="organic-card p-12 text-center"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                >
+                  <div className="w-20 h-20 rounded-full bg-organic-stone flex items-center justify-center mx-auto mb-4">
+                    <i className="fa-solid fa-flask text-3xl text-grass"></i>
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-600 mb-2">
-                    {searchQuery || statusFilter !== 'all' || dateFilter !== 'all' || categoryFilter !== 'all' ? '未找到相关记录' : '还没有实验记录'}
+                  <h3 className="text-xl font-heading font-semibold text-bark mb-2">
+                    {searchQuery || statusFilter !== 'all' || dateFilter !== 'all' || categoryFilter !== 'all'
+                      ? '未找到相关记录' : '还没有实验记录'}
                   </h3>
-                  <p className="text-gray-500 mb-6">
-                    {searchQuery || statusFilter !== 'all' || dateFilter !== 'all' || categoryFilter !== 'all' ? '请尝试修改筛选条件' : '开始您的第一个实验记录吧！'}
+                  <p className="text-grass mb-6">
+                    {searchQuery || statusFilter !== 'all' || dateFilter !== 'all' || categoryFilter !== 'all'
+                      ? '请尝试修改筛选条件' : '开始您的第一个实验记录吧！'}
                   </p>
                   {!(searchQuery || statusFilter !== 'all' || dateFilter !== 'all' || categoryFilter !== 'all') && (
-                    <button
-                      onClick={openCreateForm}
-                      className="bg-forest-secondary hover:bg-forest-primary text-white px-6 py-3 rounded-xl font-semibold transition-colors duration-300 shadow-md"
-                    >
-                      <i className="fa-solid fa-plus mr-2"></i>
-                      创建第一个记录
+                    <button onClick={openCreateForm} className="organic-btn organic-btn--primary">
+                      <i className="fa-solid fa-plus mr-2"></i>创建第一个记录
                     </button>
                   )}
-                </div>
+                </motion.div>
               ) : (
                 <motion.div
                   className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
                 >
                   {filteredRecords.map((record, index) => (
                     <motion.div
                       key={record.id}
-                      className="group bg-white rounded-2xl shadow-sm border border-forest-accent/30 p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 relative"
+                      className={cn(
+                        'organic-card p-6 relative group',
+                        cardRadiusVariants[index % 6],
+                        'hover:-translate-y-2 hover:shadow-float'
+                      )}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.1 }}
+                      transition={{ duration: 0.4, delay: index * 0.05 }}
                     >
                       {/* 复选框 */}
-                      <div className="absolute top-4 left-4">
+                      <div className="absolute top-5 left-5">
                         <input
                           type="checkbox"
                           checked={selectedRecords.has(record.id)}
                           onChange={() => toggleRecordSelection(record.id)}
-                          className="rounded border-forest-accent/50 text-forest-secondary focus:ring-forest-secondary"
+                          className="w-4 h-4 rounded border-timber text-moss focus:ring-moss/30"
                         />
                       </div>
 
                       <div className="ml-8">
-                        <div className="flex justify-between items-start mb-4">
-                          <div className="flex-1">
-                            <h3 className="text-lg font-bold text-text-main mb-2 group-hover:text-forest-primary transition-colors">{record.title}</h3>
-                            <p className="text-sm text-text-soft mb-2">
-                              <i className="fa-solid fa-calendar mr-1 text-forest-secondary/70"></i>
-                              {new Date(record.date).toLocaleDateString('zh-CN')}
-                            </p>
-                            {record.projectId && (() => {
-                              const relatedProject = projectService.getById(record.projectId);
-                              return relatedProject ? (
-                                <p className="text-xs text-forest-secondary mb-2">
-                                  <i className="fa-solid fa-project-diagram mr-1"></i>
-                                  所属课题：{relatedProject.title}
-                                </p>
-                              ) : null;
-                            })()}
-                            <span className={`inline-block px-2.5 py-1 text-xs font-medium rounded-full mr-2 ${record.status === 'completed' ? 'bg-status-success/10 text-status-success' :
-                              record.status === 'draft' ? 'bg-status-warning/10 text-status-warning' :
-                                'bg-text-muted/10 text-text-muted'
-                              }`}>
-                              {record.status === 'completed' ? '已完成' :
-                                record.status === 'draft' ? '草稿' : '已归档'}
-                            </span>
-                            <span className="inline-block px-2.5 py-1 text-xs font-medium rounded-full bg-forest-accent/20 text-forest-primary">
-                              <i className="fa-solid fa-microscope mr-1"></i>
-                              {getExperimentCategoryDisplayName(record.category as ExperimentCategory)}
-                            </span>
-                          </div>
+                        {/* 标题和日期 */}
+                        <div className="mb-4">
+                          <h3 className="text-lg font-heading font-bold text-loam mb-2 group-hover:text-moss transition-colors line-clamp-1">
+                            {record.title}
+                          </h3>
+                          <p className="text-sm text-grass flex items-center gap-1">
+                            <i className="fa-solid fa-calendar text-xs"></i>
+                            {new Date(record.date).toLocaleDateString('zh-CN')}
+                          </p>
+                          {record.projectId && (() => {
+                            const relatedProject = projectService.getById(record.projectId);
+                            return relatedProject ? (
+                              <p className="text-xs text-terracotta mt-1">
+                                <i className="fa-solid fa-folder mr-1"></i>
+                                {relatedProject.title}
+                              </p>
+                            ) : null;
+                          })()}
                         </div>
 
-                        <p className="text-gray-600 text-sm mb-4 line-clamp-3">
+                        {/* 状态和类型标签 */}
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          <span className={cn(
+                            'px-3 py-1 text-xs font-medium rounded-full',
+                            record.status === 'completed' ? 'bg-status-success/15 text-status-success' :
+                              record.status === 'draft' ? 'bg-terracotta/15 text-terracotta' :
+                                'bg-grass/15 text-grass'
+                          )}>
+                            {record.status === 'completed' ? '已完成' : record.status === 'draft' ? '草稿' : '已归档'}
+                          </span>
+                          <span className="px-3 py-1 text-xs font-medium rounded-full bg-moss-soft text-moss">
+                            {getExperimentCategoryDisplayName(record.category as ExperimentCategory)}
+                          </span>
+                        </div>
+
+                        {/* 内容预览 */}
+                        <p className="text-bark text-sm mb-4 line-clamp-2">
                           {record.content.substring(0, 100)}{record.content.length > 100 ? '...' : ''}
                         </p>
 
+                        {/* 标签 */}
                         {record.tags.length > 0 && (
                           <div className="flex flex-wrap gap-1.5 mb-4">
-                            {record.tags.slice(0, 3).map((tag, index) => (
-                              <span key={index} className="bg-forest-accent/20 text-forest-primary px-2 py-0.5 text-xs rounded-md">
+                            {record.tags.slice(0, 3).map((tag, i) => (
+                              <span key={i} className="px-2 py-0.5 text-xs rounded-md bg-organic-stone text-bark">
                                 #{tag}
                               </span>
                             ))}
                             {record.tags.length > 3 && (
-                              <span className="text-text-muted text-xs">+{record.tags.length - 3}</span>
+                              <span className="text-xs text-grass">+{record.tags.length - 3}</span>
                             )}
                           </div>
                         )}
 
-                        <div className="flex justify-between items-center">
+                        {/* 操作按钮 */}
+                        <div className="flex justify-between items-center pt-4 border-t border-timber-soft">
                           <Link
                             to={`/records/${record.id}`}
-                            className="inline-flex items-center px-3 py-1.5 bg-forest-secondary/10 text-forest-primary hover:bg-forest-secondary/20 font-medium text-sm rounded-lg transition-colors"
+                            className="px-4 py-2 rounded-full bg-moss-soft text-moss text-sm font-medium hover:bg-moss hover:text-moss-light transition-all"
                           >
-                            <i className="fa-solid fa-eye mr-1.5"></i>
-                            查看详情
+                            <i className="fa-solid fa-eye mr-1.5"></i>查看详情
                           </Link>
-
-                          <div className="flex space-x-1">
+                          <div className="flex gap-1">
                             <button
                               onClick={() => openEditForm(record)}
-                              className="p-2 text-text-soft hover:text-forest-primary hover:bg-forest-accent/20 rounded-lg transition-colors"
+                              className="p-2 rounded-lg text-grass hover:text-moss hover:bg-moss-soft transition-colors"
                               title="编辑"
                             >
                               <i className="fa-solid fa-pen-to-square"></i>
                             </button>
                             <button
                               onClick={() => handleDelete(record.id)}
-                              className="p-2 text-text-soft hover:text-status-error hover:bg-status-error/10 rounded-lg transition-colors"
+                              className="p-2 rounded-lg text-grass hover:text-status-error hover:bg-status-error/10 transition-colors"
                               title="删除"
                             >
                               <i className="fa-solid fa-trash-can"></i>
@@ -514,7 +482,7 @@ export default function ExperimentRecords() {
                   ))}
                 </motion.div>
               )}
-            </>
+            </div>
           )}
         </main>
       </div>

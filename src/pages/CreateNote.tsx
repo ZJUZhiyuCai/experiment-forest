@@ -5,9 +5,9 @@ import { experimentNoteService, experimentRecordService } from '@/lib/cachedStor
 import { ExperimentRecord, ExperimentNote } from '@/types';
 import { Header } from '@/components/Header';
 import { Sidebar } from '@/components/Sidebar';
-import { Button } from '@/components/Button';
 import { TreePlantingCelebration } from '@/components/TreePlantingCelebration';
 import { EnhancedInput, EnhancedFormContainer } from '@/components/EnhancedForm';
+import { cn } from '@/lib/utils';
 
 
 
@@ -163,32 +163,38 @@ export default function CreateNote() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-earth-beige flex items-center justify-center">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-emerald-500 mb-4"></div>
-          <p className="text-text-main">加载中...</p>
+      <div className="min-h-screen bg-organic-rice-paper flex items-center justify-center">
+        <div className="organic-card p-8 rounded-[2rem_1rem_2.5rem_1.5rem] text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-moss mb-4"></div>
+          <p className="text-loam">加载中...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-earth-beige text-text-main">
+    <div className="min-h-screen bg-organic-rice-paper text-loam">
+      {/* 环境 Blob 背景 */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="organic-blob organic-blob--terracotta w-[400px] h-[400px] -top-20 -right-20 opacity-15" />
+        <div className="organic-blob organic-blob--sand w-[300px] h-[300px] bottom-10 -left-20 opacity-10" />
+      </div>
+
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
 
-      <div className={sidebarCollapsed ? 'ml-16' : 'ml-64'}>
+      <div className={cn('transition-all duration-500 relative z-10', sidebarCollapsed ? 'ml-16' : 'ml-64')}>
         <Header
           title={isEditMode ? '编辑实验笔记' : '创建实验笔记'}
           sidebarCollapsed={sidebarCollapsed}
           actions={
-            <Button onClick={() => navigate('/notes')} variant="outline">
+            <button onClick={() => navigate('/notes')} className="organic-btn organic-btn--ghost text-sm">
               <i className="fa-solid fa-arrow-left mr-2"></i>
               <span>返回列表</span>
-            </Button>
+            </button>
           }
         />
 
-        <main className="container mx-auto px-4 py-6">
+        <main className="container mx-auto px-6 py-6">
           <EnhancedFormContainer
             title={isEditMode ? '编辑实验笔记' : '创建实验笔记'}
             subtitle={isEditMode ? '修改笔记的详细信息' : '记录您的实验观察和想法'}

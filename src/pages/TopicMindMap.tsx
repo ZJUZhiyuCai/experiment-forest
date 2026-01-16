@@ -17,11 +17,11 @@ import { projectService, experimentRecordService, experimentNoteService, sopServ
 import { Project } from '@/types';
 import { Sidebar } from '@/components/Sidebar';
 import { Header } from '@/components/Header';
-import { Button } from '@/components/Button';
 import CustomNode from '@/components/mindmap/CustomNode';
 import { getLayoutedElements } from '@/lib/mindMapLayout';
 import { mindMapAIService, MindMapGenerationOptions } from '@/lib/mindMapAIService';
 import { motion, AnimatePresence } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 const nodeTypes = {
   custom: CustomNode,
@@ -188,39 +188,42 @@ export default function TopicMindMap() {
   };
 
 
-  if (loading || !project) return <div className="h-screen flex items-center justify-center bg-earth-beige/50 text-forest-primary">加载中...</div>;
+  if (loading || !project) return (
+    <div className="h-screen flex items-center justify-center bg-organic-rice-paper">
+      <div className="organic-card p-8 rounded-[2rem_1rem_2.5rem_1.5rem] text-center">
+        <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-moss mb-4"></div>
+        <p className="text-loam">加载中...</p>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="flex h-screen bg-earth-beige/20 text-text-main overflow-hidden">
+    <div className="flex h-screen bg-organic-rice-paper text-loam overflow-hidden">
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
 
-      <div className={`flex-1 flex flex-col transition-all duration-300 ${sidebarCollapsed ? 'ml-16' : 'ml-64'}`}>
+      <div className={cn('flex-1 flex flex-col transition-all duration-500', sidebarCollapsed ? 'ml-16' : 'ml-64')}>
         <Header
           title={`思维导图: ${project.title}`}
           sidebarCollapsed={sidebarCollapsed}
           actions={
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
+              <button
                 onClick={() => setShowGenerationOptions(!showGenerationOptions)}
-                className="bg-white hover:bg-forest-main/5 text-forest-primary border-forest-accent/30"
+                className="organic-btn organic-btn--outline text-sm"
               >
                 <i className={`fa-solid fa-magic mr-2 ${isGenerating ? 'animate-spin' : ''}`}></i>
                 AI 生成
-              </Button>
+              </button>
               {hasAIGenerated && (
-                <Button
-                  variant="outline"
-                  size="sm"
+                <button
                   onClick={loadData}
-                  className="text-text-muted hover:text-text-main"
+                  className="organic-btn organic-btn--ghost text-sm"
                 >
                   <i className="fa-solid fa-undo mr-2"></i> 重置
-                </Button>
+                </button>
               )}
-              <Link to={`/projects/${id}`}>
-                <Button variant="ghost" size="sm">返回课题</Button>
+              <Link to={`/projects/${id}`} className="organic-btn organic-btn--ghost text-sm">
+                返回课题
               </Link>
             </div>
           }
@@ -234,53 +237,52 @@ export default function TopicMindMap() {
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="absolute top-4 right-4 z-50 w-80 bg-white rounded-2xl shadow-xl border border-forest-accent/20 p-5"
+                className="absolute top-4 right-4 z-50 w-80 organic-card rounded-[1.5rem_1rem_2rem_1.2rem] p-5"
               >
-                <h3 className="font-bold text-forest-primary mb-4 flex items-center">
-                  <i className="fa-solid fa-robot mr-2"></i>
+                <h3 className="font-heading font-bold text-loam mb-4 flex items-center">
+                  <i className="fa-solid fa-robot mr-2 text-moss"></i>
                   AI 导图生成
                 </h3>
 
                 <div className="space-y-4">
-                  <div className="space-y-2">
-                    <label className="flex items-center text-sm text-text-main">
+                  <div className="space-y-3">
+                    <label className="flex items-center text-sm text-loam cursor-pointer group">
                       <input
                         type="checkbox"
                         checked={generationOptions.includeExperiments}
                         onChange={e => setGenerationOptions({ ...generationOptions, includeExperiments: e.target.checked })}
-                        className="mr-2 text-forest-secondary focus:ring-forest-secondary rounded"
+                        className="w-4 h-4 mr-3 rounded border-bark/30 text-moss focus:ring-moss/30 bg-organic-rice-paper"
                       />
-                      包含实验记录
+                      <span className="group-hover:text-moss transition-colors">包含实验记录</span>
                     </label>
-                    <label className="flex items-center text-sm text-text-main">
+                    <label className="flex items-center text-sm text-loam cursor-pointer group">
                       <input
                         type="checkbox"
                         checked={generationOptions.includeNotes}
                         onChange={e => setGenerationOptions({ ...generationOptions, includeNotes: e.target.checked })}
-                        className="mr-2 text-forest-secondary focus:ring-forest-secondary rounded"
+                        className="w-4 h-4 mr-3 rounded border-bark/30 text-moss focus:ring-moss/30 bg-organic-rice-paper"
                       />
-                      包含研究笔记
+                      <span className="group-hover:text-moss transition-colors">包含研究笔记</span>
                     </label>
-                    <label className="flex items-center text-sm text-text-main">
+                    <label className="flex items-center text-sm text-loam cursor-pointer group">
                       <input
                         type="checkbox"
                         checked={generationOptions.includeSOPs}
                         onChange={e => setGenerationOptions({ ...generationOptions, includeSOPs: e.target.checked })}
-                        className="mr-2 text-forest-secondary focus:ring-forest-secondary rounded"
+                        className="w-4 h-4 mr-3 rounded border-bark/30 text-moss focus:ring-moss/30 bg-organic-rice-paper"
                       />
-                      包含 SOP 文档
+                      <span className="group-hover:text-moss transition-colors">包含 SOP 文档</span>
                     </label>
                   </div>
 
-                  <div className="pt-2 border-t border-forest-accent/10 flex justify-end gap-2">
-                    <Button size="sm" variant="ghost" onClick={() => setShowGenerationOptions(false)}>取消</Button>
-                    <Button
-                      size="sm"
+                  <div className="pt-3 border-t border-timber-soft flex justify-end gap-2">
+                    <button onClick={() => setShowGenerationOptions(false)} className="organic-btn organic-btn--ghost text-sm">取消</button>
+                    <button
                       onClick={handleAIGeneration}
-                      className="bg-forest-secondary hover:bg-forest-primary text-white"
+                      className="organic-btn organic-btn--primary text-sm"
                     >
                       开始生成
-                    </Button>
+                    </button>
                   </div>
                 </div>
               </motion.div>
@@ -297,18 +299,18 @@ export default function TopicMindMap() {
               nodeTypes={nodeTypes}
               fitView
               attributionPosition="bottom-right"
-              className="bg-earth-beige/20"
+              className="bg-organic-rice-paper"
             >
-              <Controls showInteractive={false} className="bg-white border-forest-accent/20 shadow-md rounded-lg overflow-hidden" />
-              <Background color="#10b981" gap={16} size={1} style={{ opacity: 0.1 }} />
+              <Controls showInteractive={false} className="bg-timber-soft border-bark/20 shadow-organic rounded-lg overflow-hidden" />
+              <Background color="#6B8E7B" gap={16} size={1} style={{ opacity: 0.08 }} />
               <MiniMap
                 nodeColor={(n) => {
-                  if (n.data.type === 'project') return '#059669';
-                  if (n.data.type === 'record') return '#34d399';
-                  if (n.data.type === 'note') return '#fbbf24';
-                  return '#e5e7eb';
+                  if (n.data.type === 'project') return '#6B8E7B'; // moss
+                  if (n.data.type === 'record') return '#C19A6B'; // terracotta
+                  if (n.data.type === 'note') return '#E6D5B8'; // sand
+                  return '#D9D0C4'; // timber-soft
                 }}
-                className="border border-forest-accent/20 shadow-lg rounded-lg overflow-hidden"
+                className="border border-bark/20 shadow-organic rounded-lg overflow-hidden"
               />
             </ReactFlow>
           </ReactFlowProvider>

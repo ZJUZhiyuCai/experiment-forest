@@ -1,294 +1,205 @@
 import { useState, useEffect } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
 import { projectService } from '@/lib/cachedStorage';
-
-interface MenuItem {
-  path: string;
-  icon: string;
-  label: string;
-  children?: {
-    path: string;
-    icon?: string;
-    label: string;
-    children?: {
-      path: string;
-      icon: string;
-      label: string;
-    }[];
-  }[];
-}
+import { Project } from '@/types';
 
 interface SidebarProps {
   isCollapsed: boolean;
   onToggle: () => void;
 }
 
+/**
+ * 🌿 有机侧边栏组件 (Organic Sidebar)
+ * 温暖亲切的导航体验
+ */
 export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const location = useLocation();
-  const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isProjectsExpanded, setIsProjectsExpanded] = useState(true);
 
-  // 基础导航项，设置始终可见，融合日历功能
-  const [navItems, setNavItems] = useState<MenuItem[]>([
-    { path: '/', icon: 'fa-home', label: '首页' },
-    { path: '/forest', icon: 'fa-seedling', label: '我的森林' },
-    {
-      path: '/projects',
-      icon: 'fa-project-diagram',
-      label: '课题管理',
-      children: [] // 这里将动态填充课题列表
-    },
-    { path: '/calendar', icon: 'fa-calendar-alt', label: '实验日历' },
-    { path: '/records', icon: 'fa-flask', label: '实验记录' },
-    { path: '/notes', icon: 'fa-sticky-note', label: '实验笔记' },
-    { path: '/sops', icon: 'fa-file-alt', label: 'SOP文档' },
-    { path: '/samples', icon: 'fa-vials', label: '样本管理' },
-    { path: '/settings', icon: 'fa-cog', label: '设置' }
-  ]);
-
-  // 获取课题数据并更新导航项
   useEffect(() => {
-    const updateNavItems = () => {
-      try {
-        const allProjects = projectService.getAll();
+    setProjects(projectService.getAll());
 
-        // 更新课题管理的子项，包含AI助手、思维导图和所有课题
-        setNavItems(prev => prev.map(item => {
-          if (item.path === '/projects') {
-            const projectChildren = allProjects.map(project => ({
-              path: `/projects/${project.id}`,
-              icon: 'fa-folder',
-              label: project.title,
-              children: [
-                {
-                  path: `/chat`,
-                  icon: 'fa-robot',
-                  label: '小森博士'
-                },
-                {
-                  path: `/topics/${project.id}/mindmap`,
-                  icon: 'fa-sitemap',
-                  label: '思维导图'
-                },
-                {
-                  path: `/projects/${project.id}/records`,
-                  icon: 'fa-flask',
-                  label: '实验记录'
-                },
-                {
-                  path: `/projects/${project.id}/notes`,
-                  icon: 'fa-sticky-note',
-                  label: '实验笔记'
-                },
-                {
-                  path: `/projects/${project.id}/sops`,
-                  icon: 'fa-file-alt',
-                  label: 'SOP文档'
-                }
-              ]
-            }));
-
-            return {
-              ...item,
-              children: projectChildren
-            };
-          }
-          return item;
-        }));
-      } catch (error) {
-        console.error('获取课题数据失败:', error);
-      }
+    const handleProjectsUpdate = () => {
+      setProjects(projectService.getAll());
     };
 
-    // 只在初始加载时更新一次
-    updateNavItems();
+    window.addEventListener('projects-updated', handleProjectsUpdate);
+    return () => window.removeEventListener('projects-updated', handleProjectsUpdate);
   }, []);
 
-  // 根据当前路径自动展开相关菜单
-  useEffect(() => {
-    const currentPath = location.pathname;
-    const newExpandedItems = [...expandedItems];
-
-    // 如果在课题相关页面，自动展开课题管理菜单
-    if (currentPath.startsWith('/projects')) {
-      if (!newExpandedItems.includes('/projects')) {
-        newExpandedItems.push('/projects');
-      }
-
-      // 如果在具体课题的子页面，也展开对应的课题
-      const projectMatch = currentPath.match(/^\/projects\/([^/]+)/);
-      if (projectMatch) {
-        const projectPath = `/projects/${projectMatch[1]}`;
-        if (!newExpandedItems.includes(projectPath)) {
-          newExpandedItems.push(projectPath);
-        }
-      }
-    }
-
-    setExpandedItems(newExpandedItems);
-  }, [location.pathname]);
-
-  // 切换子菜单展开/折叠状态
-  const toggleSubMenu = (path: string) => {
-    setExpandedItems(prev =>
-      prev.includes(path)
-        ? prev.filter(item => item !== path)
-        : [...prev, path]
-    );
-  };
-
-  // 检查是否为当前路径或子路径
-  const isActivePath = (path: string) => {
-    return location.pathname === path || location.pathname.startsWith(`${path}/`);
-  };
-
+  const navItems = [
+    { path: '/', icon: 'fa-chart-pie', label: '控制台' },
+    { path: '/projects', icon: 'fa-folder-tree', label: '实验课题' },
+    { path: '/records', icon: 'fa-seedling', label: '实验记录' },
+    { path: '/notes', icon: 'fa-leaf', label: '实验笔记' },
+    { path: '/sops', icon: 'fa-book-medical', label: 'SOP文档' },
+    { path: '/calendar', icon: 'fa-calendar-days', label: '实验日历' },
+    { path: '/samples', icon: 'fa-vial', label: '样本管理' },
+    { path: '/chat', icon: 'fa-robot', label: 'AI 助手' },
+    { path: '/settings', icon: 'fa-gear', label: '系统设置' },
+  ];
 
   return (
-    <motion.div
+    <aside
       className={cn(
-        'fixed h-full bg-white border-r border-forest-accent/30 z-30 transition-all duration-300 ease-in-out',
-        isCollapsed ? 'w-16' : 'w-64',
-        'shadow-nature rounded-r-2xl'
+        'fixed left-0 top-0 h-full z-30 transition-all duration-500',
+        'bg-organic-card/95 backdrop-blur-sm',
+        'border-r border-timber-soft shadow-moss',
+        isCollapsed ? 'w-16' : 'w-64'
       )}
     >
-      <div className="flex items-center justify-between p-4 border-b border-forest-light">
-        <div className={cn('flex items-center', !isCollapsed && 'space-x-2')}>
-          <i className="fa-solid fa-seedling text-forest-secondary text-xl"></i>
-          {!isCollapsed && (
-            <div>
-              <h1 className="text-xl font-header font-bold text-forest-primary">实验小森林</h1>
-              <p className="text-[10px] text-forest-secondary/70 tracking-wider">记录每一次科学的萌芽</p>
-            </div>
-          )}
-        </div>
-        <button
-          onClick={onToggle}
-          className="p-1.5 rounded-full hover:bg-forest-light text-forest-secondary transition-colors"
-        >
-          <i className={`fa-solid ${isCollapsed ? 'fa-chevron-right' : 'fa-chevron-left'}`}></i>
-        </button>
-      </div>
+      {/* 折叠按钮 - 有机圆形 */}
+      <button
+        onClick={onToggle}
+        className={cn(
+          'absolute -right-3 top-20 z-40',
+          'w-6 h-6 rounded-full',
+          'bg-organic-card border border-timber',
+          'flex items-center justify-center',
+          'text-[10px] text-grass',
+          'hover:text-moss hover:border-moss hover:scale-110',
+          'shadow-moss transition-all duration-300'
+        )}
+      >
+        <i className={cn('fa-solid', isCollapsed ? 'fa-chevron-right' : 'fa-chevron-left')}></i>
+      </button>
 
-      <nav className="mt-6 px-2">
-        <ul className="space-y-1.5">
-          {navItems.map((item) => (
-            <li key={item.path} className="mb-1">
-              {/* 主菜单项 */}
+      <div className="flex flex-col h-full overflow-hidden">
+        {/* Logo 区域 - 有机温暖风格 */}
+        <div className="p-5 mb-2">
+          <Link to="/" className="flex items-center group">
+            <div className={cn(
+              'w-10 h-10 rounded-2xl',
+              'bg-moss flex items-center justify-center',
+              'shadow-moss group-hover:shadow-moss-lg',
+              'transition-all duration-300 group-hover:scale-105'
+            )}>
+              <i className="fa-solid fa-seedling text-moss-light text-lg"></i>
+            </div>
+            {!isCollapsed && (
+              <span className="ml-3 font-heading font-bold text-xl text-loam tracking-tight">
+                实验小森林
+              </span>
+            )}
+          </Link>
+        </div>
+
+        {/* 导航区域 */}
+        <div className="flex-1 overflow-y-auto custom-scrollbar px-3 space-y-1">
+          {navItems.map((item) => {
+            const isActive = location.pathname === item.path ||
+              (item.path !== '/' && location.pathname.startsWith(item.path));
+
+            return (
               <NavLink
+                key={item.path}
                 to={item.path}
                 className={cn(
-                  'flex items-center px-4 py-3 rounded-xl transition-all duration-300 cursor-pointer w-full group',
-                  isActivePath(item.path)
-                    ? 'bg-forest-secondary text-white shadow-md'
-                    : 'text-text-soft hover:bg-forest-light hover:text-forest-primary'
+                  'flex items-center px-3 py-2.5 rounded-xl transition-all duration-300 group relative',
+                  isActive
+                    ? 'bg-moss-soft text-moss'
+                    : 'text-bark hover:text-moss hover:bg-moss-soft/50'
                 )}
-                onClick={() => {
-                  if (item.children && item.children.length > 0) {
-                    // 展开/折叠子菜单，但不阻止导航
-                    toggleSubMenu(item.path);
-                  }
-                }}
               >
-                <i className={`fa-solid ${item.icon} ${!isCollapsed && 'mr-3'}`}></i>
-                {!isCollapsed && <span>{item.label}</span>}
-                {item.children && item.children.length > 0 && !isCollapsed && (
-                  <i className={`fa-solid ml-auto ${expandedItems.includes(item.path) ? 'fa-chevron-down' : 'fa-chevron-right'}`}></i>
+                <div className={cn(
+                  'w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-300',
+                  isActive
+                    ? 'bg-moss text-moss-light shadow-moss'
+                    : 'bg-organic-stone/50 group-hover:bg-moss group-hover:text-moss-light group-hover:shadow-moss'
+                )}>
+                  <i className={cn('fa-solid text-sm', item.icon)}></i>
+                </div>
+                {!isCollapsed && (
+                  <span className="ml-3 font-medium text-sm">
+                    {item.label}
+                  </span>
+                )}
+
+                {/* 活跃指示器 - 有机竖条 */}
+                {isActive && (
+                  <div className="absolute left-0 w-1 h-5 bg-moss rounded-full" />
                 )}
               </NavLink>
+            );
+          })}
 
-              {/* 子菜单项 */}
-              {item.children && item.children.length > 0 && expandedItems.includes(item.path) && !isCollapsed && (
-                <ul className="pl-10 mt-1 space-y-1">
-                  {item.children.map((child) => (
-                    <li key={child.path}>
-                      {child.children ? (
-                        // 如果子项还有子菜单，渲染为可展开项
-                        <div>
-                          <button
-                            onClick={(e) => {
-                              e.preventDefault();
-                              toggleSubMenu(child.path);
-                            }}
-                            className={cn(
-                              'flex items-center px-3 py-2 rounded-lg text-sm transition-all duration-200 w-full text-left',
-                              expandedItems.includes(child.path)
-                                ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 font-medium'
-                                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
-                            )}
-                          >
-                            <i className={`fa-solid ${child.icon || 'fa-folder'} mr-3`}></i>
-                            <span>{child.label}</span>
-                            <i className={`fa-solid ml-auto ${expandedItems.includes(child.path) ? 'fa-chevron-down' : 'fa-chevron-right'}`}></i>
-                          </button>
+          <div className="h-px bg-timber-soft mx-3 my-4" />
 
-                          {/* 课题的子菜单 */}
-                          {expandedItems.includes(child.path) && (
-                            <ul className="pl-10 mt-1 space-y-1">
-                              {child.children.map((subChild) => (
-                                <li key={subChild.path}>
-                                  <NavLink
-                                    to={subChild.path}
-                                    className={({ isActive }) =>
-                                      cn(
-                                        'flex items-center px-3 py-2 rounded-lg text-sm transition-all duration-200',
-                                        isActive
-                                          ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 font-medium'
-                                          : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
-                                      )
-                                    }
-                                  >
-                                    <i className={`fa-solid ${subChild.icon} mr-3`}></i>
-                                    <span>{subChild.label}</span>
-                                  </NavLink>
-                                </li>
-                              ))}
-                            </ul>
-                          )}
-                        </div>
-                      ) : (
-                        // 普通子项
-                        <NavLink
-                          to={child.path}
-                          className={({ isActive }) =>
-                            cn(
-                              'flex items-center px-3 py-2 rounded-lg text-sm transition-all duration-200',
-                              isActive
-                                ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 font-medium'
-                                : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
-                            )
-                          }
-                        >
-                          <i className={`fa-solid ${child.icon} mr-3`}></i>
-                          <span>{child.label}</span>
-                        </NavLink>
-                      )}
-                    </li>
-                  ))}
-                </ul>
+          {/* 课题列表 */}
+          <div className="px-2">
+            <button
+              onClick={() => setIsProjectsExpanded(!isProjectsExpanded)}
+              className={cn(
+                'flex items-center justify-between w-full px-2 py-2 mb-2 rounded-lg',
+                'text-xs font-semibold uppercase tracking-wider text-grass',
+                'hover:text-moss hover:bg-moss-soft/30 transition-all duration-300'
               )}
-            </li>
-          ))}
-        </ul>
-      </nav>
-
-      <div className={cn('absolute bottom-0 w-full p-4 border-t border-gray-200 dark:border-gray-700', isCollapsed ? 'flex justify-center' : 'block')}>
-        {!isCollapsed ? (
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-              <i className="fa-solid fa-user text-blue-600 dark:text-blue-400"></i>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-gray-800 dark:text-white">实验员</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">个人账号</p>
-            </div>
+            >
+              <span>活跃课题</span>
+              <i className={cn(
+                'fa-solid fa-chevron-down transition-transform duration-300 text-[10px]',
+                !isProjectsExpanded && '-rotate-90'
+              )}></i>
+            </button>
+            <AnimatePresence>
+              {isProjectsExpanded && !isCollapsed && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-1 overflow-hidden"
+                >
+                  {projects.length > 0 ? (
+                    projects.slice(0, 5).map(project => (
+                      <Link
+                        key={project.id}
+                        to={`/projects/${project.id}`}
+                        className={cn(
+                          'flex items-center px-3 py-2 rounded-lg text-sm',
+                          'text-bark hover:text-moss hover:bg-moss-soft/30',
+                          'transition-all duration-300'
+                        )}
+                      >
+                        <span className="w-2 h-2 rounded-full bg-terracotta mr-3"></span>
+                        <span className="truncate">{project.title}</span>
+                      </Link>
+                    ))
+                  ) : (
+                    <div className="px-3 py-2 text-xs text-grass italic">
+                      暂无活跃课题
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
-        ) : (
-          <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-            <i className="fa-solid fa-user text-blue-600 dark:text-blue-400"></i>
+        </div>
+
+        {/* 底部信息 - 有机卡片风格 */}
+        {!isCollapsed && (
+          <div className="p-4">
+            <div className={cn(
+              'rounded-2xl p-4',
+              'bg-organic-stone/50 border border-timber-soft'
+            )}>
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs font-medium text-grass">版本</span>
+                <span className="text-xs font-mono font-semibold text-moss">v2.0.0</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-xs font-medium text-grass">状态</span>
+                <div className="flex items-center">
+                  <span className="w-2 h-2 rounded-full bg-status-success animate-pulse mr-2"></span>
+                  <span className="text-xs font-medium text-loam">正常运行</span>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>
-    </motion.div>
+    </aside>
   );
 }

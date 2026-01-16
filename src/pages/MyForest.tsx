@@ -5,6 +5,7 @@ import { experimentRecordService, experimentNoteService, sopService, projectServ
 import { ExperimentRecord, ExperimentNote, SOP, Project } from '@/types';
 import { Sidebar } from '@/components/Sidebar';
 import { Header } from '@/components/Header';
+import { cn } from '@/lib/utils';
 
 interface ForestStats {
   totalTrees: number;
@@ -14,6 +15,14 @@ interface ForestStats {
   forestCoverage: number;
   achievements: string[];
 }
+
+// 不对称圆角变体
+const cardRadiusVariants = [
+  'rounded-[2rem_1rem_2.5rem_1.5rem]',
+  'rounded-[1.5rem_2.5rem_1rem_2rem]',
+  'rounded-[2.5rem_1.5rem_2rem_1rem]',
+  'rounded-[1rem_2rem_1.5rem_2.5rem]',
+];
 
 export default function MyForest() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -32,7 +41,6 @@ export default function MyForest() {
   });
 
   useEffect(() => {
-    // 获取所有数据
     const allRecords = experimentRecordService.getAll();
     const allNotes = experimentNoteService.getAll();
     const allSOPs = sopService.getAll();
@@ -43,7 +51,6 @@ export default function MyForest() {
     setSOPs(allSOPs);
     setProjects(allProjects);
 
-    // 计算森林统计
     const totalTrees = allRecords.length + allNotes.length + allSOPs.length;
     const achievements = [];
 
@@ -64,92 +71,92 @@ export default function MyForest() {
   }, []);
 
   const generateForestLayout = () => {
-    // const trees = [];
     const allItems = [
-      ...records.map(r => ({ ...r, type: 'record', icon: 'fa-seedling', color: 'var(--forest-secondary)' })),
-      ...notes.map(n => ({ ...n, type: 'note', icon: 'fa-leaf', color: 'var(--forest-accent)' })),
-      ...sops.map(s => ({ ...s, type: 'sop', icon: 'fa-tree', color: 'var(--forest-primary)' }))
+      ...records.map(r => ({ ...r, type: 'record', icon: 'fa-seedling', color: 'var(--moss)' })),
+      ...notes.map(n => ({ ...n, type: 'note', icon: 'fa-leaf', color: 'var(--terracotta)' })),
+      ...sops.map(s => ({ ...s, type: 'sop', icon: 'fa-tree', color: 'var(--loam)' }))
     ];
 
-    // 按创建时间排序，模拟森林生长过程
     allItems.sort((a, b) => {
-      // 使用类型安全的方式获取日期
       const getItemDate = (item: any) => {
-        if (item.type === 'record' && item.createdAt) {
-          return new Date(item.createdAt);
-        } else if (item.type === 'note' && item.createdAt) {
-          return new Date(item.createdAt);
-        } else if (item.type === 'sop' && item.lastUpdated) {
-          return new Date(item.lastUpdated);
-        }
-        return new Date(0); // 默认日期
+        if (item.type === 'record' && item.createdAt) return new Date(item.createdAt);
+        else if (item.type === 'note' && item.createdAt) return new Date(item.createdAt);
+        else if (item.type === 'sop' && item.lastUpdated) return new Date(item.lastUpdated);
+        return new Date(0);
       };
-
-      const aDate = getItemDate(a);
-      const bDate = getItemDate(b);
-      return aDate.getTime() - bDate.getTime();
+      return getItemDate(a).getTime() - getItemDate(b).getTime();
     });
 
     return allItems.map((item, index) => {
-      // 使用伪随机但固定的位置
       const seed = item.id.split('').reduce((a, b) => a + b.charCodeAt(0), 0);
-      const x = (seed % 80) + 10; // 10-90%
-      const y = ((seed * 17) % 60) + 20; // 20-80%
-
-      return {
-        ...item,
-        x,
-        y,
-        size: item.type === 'sop' ? 'large' : item.type === 'note' ? 'medium' : 'small',
-        delay: index * 0.1
-      };
+      const x = (seed % 80) + 10;
+      const y = ((seed * 17) % 60) + 20;
+      return { ...item, x, y, size: item.type === 'sop' ? 'large' : item.type === 'note' ? 'medium' : 'small', delay: index * 0.1 };
     });
   };
 
   const forestTrees = generateForestLayout();
 
   return (
-    <div className="min-h-screen bg-earth-beige text-text-main">
+    <div className="min-h-screen bg-organic-rice-paper text-loam">
+      {/* 环境 Blob 背景 */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="organic-blob organic-blob--moss w-[600px] h-[600px] -top-40 -right-40 opacity-20" />
+        <div className="organic-blob organic-blob--terracotta w-[400px] h-[400px] bottom-0 -left-20 opacity-15" />
+        <div className="organic-blob organic-blob--sand w-[300px] h-[300px] top-1/2 left-1/4 opacity-10" />
+      </div>
+
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
 
-      <div className={sidebarCollapsed ? 'ml-16' : 'ml-64'}>
-        <Header
-          title="我的实验森林"
-          sidebarCollapsed={sidebarCollapsed}
-        />
+      <div className={cn('transition-all duration-500 relative z-10', sidebarCollapsed ? 'ml-16' : 'ml-64')}>
+        <Header title="我的实验森林" sidebarCollapsed={sidebarCollapsed} />
 
-        <main className="container mx-auto px-4 py-6">
+        <main className="container mx-auto px-6 py-6">
           {/* 森林统计信息 */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-            <div className="bg-gradient-to-br from-forest-accent/30 to-forest-secondary/20 rounded-xl p-6 text-center">
-              <i className="fa-solid fa-tree text-forest-primary text-3xl mb-3"></i>
-              <h3 className="text-2xl font-bold text-forest-primary">{forestStats.totalTrees}</h3>
-              <p className="text-text-soft text-sm">总树木数量</p>
-            </div>
-
-            <div className="bg-gradient-to-br from-forest-secondary/30 to-forest-primary/20 rounded-xl p-6 text-center">
-              <i className="fa-solid fa-seedling text-forest-secondary text-3xl mb-3"></i>
-              <h3 className="text-2xl font-bold text-forest-primary">{forestStats.seedlings}</h3>
-              <p className="text-text-soft text-sm">实验幼苗</p>
-            </div>
-
-            <div className="bg-gradient-to-br from-forest-primary/30 to-earth-brown/20 rounded-xl p-6 text-center">
-              <i className="fa-solid fa-leaf text-forest-accent text-3xl mb-3"></i>
-              <h3 className="text-2xl font-bold text-forest-primary">{forestStats.saplings}</h3>
-              <p className="text-text-soft text-sm">知识枝叶</p>
-            </div>
-
-            <div className="bg-gradient-to-br from-earth-brown/30 to-forest-primary/20 rounded-xl p-6 text-center">
-              <i className="fa-solid fa-percentage text-forest-primary text-3xl mb-3"></i>
-              <h3 className="text-2xl font-bold text-forest-primary">{forestStats.forestCoverage}%</h3>
-              <p className="text-text-soft text-sm">森林覆盖率</p>
-            </div>
+            {[
+              { icon: 'fa-tree', value: forestStats.totalTrees, label: '总树木数量', color: 'moss' },
+              { icon: 'fa-seedling', value: forestStats.seedlings, label: '实验幼苗', color: 'moss' },
+              { icon: 'fa-leaf', value: forestStats.saplings, label: '知识枝叶', color: 'terracotta' },
+              { icon: 'fa-percentage', value: `${forestStats.forestCoverage}%`, label: '森林覆盖率', color: 'sand' },
+            ].map((stat, index) => (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className={cn(
+                  'organic-card p-6 text-center hover:-translate-y-1 hover:shadow-float transition-all',
+                  cardRadiusVariants[index]
+                )}
+              >
+                <div className={cn(
+                  'w-14 h-14 rounded-xl mx-auto mb-3 flex items-center justify-center',
+                  stat.color === 'moss' ? 'bg-moss-soft' : stat.color === 'terracotta' ? 'bg-terracotta-light' : 'bg-organic-stone'
+                )}>
+                  <i className={cn(
+                    'fa-solid text-2xl',
+                    stat.icon,
+                    stat.color === 'moss' ? 'text-moss' : stat.color === 'terracotta' ? 'text-terracotta' : 'text-bark'
+                  )}></i>
+                </div>
+                <h3 className="text-3xl font-heading font-bold text-loam">{stat.value}</h3>
+                <p className="text-grass text-sm">{stat.label}</p>
+              </motion.div>
+            ))}
           </div>
 
           {/* 成就展示 */}
-          <div className="bg-white/70 rounded-xl shadow-md border border-forest-accent/30 p-6 mb-8">
-            <h2 className="text-xl font-bold text-forest-primary mb-4 flex items-center">
-              <i className="fa-solid fa-trophy text-status-warning mr-3"></i>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+            className="organic-card p-6 mb-8 rounded-[1.5rem_2.5rem_1rem_2rem]"
+          >
+            <h2 className="text-xl font-heading font-bold text-loam mb-4 flex items-center">
+              <div className="w-10 h-10 rounded-xl bg-terracotta-light flex items-center justify-center mr-3">
+                <i className="fa-solid fa-trophy text-terracotta"></i>
+              </div>
               森林成就
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -159,39 +166,56 @@ export default function MyForest() {
                 { name: '森林守护者', icon: 'fa-tree', condition: sops.length >= 3, description: '创建3个SOP文档' },
                 { name: '森林之主', icon: 'fa-crown', condition: forestStats.totalTrees >= 20, description: '拥有20棵树木' },
                 { name: '生态建设师', icon: 'fa-city', condition: projects.length >= 3, description: '管理3个课题项目' }
-              ].map((achievement) => (
-                <div
+              ].map((achievement, index) => (
+                <motion.div
                   key={achievement.name}
-                  className={`p-4 rounded-lg text-center transition-all duration-300 ${achievement.condition
-                    ? 'bg-gradient-to-br from-status-warning/20 to-status-warning/10 border border-status-warning/30'
-                    : 'bg-gray-100 border border-gray-200 opacity-50'
-                    }`}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.5 + index * 0.1 }}
+                  className={cn(
+                    'p-4 rounded-xl text-center transition-all duration-300',
+                    achievement.condition
+                      ? 'bg-terracotta-light/50 border border-terracotta/30 hover:shadow-terracotta hover:-translate-y-1'
+                      : 'bg-organic-stone/50 border border-timber-soft opacity-60'
+                  )}
                 >
-                  <i className={`fa-solid ${achievement.icon} text-2xl mb-2 ${achievement.condition ? 'text-status-warning' : 'text-gray-400'
-                    }`}></i>
-                  <h4 className={`text-sm font-medium mb-1 ${achievement.condition ? 'text-forest-primary' : 'text-gray-400'
-                    }`}>
+                  <div className={cn(
+                    'w-12 h-12 rounded-lg mx-auto mb-2 flex items-center justify-center',
+                    achievement.condition ? 'bg-terracotta/20' : 'bg-bark/10'
+                  )}>
+                    <i className={cn(
+                      'fa-solid text-xl',
+                      achievement.icon,
+                      achievement.condition ? 'text-terracotta' : 'text-bark/50'
+                    )}></i>
+                  </div>
+                  <h4 className={cn('text-sm font-medium mb-1', achievement.condition ? 'text-loam' : 'text-bark/50')}>
                     {achievement.name}
                   </h4>
-                  <p className="text-xs text-gray-500">{achievement.description}</p>
+                  <p className="text-xs text-grass">{achievement.description}</p>
                   {achievement.condition && (
                     <div className="mt-2">
-                      <span className="inline-block w-2 h-2 bg-status-warning rounded-full animate-pulse"></span>
+                      <span className="inline-block w-2 h-2 bg-terracotta rounded-full animate-pulse"></span>
                     </div>
                   )}
-                </div>
+                </motion.div>
               ))}
             </div>
-          </div>
+          </motion.div>
 
           {/* 互动森林画布 */}
-          <div className="bg-gradient-to-b from-status-info/30 via-forest-light to-earth-brown/20 rounded-xl shadow-lg border border-forest-accent/30 overflow-hidden">
-            <div className="p-6 border-b border-forest-accent/30">
-              <h2 className="text-xl font-bold text-forest-primary flex items-center">
-                <i className="fa-solid fa-seedling mr-3 text-forest-secondary"></i>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="organic-card overflow-hidden rounded-[2.5rem_1rem_2rem_1.5rem]"
+          >
+            <div className="p-6 border-b border-timber-soft bg-moss-soft/30">
+              <h2 className="text-xl font-heading font-bold text-loam flex items-center">
+                <i className="fa-solid fa-seedling mr-3 text-moss"></i>
                 森林生态图
               </h2>
-              <p className="text-text-soft text-sm mt-1">点击任意树木查看详细信息</p>
+              <p className="text-grass text-sm mt-1">点击任意树木查看详细信息</p>
             </div>
 
             <div className="relative h-96 p-6">
@@ -289,7 +313,7 @@ export default function MyForest() {
                 )}
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* 选中树木的详情弹窗 */}
           {selectedTree && (

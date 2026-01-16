@@ -12,7 +12,7 @@ interface EnhancedCardProps {
   date?: string;
   author?: string;
   icon?: string;
-  gradient?: 'emerald' | 'blue' | 'purple' | 'orange' | 'pink';
+  gradient?: 'moss' | 'terracotta' | 'sand' | 'stone';
   onClick?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
@@ -20,8 +20,21 @@ interface EnhancedCardProps {
   className?: string;
   hoverable?: boolean;
   expandable?: boolean;
+  radiusVariant?: number;
 }
 
+// 不对称圆角变体
+const radiusVariants = [
+  'rounded-[2rem_1rem_2.5rem_1.5rem]',
+  'rounded-[1.5rem_2.5rem_1rem_2rem]',
+  'rounded-[2.5rem_1.5rem_2rem_1rem]',
+  'rounded-[1rem_2rem_1.5rem_2.5rem]',
+];
+
+/**
+ * 🌿 有机增强卡片组件 (Organic Enhanced Card)
+ * 侘寂风格 - 不对称圆角 + 柔和渐变 + 自然动效
+ */
 export const EnhancedCard: React.FC<EnhancedCardProps> = ({
   title,
   subtitle,
@@ -32,33 +45,42 @@ export const EnhancedCard: React.FC<EnhancedCardProps> = ({
   date,
   author,
   icon = 'fa-file-alt',
-  gradient = 'emerald',
+  gradient = 'moss',
   onClick,
   onEdit,
   onDelete,
   children,
   className,
   hoverable = true,
-  expandable = false
+  expandable = false,
+  radiusVariant = 0
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
 
+  // 有机渐变/背景样式
   const gradientClasses = {
-    emerald: 'from-emerald-400 to-teal-500',
-    blue: 'from-blue-400 to-indigo-500',
-    purple: 'from-purple-400 to-pink-500',
-    orange: 'from-orange-400 to-red-500',
-    pink: 'from-pink-400 to-rose-500'
+    moss: 'bg-moss',
+    terracotta: 'bg-terracotta',
+    sand: 'bg-organic-sand',
+    stone: 'bg-organic-stone',
   };
 
+  const gradientShadows = {
+    moss: 'shadow-moss',
+    terracotta: 'shadow-clay',
+    sand: 'shadow-moss',
+    stone: 'shadow-minimal',
+  };
+
+  // 状态样式
   const statusColors = {
-    draft: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    completed: 'bg-green-100 text-green-800 border-green-200',
-    archived: 'bg-gray-100 text-gray-800 border-gray-200',
-    pending: 'bg-blue-100 text-blue-800 border-blue-200',
-    approved: 'bg-emerald-100 text-emerald-800 border-emerald-200',
-    rejected: 'bg-red-100 text-red-800 border-red-200'
+    draft: 'bg-terracotta/15 text-terracotta',
+    completed: 'bg-status-success/15 text-status-success',
+    archived: 'bg-organic-stone text-grass',
+    pending: 'bg-terracotta-light text-terracotta',
+    approved: 'bg-moss-soft text-moss',
+    rejected: 'bg-status-error/15 text-status-error'
   };
 
   const statusIcons = {
@@ -70,32 +92,39 @@ export const EnhancedCard: React.FC<EnhancedCardProps> = ({
     rejected: 'fa-times-circle'
   };
 
+  const statusTexts = {
+    draft: '草稿',
+    completed: '已完成',
+    archived: '已归档',
+    pending: '待审批',
+    approved: '已批准',
+    rejected: '已拒绝'
+  };
+
   return (
     <motion.div
       className={cn(
-        'relative bg-white rounded-xl shadow-md border border-gray-100 overflow-hidden',
-        hoverable && 'cursor-pointer',
+        'organic-card relative overflow-hidden',
+        radiusVariants[radiusVariant % radiusVariants.length],
+        hoverable && 'cursor-pointer hover:-translate-y-2 hover:shadow-float',
         className
       )}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={hoverable ? { 
-        y: -5, 
-        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1)' 
-      } : {}}
+      whileHover={hoverable ? { y: -8 } : {}}
       transition={{ duration: 0.3 }}
       onClick={onClick}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      {/* 渐变装饰条 */}
-      <div className={`h-1 w-full bg-gradient-to-r ${gradientClasses[gradient]}`} />
-      
+      {/* 顶部渐变装饰条 */}
+      <div className={cn('h-1 w-full', gradientClasses[gradient])} />
+
       {/* 悬停光晕效果 */}
       <AnimatePresence>
         {isHovered && hoverable && (
           <motion.div
-            className={`absolute inset-0 bg-gradient-to-r ${gradientClasses[gradient]} opacity-5`}
+            className={cn('absolute inset-0 opacity-5', gradientClasses[gradient])}
             initial={{ opacity: 0 }}
             animate={{ opacity: 0.05 }}
             exit={{ opacity: 0 }}
@@ -107,43 +136,46 @@ export const EnhancedCard: React.FC<EnhancedCardProps> = ({
       <div className="p-6">
         {/* 头部信息 */}
         <div className="flex items-start justify-between mb-4">
-          <div className="flex items-start space-x-3 flex-1">
-            {/* 图标 */}
-            <motion.div 
-              className={`w-10 h-10 rounded-lg bg-gradient-to-r ${gradientClasses[gradient]} 
-                         flex items-center justify-center text-white shadow-lg`}
-              whileHover={{ scale: 1.1, rotate: 5 }}
+          <div className="flex items-start gap-3 flex-1">
+            {/* 图标容器 */}
+            <motion.div
+              className={cn(
+                'w-11 h-11 rounded-xl flex items-center justify-center text-white',
+                gradientClasses[gradient],
+                gradientShadows[gradient]
+              )}
+              whileHover={{ scale: 1.1, rotate: 3 }}
               transition={{ duration: 0.2 }}
             >
-              <i className={`fa-solid ${icon} text-sm`}></i>
+              <i className={cn('fa-solid text-sm', icon)}></i>
             </motion.div>
 
             {/* 标题和副标题 */}
             <div className="flex-1 min-w-0">
-              <h3 className="text-lg font-semibold text-gray-900 truncate">
+              <h3 className="text-lg font-heading font-bold text-loam line-clamp-1">
                 {title}
               </h3>
               {subtitle && (
-                <p className="text-sm text-gray-600 mt-1">{subtitle}</p>
+                <p className="text-sm text-bark mt-1">{subtitle}</p>
               )}
-              
+
               {/* 分类和日期 */}
-              <div className="flex items-center space-x-4 mt-2 text-xs text-gray-500">
+              <div className="flex items-center gap-4 mt-2 text-xs text-grass">
                 {category && (
-                  <span className="flex items-center">
-                    <i className="fa-solid fa-folder mr-1"></i>
+                  <span className="flex items-center gap-1">
+                    <i className="fa-solid fa-folder"></i>
                     {category}
                   </span>
                 )}
                 {date && (
-                  <span className="flex items-center">
-                    <i className="fa-solid fa-calendar mr-1"></i>
+                  <span className="flex items-center gap-1">
+                    <i className="fa-solid fa-calendar"></i>
                     {date}
                   </span>
                 )}
                 {author && (
-                  <span className="flex items-center">
-                    <i className="fa-solid fa-user mr-1"></i>
+                  <span className="flex items-center gap-1">
+                    <i className="fa-solid fa-user"></i>
                     {author}
                   </span>
                 )}
@@ -153,15 +185,17 @@ export const EnhancedCard: React.FC<EnhancedCardProps> = ({
 
           {/* 状态标签 */}
           {status && (
-            <motion.div 
-              className={`px-3 py-1 rounded-full text-xs font-medium border 
-                         flex items-center space-x-1 ${statusColors[status]}`}
+            <motion.div
+              className={cn(
+                'px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1',
+                statusColors[status]
+              )}
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{ delay: 0.3 }}
+              transition={{ delay: 0.2 }}
             >
-              <i className={`fa-solid ${statusIcons[status]} text-xs`}></i>
-              <span>{status}</span>
+              <i className={cn('fa-solid text-xs', statusIcons[status])}></i>
+              <span>{statusTexts[status]}</span>
             </motion.div>
           )}
         </div>
@@ -169,28 +203,25 @@ export const EnhancedCard: React.FC<EnhancedCardProps> = ({
         {/* 内容 */}
         {content && (
           <div className="mb-4">
-            <motion.p 
-              className={`text-gray-700 leading-relaxed ${
+            <motion.p
+              className={cn(
+                'text-bark leading-relaxed text-sm',
                 expandable && !isExpanded ? 'line-clamp-2' : ''
-              }`}
+              )}
               layout
             >
               {content}
             </motion.p>
-            
+
             {expandable && content.length > 100 && (
               <motion.button
-                className="text-emerald-600 text-sm mt-2 hover:text-emerald-700 
-                         flex items-center space-x-1"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setIsExpanded(!isExpanded);
-                }}
-                whileHover={{ scale: 1.05 }}
+                className="text-moss text-sm mt-2 hover:text-terracotta flex items-center gap-1 transition-colors"
+                onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); }}
+                whileHover={{ scale: 1.02 }}
               >
                 <span>{isExpanded ? '收起' : '展开'}</span>
-                <motion.i 
-                  className={`fa-solid fa-chevron-${isExpanded ? 'up' : 'down'} text-xs`}
+                <motion.i
+                  className={cn('fa-solid text-xs', isExpanded ? 'fa-chevron-up' : 'fa-chevron-down')}
                   animate={{ rotate: isExpanded ? 180 : 0 }}
                   transition={{ duration: 0.2 }}
                 />
@@ -200,11 +231,7 @@ export const EnhancedCard: React.FC<EnhancedCardProps> = ({
         )}
 
         {/* 自定义内容 */}
-        {children && (
-          <div className="mb-4">
-            {children}
-          </div>
-        )}
+        {children && <div className="mb-4">{children}</div>}
 
         {/* 标签 */}
         {tags.length > 0 && (
@@ -212,11 +239,10 @@ export const EnhancedCard: React.FC<EnhancedCardProps> = ({
             {tags.map((tag, index) => (
               <motion.span
                 key={tag}
-                className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-md
-                         hover:bg-gray-200 transition-colors duration-200"
+                className="px-2.5 py-1 bg-organic-stone text-bark text-xs rounded-md hover:bg-moss-soft hover:text-moss transition-colors"
                 initial={{ opacity: 0, scale: 0 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.1 * index }}
+                transition={{ delay: 0.05 * index }}
                 whileHover={{ scale: 1.05 }}
               >
                 #{tag}
@@ -227,35 +253,27 @@ export const EnhancedCard: React.FC<EnhancedCardProps> = ({
 
         {/* 操作按钮 */}
         {(onEdit || onDelete) && (
-          <motion.div 
-            className="flex justify-end space-x-2 pt-4 border-t border-gray-100"
+          <motion.div
+            className="flex justify-end gap-2 pt-4 border-t border-timber-soft"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 0.4 }}
+            transition={{ delay: 0.3 }}
           >
             {onEdit && (
               <motion.button
-                className="p-2 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 
-                         rounded-lg transition-all duration-200"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onEdit();
-                }}
+                className="p-2 text-grass hover:text-moss hover:bg-moss-soft rounded-lg transition-all"
+                onClick={(e) => { e.stopPropagation(); onEdit(); }}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
               >
                 <i className="fa-solid fa-edit"></i>
               </motion.button>
             )}
-            
+
             {onDelete && (
               <motion.button
-                className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 
-                         rounded-lg transition-all duration-200"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onDelete();
-                }}
+                className="p-2 text-grass hover:text-status-error hover:bg-status-error/10 rounded-lg transition-all"
+                onClick={(e) => { e.stopPropagation(); onDelete(); }}
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -266,7 +284,7 @@ export const EnhancedCard: React.FC<EnhancedCardProps> = ({
         )}
       </div>
 
-      {/* 加载状态指示器 */}
+      {/* 悬停指示器 */}
       <AnimatePresence>
         {isHovered && hoverable && (
           <motion.div
@@ -276,7 +294,7 @@ export const EnhancedCard: React.FC<EnhancedCardProps> = ({
             exit={{ opacity: 0, scale: 0 }}
             transition={{ duration: 0.2 }}
           >
-            <div className={`w-2 h-2 rounded-full bg-gradient-to-r ${gradientClasses[gradient]}`} />
+            <div className={cn('w-2 h-2 rounded-full', gradientClasses[gradient])} />
           </motion.div>
         )}
       </AnimatePresence>
@@ -307,12 +325,7 @@ export const CardGrid: React.FC<CardGridProps> = ({
 
   return (
     <motion.div
-      className={cn(
-        'grid',
-        gridCols[columns],
-        `gap-${gap}`,
-        className
-      )}
+      className={cn('grid', gridCols[columns], `gap-${gap}`, className)}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5, staggerChildren: 0.1 }}

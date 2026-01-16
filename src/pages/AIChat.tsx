@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { ChatSession } from '@/types';
 import { Sidebar } from '@/components/Sidebar';
-import { Header } from '@/components/Header';
 import { AIChatComponent } from '@/components/AIChatComponent';
+import { cn } from '@/lib/utils';
 
 export default function AIChat() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
@@ -13,23 +13,19 @@ export default function AIChat() {
   };
 
   return (
-    <div className="min-h-screen" style={{ background: 'linear-gradient(135deg, #F2EDE2 0%, #A6B7A1 50%, #88A588 100%)' }}>
+    <div className="min-h-screen bg-organic-rice-paper">
+      {/* 环境 Blob 背景 */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="organic-blob organic-blob--moss w-[500px] h-[500px] -top-32 -right-32 opacity-15" />
+        <div className="organic-blob organic-blob--terracotta w-[400px] h-[400px] bottom-0 -left-20 opacity-10" />
+      </div>
+
       <Sidebar isCollapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} />
 
-      <div className={sidebarCollapsed ? 'ml-16' : 'ml-64'}>
-        <Header
-          title="🌲 小森博士 - AI智能助手"
-          sidebarCollapsed={sidebarCollapsed}
-        />
-
-        <main className="h-[calc(100vh-64px)] p-6">
+      <div className={cn('transition-all duration-500 relative z-10', sidebarCollapsed ? 'ml-16' : 'ml-64')}>
+        <main className="h-screen p-6">
           <div className="h-full max-w-5xl mx-auto">
-            <div
-              className="rounded-2xl shadow-lg h-full overflow-hidden backdrop-blur-sm border border-white/20"
-              style={{
-                background: 'linear-gradient(135deg, rgba(242, 237, 226, 0.95) 0%, rgba(166, 183, 161, 0.85) 50%, rgba(136, 165, 136, 0.75) 100%)'
-              }}
-            >
+            <div className="organic-card h-full overflow-hidden rounded-[2rem_1rem_2.5rem_1.5rem]">
               <AIChatComponent
                 onSessionChange={handleSessionChange}
                 className="h-full"
