@@ -10,9 +10,20 @@ interface SidebarProps {
   onToggle: () => void;
 }
 
+interface NavItem {
+  path: string;
+  icon: string;
+  label: string;
+}
+
+interface NavGroup {
+  title?: string;
+  items: NavItem[];
+}
+
 /**
  * 🌿 有机侧边栏组件 (Organic Sidebar)
- * 温暖亲切的导航体验
+ * 温暖亲切的导航体验 - 分组层级结构
  */
 export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
   const location = useLocation();
@@ -30,17 +41,71 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
     return () => window.removeEventListener('projects-updated', handleProjectsUpdate);
   }, []);
 
-  const navItems = [
-    { path: '/', icon: 'fa-chart-pie', label: '控制台' },
-    { path: '/projects', icon: 'fa-folder-tree', label: '实验课题' },
-    { path: '/records', icon: 'fa-seedling', label: '实验记录' },
-    { path: '/notes', icon: 'fa-leaf', label: '实验笔记' },
-    { path: '/sops', icon: 'fa-book-medical', label: 'SOP文档' },
-    { path: '/calendar', icon: 'fa-calendar-days', label: '实验日历' },
-    { path: '/samples', icon: 'fa-vial', label: '样本管理' },
-    { path: '/chat', icon: 'fa-robot', label: 'AI 助手' },
-    { path: '/settings', icon: 'fa-gear', label: '系统设置' },
+  // 分组导航结构
+  const navGroups: NavGroup[] = [
+    {
+      items: [{ path: '/', icon: 'fa-chart-pie', label: '控制台' }]
+    },
+    {
+      title: '实验研究',
+      items: [
+        { path: '/projects', icon: 'fa-folder-tree', label: '实验课题' },
+        { path: '/records', icon: 'fa-seedling', label: '实验记录' },
+        { path: '/notes', icon: 'fa-leaf', label: '实验笔记' },
+        { path: '/sops', icon: 'fa-book-medical', label: 'SOP文档' },
+        { path: '/samples', icon: 'fa-vial', label: '样本管理' },
+      ]
+    },
+    {
+      title: '计划管理',
+      items: [{ path: '/calendar', icon: 'fa-calendar-days', label: '实验日历' }]
+    },
+    {
+      title: '系统工具',
+      items: [
+        { path: '/chat', icon: 'fa-robot', label: 'AI 助手' },
+        { path: '/settings', icon: 'fa-gear', label: '系统设置' },
+      ]
+    }
   ];
+
+  // 渲染单个导航项
+  const renderNavItem = (item: NavItem) => {
+    const isActive = location.pathname === item.path ||
+      (item.path !== '/' && location.pathname.startsWith(item.path));
+
+    return (
+      <NavLink
+        key={item.path}
+        to={item.path}
+        className={cn(
+          'flex items-center px-3 py-2.5 rounded-xl transition-all duration-300 group relative',
+          isActive
+            ? 'bg-moss-soft text-moss'
+            : 'text-bark hover:text-moss hover:bg-moss-soft/50'
+        )}
+      >
+        <div className={cn(
+          'w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-300',
+          isActive
+            ? 'bg-moss text-moss-light shadow-moss'
+            : 'bg-organic-stone/50 group-hover:bg-moss group-hover:text-moss-light group-hover:shadow-moss'
+        )}>
+          <i className={cn('fa-solid text-sm', item.icon)}></i>
+        </div>
+        {!isCollapsed && (
+          <span className="ml-3 font-medium text-sm">
+            {item.label}
+          </span>
+        )}
+
+        {/* 活跃指示器 - 有机竖条 */}
+        {isActive && (
+          <div className="absolute left-0 w-1 h-5 bg-moss rounded-full" />
+        )}
+      </NavLink>
+    );
+  };
 
   return (
     <aside
@@ -87,44 +152,28 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
           </Link>
         </div>
 
-        {/* 导航区域 */}
+        {/* 导航区域 - 分组显示 */}
         <div className="flex-1 overflow-y-auto custom-scrollbar px-3 space-y-1">
-          {navItems.map((item) => {
-            const isActive = location.pathname === item.path ||
-              (item.path !== '/' && location.pathname.startsWith(item.path));
-
-            return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className={cn(
-                  'flex items-center px-3 py-2.5 rounded-xl transition-all duration-300 group relative',
-                  isActive
-                    ? 'bg-moss-soft text-moss'
-                    : 'text-bark hover:text-moss hover:bg-moss-soft/50'
-                )}
-              >
-                <div className={cn(
-                  'w-9 h-9 flex items-center justify-center rounded-xl transition-all duration-300',
-                  isActive
-                    ? 'bg-moss text-moss-light shadow-moss'
-                    : 'bg-organic-stone/50 group-hover:bg-moss group-hover:text-moss-light group-hover:shadow-moss'
-                )}>
-                  <i className={cn('fa-solid text-sm', item.icon)}></i>
-                </div>
-                {!isCollapsed && (
-                  <span className="ml-3 font-medium text-sm">
-                    {item.label}
+          {navGroups.map((group, groupIndex) => (
+            <div key={groupIndex} className="mb-2">
+              {/* 分组标题 */}
+              {group.title && !isCollapsed && (
+                <div className="px-3 py-2 mt-4 first:mt-0">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-grass">
+                    {group.title}
                   </span>
-                )}
-
-                {/* 活跃指示器 - 有机竖条 */}
-                {isActive && (
-                  <div className="absolute left-0 w-1 h-5 bg-moss rounded-full" />
-                )}
-              </NavLink>
-            );
-          })}
+                </div>
+              )}
+              {/* 分组分割线（折叠状态） */}
+              {group.title && isCollapsed && (
+                <div className="h-px bg-timber-soft mx-2 my-3" />
+              )}
+              {/* 导航项 */}
+              <div className="space-y-1">
+                {group.items.map(renderNavItem)}
+              </div>
+            </div>
+          ))}
 
           <div className="h-px bg-timber-soft mx-3 my-4" />
 
@@ -138,11 +187,14 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
                 'hover:text-moss hover:bg-moss-soft/30 transition-all duration-300'
               )}
             >
-              <span>活跃课题</span>
-              <i className={cn(
-                'fa-solid fa-chevron-down transition-transform duration-300 text-[10px]',
-                !isProjectsExpanded && '-rotate-90'
-              )}></i>
+              {!isCollapsed && <span>活跃课题</span>}
+              {isCollapsed && <i className="fa-solid fa-folder-open text-sm mx-auto"></i>}
+              {!isCollapsed && (
+                <i className={cn(
+                  'fa-solid fa-chevron-down transition-transform duration-300 text-[10px]',
+                  !isProjectsExpanded && '-rotate-90'
+                )}></i>
+              )}
             </button>
             <AnimatePresence>
               {isProjectsExpanded && !isCollapsed && (
