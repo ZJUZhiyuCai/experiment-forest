@@ -666,7 +666,7 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
       <header className="fa-top">
         <button type="button" className="fa-brand" onClick={() => openScope('home')} title="回到林地">
           <span className="fa-brand__mark" aria-hidden="true">
-            <Icon name="sprout" size={18} />
+            <Icon name="sprout" size={15} />
           </span>
           <span className="fa-brand__name">实验小森林</span>
         </button>
@@ -678,12 +678,17 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
             className="fa-search__input"
             type="search"
             value={query}
-            placeholder="搜索  ⌘K"
+            placeholder="搜索"
             onChange={(e) => {
               setQuery(e.target.value);
               navigated.current = true;
             }}
           />
+          {!query && (
+            <kbd className="fa-kbd" aria-hidden="true">
+              ⌘K
+            </kbd>
+          )}
         </label>
         {unsavedCount > 0 && (
           <button
@@ -748,7 +753,7 @@ function SyncState({ store }: { store: ReturnType<typeof useForest> }) {
     : store.syncError
       ? '同步失败'
       : store.lastSyncedAt
-        ? `已同步 ${formatTime(store.lastSyncedAt)}`
+        ? `已同步 ${formatTime(store.lastSyncedAt).slice(0, 5)}`
         : '未同步';
   const tone = store.syncError ? 'is-bad' : store.syncing ? 'is-busy' : 'is-ok';
   return (
@@ -757,7 +762,7 @@ function SyncState({ store }: { store: ReturnType<typeof useForest> }) {
       className={`fa-sync ${tone}`}
       onClick={() => void store.refresh()}
       disabled={store.syncing}
-      title={`${label}${store.revision !== null ? ` · 数据修订 r${store.revision}` : ''}。点击立即刷新（面板可见时每 5 秒自动刷新）`}
+      title={`${store.lastSyncedAt && !store.syncing && !store.syncError ? `已同步 ${formatTime(store.lastSyncedAt)}` : label}${store.revision !== null ? ` · 数据修订 r${store.revision}` : ''}。点击立即刷新（面板可见时每 5 秒自动刷新）`}
       aria-label={`${label}，点击立即刷新`}
     >
       <span className="fa-sync__dot" aria-hidden="true" />

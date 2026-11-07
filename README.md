@@ -4,13 +4,19 @@
 
 这次重构将原来的浏览器单机应用改为 **Harness 原生 Host + Client 插件**：右侧栏工作台、Host 持久化服务和三个模型工具使用同一份数据。模型与密钥沿用 Harness 的配置，无需在网页重复填写，不再提供模拟 AI 回复。
 
+界面由远端 Claude 按现代 Apple / Notion 风格重做：中性底色、宽松留白、清晰的资料层级，以及浅色与深色模式。
+
+![实验森林工作台](docs/images/workspace.png)
+
+上图为真实 Harness 中的插件页面，内容均为软件验收示例。
+
 ## 使用
 
 要求 Node.js **24.9 或以上**、DeepSeek Harness **0.2.2-rc.1**。当前只对这个已核验的 Harness 版本声明兼容；它的插件 API 仍在变化。
 
 ```sh
-git clone https://github.com/ZJUZhiyuCai/experiment-forest.git
-cd experiment-forest
+# 进入包含 client/、plugin/ 的新版源码目录
+cd /absolute/path/experiment-forest
 npm ci --ignore-scripts
 npm run build
 
@@ -60,7 +66,7 @@ tests/        工具、导出和接入行为检查
 src/          旧版前端，仅作为迁移参考
 ```
 
-[后端审查](docs/BACKEND_REVIEW.md) · [Claude 前端审查](docs/FRONTEND_REVIEW.md) · [Claude 初步设计（含未实施设想）](docs/FRONTEND_DESIGN.md)
+[后端审查](docs/BACKEND_REVIEW.md) · [Claude 前端审查](docs/FRONTEND_REVIEW.md) · [Claude 最终视觉说明](docs/FRONTEND_VISUAL_NOTES.md) · [Claude 初步设计（历史稿，含未实施设想）](docs/FRONTEND_DESIGN.md)
 
 [原稿与本机适配说明](docs/LOCAL_ADAPTATIONS.md)
 

@@ -17,11 +17,12 @@ import {
 
 /* ───────────────────────── 状态 ───────────────────────── */
 
+/** 状态：一枚小圆点 + 文字，安静地呈现；颜色之外还有点的形态（空心/实心/菱形）区分 */
 export function StatusPill({ kind, status }: { kind: EntityKind; status: string }) {
   const opt = statusOption(kind, status);
   return (
-    <span className={`fa-pill fa-tone-${opt.tone}`}>
-      <span className="fa-pill__mark" aria-hidden="true" />
+    <span className={`fa-status fa-tone-${opt.tone}`}>
+      <span className="fa-status__dot" aria-hidden="true" />
       {opt.label}
     </span>
   );
@@ -35,9 +36,9 @@ export function StatusNode({ kind, status }: { kind: EntityKind; status: string 
 
 export function AiBadge({ needsReview }: { needsReview: boolean }) {
   return (
-    <span className={`fa-badge fa-badge--ai${needsReview ? ' is-review' : ''}`}>
-      <Icon name="spark" size={12} />
-      {needsReview ? 'AI 草稿 · 待核对' : 'AI 草稿 · 已核对'}
+    <span className={`fa-ai-tag${needsReview ? ' is-review' : ''}`} title={needsReview ? 'AI 草稿，待人工核对' : 'AI 草稿，已人工核对'}>
+      <Icon name="spark" size={11} />
+      {needsReview ? 'AI · 待核对' : 'AI · 已核对'}
     </span>
   );
 }
@@ -45,7 +46,7 @@ export function AiBadge({ needsReview }: { needsReview: boolean }) {
 export function FreshDot() {
   return (
     <span className="fa-fresh" title="刷新后新出现的条目">
-      新
+      <span className="fa-sr">新</span>
     </span>
   );
 }
@@ -68,23 +69,22 @@ export function RingGlyph({ records, size = 40 }: { records: ForestEntity[]; siz
   const label = sorted.length
     ? `年轮：${sorted.length} 个月份有实验记录（${sorted.map(([m, c]) => `${m} 共 ${c} 条`).join('，')}）`
     : '年轮：尚无实验记录';
+  // 放在柔和的圆角方块里：细线同心圆，越外圈越新；没有记录时只有一粒中心点
   const c = size / 2;
-  const maxR = c - 2;
+  const maxR = c * 0.72;
+  const minR = c * 0.16;
   return (
-    <svg className="fa-rings" width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label={label}>
-      <title>{label}</title>
-      <circle cx={c} cy={c} r={maxR} className="fa-rings__bark" />
-      {shown.length === 0 ? (
-        <circle cx={c} cy={c} r={2.2} className="fa-rings__seed" />
-      ) : (
-        shown.map(([m, count], i) => {
-          const r = 2.5 + ((maxR - 3.5) * (i + 1)) / shown.length;
-          const w = Math.min(3.2, 0.9 + Math.log2(count + 1) * 0.7);
-          return <circle key={m} cx={c} cy={c} r={r} className="fa-rings__ring" strokeWidth={w} />;
-        })
-      )}
-      <circle cx={c} cy={c} r={1.4} className="fa-rings__pith" />
-    </svg>
+    <span className={`fa-rings${shown.length ? '' : ' is-empty'}`} style={{ width: size, height: size }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} role="img" aria-label={label}>
+        <title>{label}</title>
+        {shown.map(([m, count], i) => {
+          const r = shown.length === 1 ? maxR * 0.66 : minR + ((maxR - minR) * (i + 1)) / shown.length;
+          const w = Math.min(size / 14, 0.75 + Math.log2(count + 1) * (size / 64));
+          return <circle key={m} cx={c} cy={c} r={r} className="fa-rings__ring" strokeWidth={w} style={{ opacity: 0.35 + (0.65 * (i + 1)) / shown.length }} />;
+        })}
+        <circle cx={c} cy={c} r={Math.max(1.2, size / 22)} className="fa-rings__pith" />
+      </svg>
+    </span>
   );
 }
 
@@ -150,14 +150,26 @@ export function EntityRow({
   );
 }
 
-/* ───────────────────────── 标本签 ───────────────────────── */
+/* ───────────────────────── 属性表（Notion 式：左标签、右取值） ───────────────────────── */
 
-export function SpecimenLabel({ rows }: { rows: { label: string; value: ReactNode; mono?: boolean }[] }) {
+export interface PropertyRow {
+  label: string;
+  value: ReactNode;
+  icon?: IconName;
+  mono?: boolean;
+  /** 次要信息（编号、时间戳等），视觉上更轻 */
+  quiet?: boolean;
+}
+
+export function Properties({ rows, label }: { rows: PropertyRow[]; label?: string }) {
   return (
-    <dl className="fa-specimen">
+    <dl className="fa-props" aria-label={label}>
       {rows.map((r) => (
-        <div className="fa-specimen__cell" key={r.label}>
-          <dt>{r.label}</dt>
+        <div className={`fa-props__row${r.quiet ? ' is-quiet' : ''}`} key={r.label}>
+          <dt>
+            {r.icon && <Icon name={r.icon} size={14} />}
+            <span>{r.label}</span>
+          </dt>
           <dd className={r.mono ? 'is-mono' : undefined}>{r.value}</dd>
         </div>
       ))}
@@ -191,13 +203,16 @@ export function Paragraphs({ text, limit }: { text: string; limit?: number }) {
 
 /* ───────────────────────── 空态 / 提示 ───────────────────────── */
 
+/** 空态标志：细线同心圆（年轮）中长出一株新芽，克制、单色 */
 export function SeedArt() {
   return (
-    <svg className="fa-seed-art" viewBox="0 0 160 72" aria-hidden="true">
-      <path className="fa-seed-art__soil" d="M6 58c26-5 48-6 74-6s48 1 74 6" />
-      <path className="fa-seed-art__soil fa-seed-art__soil--2" d="M26 66c18-3 34-4 54-4s36 1 54 4" />
-      <ellipse className="fa-seed-art__seed" cx="80" cy="47" rx="7" ry="4.6" transform="rotate(-18 80 47)" />
-      <path className="fa-seed-art__sprout" d="M80 43c0-7 3-11 9-12-0.5 6-3.5 10-9 12Z" />
+    <svg className="fa-seed-art" viewBox="0 0 96 96" aria-hidden="true">
+      <circle className="fa-seed-art__ring fa-seed-art__ring--3" cx="48" cy="48" r="44" />
+      <circle className="fa-seed-art__ring fa-seed-art__ring--2" cx="48" cy="48" r="32" />
+      <circle className="fa-seed-art__ring" cx="48" cy="48" r="20" />
+      <path className="fa-seed-art__sprout" d="M48 60V46" />
+      <path className="fa-seed-art__leaf" d="M48 47c0-6 3.6-9.6 9.6-9.6 0 6-3.6 9.6-9.6 9.6Z" />
+      <path className="fa-seed-art__leaf" d="M48 50c0-4.6-2.8-7.4-7.4-7.4 0 4.6 2.8 7.4 7.4 7.4Z" />
     </svg>
   );
 }

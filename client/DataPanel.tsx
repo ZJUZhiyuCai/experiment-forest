@@ -152,46 +152,64 @@ export function DataPanel({
         <button type="button" className="fa-icon-btn" onClick={onClose} aria-label="关闭数据面板" title="关闭（Esc）">
           <Icon name="back" />
         </button>
-        <h2 id={`${uid}-h`} ref={headingRef} tabIndex={-1} className="fa-pane__title">
-          <span className="fa-title-icon">
-            <Icon name="data" />
+        <nav className="fa-crumbs" aria-label="位置">
+          <span className="fa-crumbs__here">
+            <Icon name="data" size={14} />
+            导入与导出
           </span>
-          数据导入导出
-        </h2>
+        </nav>
       </header>
       <div className="fa-pane__body">
+        <header className="fa-page-head">
+          <div className="fa-page-head__text">
+            <h2 id={`${uid}-h`} ref={headingRef} tabIndex={-1} className="fa-page-title">
+              导入与导出
+            </h2>
+            <p className="fa-page-sub">备份全部数据，或从旧版实验小森林迁移。</p>
+          </div>
+        </header>
+
         <section className="fa-section">
           <h3 className="fa-h3">当前数据</h3>
           <ul className="fa-ledger">
             {counts.map(({ k, total, archived }) => (
               <li key={k}>
-                <Icon name={KIND_ICON[k]} size={14} />
-                <span>{KIND[k].label}</span>
-                <span className="fa-ledger__n is-mono">{total}</span>
-                {archived > 0 && <span className="fa-muted">（含归档 {archived}）</span>}
+                <span className="fa-ledger__n">{total}</span>
+                <span className="fa-ledger__label">
+                  <Icon name={KIND_ICON[k]} size={13} />
+                  {KIND[k].label}
+                </span>
+                {archived > 0 && <span className="fa-ledger__sub">含归档 {archived}</span>}
               </li>
             ))}
           </ul>
         </section>
 
-        <section className="fa-section">
-          <h3 className="fa-h3">导出</h3>
-          <p className="fa-help">从服务端导出完整数据（包括已归档条目与导入记录），保存为 JSON 文件。</p>
+        <section className="fa-card fa-block">
+          <div className="fa-block__text">
+            <h3 className="fa-block__title">导出</h3>
+            <p className="fa-help">从服务端导出完整数据（包括已归档条目与导入记录），保存为 JSON 文件。</p>
+          </div>
           <button type="button" className="fa-btn" onClick={() => void doExport()} disabled={exporting}>
-            {exporting ? <Spinner label="正在导出…" /> : (<><Icon name="download" />导出全部为 JSON</>)}
+            {exporting ? <Spinner label="正在导出…" /> : (<><Icon name="download" />导出 JSON</>)}
           </button>
           {exportMsg && (
-            <Notice tone={exportMsg.tone} live>
-              <p>{exportMsg.text}</p>
-            </Notice>
+            <div className="fa-block__full">
+              <Notice tone={exportMsg.tone} live>
+                <p>{exportMsg.text}</p>
+              </Notice>
+            </div>
           )}
         </section>
 
-        <section className="fa-section">
-          <h3 className="fa-h3">导入</h3>
-          <p className="fa-help">
-            支持旧版“实验小森林”导出的 JSON 和本插件导出的文件。先预览、再确认；服务端会去重、保留原有字段，并且不会导入旧版的 API 密钥或聊天记录。单个文件不超过 20 MiB。
-          </p>
+        <section className="fa-card fa-block">
+          <div className="fa-block__text">
+            <h3 className="fa-block__title">导入</h3>
+            <p className="fa-help">
+              支持旧版“实验小森林”导出的 JSON 和本插件导出的文件。先预览、再确认；服务端会去重、保留原有字段，并且不会导入旧版的 API 密钥或聊天记录。单个文件不超过 20 MiB。
+            </p>
+          </div>
+          <div className="fa-block__full">
           <div className="fa-drop">
             <input
               ref={fileRef}
@@ -260,6 +278,7 @@ export function DataPanel({
               <p>{imp.message}</p>
             </Notice>
           )}
+          </div>
         </section>
       </div>
     </section>

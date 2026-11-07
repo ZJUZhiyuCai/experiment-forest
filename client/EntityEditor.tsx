@@ -103,17 +103,23 @@ export function EntityEditor(props: EditorProps) {
         <button type="button" className="fa-icon-btn" onClick={onClose} aria-label="收起编辑（保留草稿）" title="收起编辑（保留草稿）">
           <Icon name="back" />
         </button>
-        <h2 id={`${uid}-h`} ref={headingRef} tabIndex={-1} className="fa-pane__title">
-          <span className={`fa-title-icon fa-kind-${draft.kind}`}>
-            <Icon name={KIND_ICON[draft.kind]} />
+        <h2 id={`${uid}-h`} ref={headingRef} tabIndex={-1} className="fa-crumbs">
+          <span className="fa-crumbs__here">
+            <Icon name={KIND_ICON[draft.kind]} size={14} />
+            {draftHeading(draft)}
           </span>
-          {draftHeading(draft)}
         </h2>
-        {dirty && <span className="fa-chip fa-chip--warn">未保存</span>}
+        <span className="fa-spacer" />
+        {dirty && (
+          <span className="fa-unsaved-dot" title="有未保存的修改">
+            <span className="fa-unsaved-dot__dot" aria-hidden="true" />
+            未保存
+          </span>
+        )}
       </header>
 
       <form ref={formRef} className="fa-pane__body fa-form" onSubmit={submit} noValidate aria-busy={saving}>
-        <fieldset className="fa-fieldset" disabled={saving}>
+        <fieldset className="fa-fieldset fa-doc" disabled={saving}>
         {draft.mode === 'create' && (
           <fieldset className="fa-kind-switch">
             <legend className="fa-label">类型</legend>
@@ -159,7 +165,15 @@ export function EntityEditor(props: EditorProps) {
 
         <StatusBanner {...props} />
 
-        <Field id={fid('title')} label="标题" required error={err('title')} counter={`${draft.title.trim().length}/${LIMITS.title}`}>
+        <Field
+          id={fid('title')}
+          label="标题"
+          required
+          hideLabel
+          className="fa-field--title"
+          error={err('title')}
+          counter={draft.title.trim().length > LIMITS.title * 0.8 ? `${draft.title.trim().length}/${LIMITS.title}` : undefined}
+        >
           <input
             id={fid('title')}
             data-field="title"
@@ -175,8 +189,8 @@ export function EntityEditor(props: EditorProps) {
           />
         </Field>
 
-        <div className="fa-form__grid">
-          <Field id={fid('status')} label="状态" error={err('status')}>
+        <div className="fa-form__props">
+          <Field id={fid('status')} label="状态" row error={err('status')}>
             <select
               id={fid('status')}
               data-field="status"
@@ -197,7 +211,7 @@ export function EntityEditor(props: EditorProps) {
           </Field>
 
           {draft.kind !== 'project' && (
-            <Field id={fid('projectId')} label="所属课题" error={err('projectId')}>
+            <Field id={fid('projectId')} label="所属课题" row error={err('projectId')}>
               <select
                 id={fid('projectId')}
                 data-field="projectId"
@@ -222,7 +236,7 @@ export function EntityEditor(props: EditorProps) {
           {FIELDS[draft.kind]
             .filter((f) => f.type === 'date' || f.type === 'text')
             .map((f) => (
-              <Field key={f.key} id={fid(f.key)} label={f.label} error={err(f.key)} hint={f.hint}>
+              <Field key={f.key} id={fid(f.key)} label={f.label} row error={err(f.key)} hint={f.hint}>
                 <input
                   id={fid(f.key)}
                   data-field={f.key}
@@ -236,32 +250,33 @@ export function EntityEditor(props: EditorProps) {
                 />
               </Field>
             ))}
+
+          {FIELDS[draft.kind]
+            .filter((f) => f.type === 'ref' || f.type === 'refs')
+            .map((f) => (
+              <RefField
+                key={f.key}
+                id={fid(f.key)}
+                spec={f}
+                draft={draft}
+                entities={entities}
+                byId={byId}
+                value={f.type === 'ref' ? (draft.fields[f.key] ? [draft.fields[f.key]] : []) : draft.refs[f.key] ?? []}
+                onChange={(ids) => (f.type === 'ref' ? setField(f.key, ids[0] ?? '') : setRefs(f.key, ids))}
+              />
+            ))}
+
+          <Field id={fid('tags')} label="标签" row error={err('tags')}>
+            <TagInput id={fid('tags')} tags={draft.tags} onChange={(tags) => set({ tags })} describedBy={errId('tags')} />
+          </Field>
         </div>
-
-        {FIELDS[draft.kind]
-          .filter((f) => f.type === 'ref' || f.type === 'refs')
-          .map((f) => (
-            <RefField
-              key={f.key}
-              id={fid(f.key)}
-              spec={f}
-              draft={draft}
-              entities={entities}
-              byId={byId}
-              value={f.type === 'ref' ? (draft.fields[f.key] ? [draft.fields[f.key]] : []) : draft.refs[f.key] ?? []}
-              onChange={(ids) => (f.type === 'ref' ? setField(f.key, ids[0] ?? '') : setRefs(f.key, ids))}
-            />
-          ))}
-
-        <Field id={fid('tags')} label="标签" error={err('tags')}>
-          <TagInput id={fid('tags')} tags={draft.tags} onChange={(tags) => set({ tags })} describedBy={errId('tags')} />
-        </Field>
 
         <Field
           id={fid('content')}
           label="正文"
+          className="fa-field--body"
           error={err('content')}
-          hint="纯文本，空行分段。Ctrl/⌘ + Enter 保存。"
+          hint="纯文本，空行分段 · Ctrl/⌘ + Enter 保存"
           counter={draft.content.length > LIMITS.content * 0.9 ? `${draft.content.length}/${LIMITS.content}` : undefined}
         >
           <textarea
@@ -307,8 +322,8 @@ export function EntityEditor(props: EditorProps) {
           <button type="submit" className="fa-btn fa-btn--primary" disabled={saving || (draft.phase === 'uncertain' && !draft.checked)}>
             {saving ? <Spinner label="正在保存…" /> : draft.phase === 'uncertain' ? (<><Icon name="check" />仍然再次保存</>) : (<><Icon name="check" />保存</>)}
           </button>
-          <button type="button" className="fa-btn fa-btn--ghost" onClick={onClose} disabled={saving}>
-            收起（保留草稿）
+          <button type="button" className="fa-btn fa-btn--ghost" onClick={onClose} disabled={saving} title="收起编辑，输入会保留">
+            稍后继续
           </button>
           <span className="fa-spacer" />
           {dirty ? (
@@ -483,6 +498,9 @@ function Field({
   error,
   hint,
   counter,
+  row,
+  hideLabel,
+  className,
   children,
 }: {
   id: string;
@@ -491,24 +509,31 @@ function Field({
   error?: string;
   hint?: string;
   counter?: string;
+  /** 属性行：宽栏时左标签、右控件 */
+  row?: boolean;
+  /** 视觉上隐藏标签（仍保留给读屏） */
+  hideLabel?: boolean;
+  className?: string;
   children: ReactNode;
 }) {
   return (
-    <div className={`fa-field${error ? ' has-error' : ''}`}>
-      <div className="fa-field__top">
+    <div className={`fa-field${row ? ' fa-field--row' : ''}${error ? ' has-error' : ''}${className ? ` ${className}` : ''}`}>
+      <div className={`fa-field__top${hideLabel ? ' fa-sr' : ''}`}>
         <label className="fa-label" htmlFor={id}>
           {label}
           {required && <span className="fa-req" aria-hidden="true"> *</span>}
         </label>
         {counter && <span className="fa-help">{counter}</span>}
       </div>
-      {children}
-      {hint && !error && <span className="fa-help">{hint}</span>}
-      {error && (
-        <span id={`${id}-err`} className="fa-help fa-help--error">
-          {error}
-        </span>
-      )}
+      <div className="fa-field__control">
+        {children}
+        {hint && !error && <span className="fa-help">{hint}</span>}
+        {error && (
+          <span id={`${id}-err`} className="fa-help fa-help--error">
+            {error}
+          </span>
+        )}
+      </div>
     </div>
   );
 }
@@ -546,13 +571,14 @@ function RefField({
   const listId = `${id}-opts`;
 
   return (
-    <div className="fa-field">
+    <div className="fa-field fa-field--row">
       <div className="fa-field__top">
         <span className="fa-label" id={`${id}-label`}>
           {spec.label}
         </span>
-        <span className="fa-help">{single ? '单选' : `已选 ${value.length}`}</span>
+        {!single && value.length > 0 && <span className="fa-help">{value.length}</span>}
       </div>
+      <div className="fa-field__control">
       {value.length > 0 && (
         <ul className="fa-refs" aria-labelledby={`${id}-label`}>
           {value.map((rid) => {
@@ -615,6 +641,7 @@ function RefField({
         </div>
       )}
       {spec.hint && <span className="fa-help">{spec.hint}</span>}
+      </div>
     </div>
   );
 }
