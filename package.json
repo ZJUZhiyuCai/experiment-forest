@@ -1,19 +1,51 @@
 {
-  "name": "experiment-forest",
-  "private": true,
-  "version": "0.0.1",
+  "name": "dsh-experiment-forest",
+  "private": false,
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
-    "dev:client": "vite --host --port 3000",
-    "dev": "vite --host --port 3000",
-    "build:client": "vite build --outDir dist",
-    "build": "vite build --outDir dist",
-    "preview": "vite preview"
+    "dev": "node scripts/dev-harness.mjs",
+    "build": "node scripts/build-plugin.mjs",
+    "typecheck": "tsc -p tsconfig.plugin.json",
+    "test": "tsx --tsconfig tsconfig.plugin.json --test tests/*.test.ts plugin/*.test.ts",
+    "test:host": "node scripts/smoke-host.mjs",
+    "prepack": "npm run build",
+    "prepare": "npm run build",
+    "dev:legacy": "vite --host 127.0.0.1 --port 3000",
+    "build:legacy": "vite build --outDir dist-legacy",
+    "preview:legacy": "vite preview --outDir dist-legacy"
   },
   "dependencies": {
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@deepseek-ai/cordis": "4.1.0",
+    "@deepseek-ai/dsh": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-api-gateway": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-api-remote-access": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-client-ui-renderer": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-client-ui-sidebar-right": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-session": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-storage": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-storage-domain": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-storage-json": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-tools": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-typert-protocol": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-typert-registry": "0.2.2-rc.1",
+    "@types/d3": "^7.4.3",
+    "@types/d3-drag": "^3.0.7",
+    "@types/d3-force": "^3.0.10",
+    "@types/d3-selection": "^3.0.11",
+    "@types/d3-zoom": "^3.0.8",
     "@types/dagre": "^0.7.53",
     "@types/dompurify": "^3.0.5",
+    "@types/katex": "^0.16.7",
     "@types/marked": "^5.0.2",
+    "@types/node": "^24.0.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.21",
     "clsx": "^2.1.1",
     "d3": "^7.9.0",
     "d3-drag": "^3.0.0",
@@ -22,11 +54,13 @@
     "d3-zoom": "^3.0.0",
     "dagre": "^0.8.5",
     "dompurify": "^3.2.6",
+    "esbuild": "^0.25.0",
     "framer-motion": "^12.9.2",
     "highlight.js": "^11.11.1",
     "katex": "^0.16.22",
     "marked": "^16.2.0",
     "marked-react": "^3.0.1",
+    "postcss": "^8.5.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-markdown": "^8.0.7",
@@ -35,27 +69,74 @@
     "recharts": "^2.15.1",
     "remark-gfm": "^4.0.1",
     "remark-parse": "^11.0.0",
+    "rimraf": "^6.0.1",
     "sonner": "^2.0.2",
     "tailwind-merge": "^3.0.2",
-    "unified": "^11.0.5",
-    "zod": "^3.24.2"
-  },
-  "devDependencies": {
-    "@types/d3": "^7.4.3",
-    "@types/d3-drag": "^3.0.7",
-    "@types/d3-force": "^3.0.10",
-    "@types/d3-selection": "^3.0.11",
-    "@types/d3-zoom": "^3.0.8",
-    "@types/katex": "^0.16.7",
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
-    "@vitejs/plugin-react": "^4.3.4",
-    "autoprefixer": "^10.4.21",
-    "postcss": "^8.5.3",
-    "rimraf": "^6.0.1",
     "tailwindcss": "^3.4.17",
-    "typescript": "~5.7.2",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.3",
+    "unified": "^11.0.5",
     "vite": "^6.2.0",
-    "vite-tsconfig-paths": "^5.1.4"
-  }
+    "vite-tsconfig-paths": "^5.1.4",
+    "@deepseek-ai/dsh-client-connection": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-system-prompt": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-app-boot": "0.2.2-rc.1"
+  },
+  "description": "Research records and experiment workspace for DeepSeek Harness",
+  "main": "lib/index.js",
+  "exports": {
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./remote": "./lib/remote.js",
+    "./package.json": "./package.json",
+    "./locale/*.json": "./locale/*.json",
+    "./cordis.patch.yml": "./cordis.patch.yml"
+  },
+  "files": [
+    "lib/",
+    "cordis.patch.yml",
+    "README.md",
+    "LICENSE",
+    "docs/",
+    "public/legacy-export.*",
+    "locale/*.json"
+  ],
+  "engines": {
+    "node": ">=24.9.0",
+    "dsh": "0.2.2-rc.1"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "inject": [
+        "@deepseek-ai/dsh-api-gateway",
+        "@deepseek-ai/dsh-client-ui-sidebar-right",
+        "@deepseek-ai/dsh-client-ui-renderer"
+      ]
+    }
+  },
+  "peerDependencies": {
+    "@deepseek-ai/cordis": "4.1.0",
+    "@deepseek-ai/dsh-storage-domain": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-tools": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-typert-protocol": "0.2.2-rc.1",
+    "@deepseek-ai/dsh-typert-registry": "0.2.2-rc.1"
+  },
+  "overrides": {
+    "zod": "$zod"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZJUZhiyuCai/experiment-forest.git"
+  },
+  "keywords": [
+    "dsh-plugin",
+    "deepseek-harness",
+    "research",
+    "experiment"
+  ]
 }

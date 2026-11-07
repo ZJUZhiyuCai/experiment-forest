@@ -24,3 +24,13 @@ dist-ssr
 *.sw?
 
 .vercel
+
+# Native plugin artifacts and isolated development profile
+lib/
+.dsh-dev/
+dist-legacy/
+*.tgz
+
+# Local browser acceptance evidence
+output/
+.playwright-cli/

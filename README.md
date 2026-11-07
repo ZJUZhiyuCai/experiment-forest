@@ -1,324 +1,67 @@
-# 🌲 实验小森林 (Experiment Forest)
+# 实验小森林 · DeepSeek Harness 插件
 
-<div align="center">
+把课题、实验记录、研究笔记、SOP、样本和计划放在 DeepSeek Harness 的同一工作台里。AI 帮助检索资料和整理草稿，研究记录由你掌握。
 
-**让科研记录变得简单有趣**
+这次重构将原来的浏览器单机应用改为 **Harness 原生 Host + Client 插件**：右侧栏工作台、Host 持久化服务和三个模型工具使用同一份数据。模型与密钥沿用 Harness 的配置，无需在网页重复填写，不再提供模拟 AI 回复。
 
-![GitHub stars](https://img.shields.io/github/stars/caizhiyu/experiment-forest?style=social)
-![GitHub forks](https://img.shields.io/github/forks/caizhiyu/experiment-forest?style=social)
-![License](https://img.shields.io/github/license/caizhiyu/experiment-forest)
+## 使用
 
-[在线演示](https://experiment-forest.vercel.app) • [快速开始](#-快速开始) • [功能介绍](#-核心功能) • [部署指南](#-部署)
+要求 Node.js **24.9 或以上**、DeepSeek Harness **0.2.2-rc.1**。当前只对这个已核验的 Harness 版本声明兼容；它的插件 API 仍在变化。
 
-</div>
-
----
-
-## 📖 项目简介
-
-**实验小森林**是一款专为生物医学科研工作者设计的轻量级实验室管理系统。采用现代化的前端技术栈，提供简洁直观的实验记录和管理功能，帮助科研人员更好地组织实验数据、记录研究过程。
-
-### ✨ 特色亮点
-
-- 🚀 **开箱即用** - 无需复杂配置，安装即用
-- 💾 **本地优先** - 数据存储在浏览器，保护隐私
-- 🤖 **AI助手** - 内置小森博士，提供实验指导
-- 🧠 **思维导图** - 可视化实验流程和知识结构
-- 📱 **响应式设计** - 支持桌面和移动设备
-- 🎨 **美观界面** - 清新的森林主题设计
-
----
-
-## 🎯 核心功能
-
-### 🧪 实验记录管理
-- ✅ 支持多种实验类型（细胞培养、PCR、Western Blot等）
-- ✅ Markdown 格式编写，支持公式和代码高亮
-- ✅ 实验分类和标签管理
-- ✅ 全文搜索和筛选功能
-- ✅ 实验状态跟踪（草稿/完成/归档）
-
-### 🤖 AI智能助手 - 小森博士
-- 💬 24小时在线对话助手
-- 🧠 实验相关问题解答
-- 📝 实验建议和指导
-- ⚙️ 自定义API配置
-- 💬 多轮对话和会话管理
-
-### 🧠 思维导图
-- 🎨 可视化实验流程
-- 🔗 节点拖拽和连接
-- 📊 多种节点类型
-- 💾 导图保存和管理
-
-### 📋 其他功能
-- **SOP文档管理** - 标准操作程序创建和版本管理
-- **样本管理** - 样本信息录入、存储条件、到期提醒
-- **项目管理** - 课题组织、进度跟踪、成员管理
-- **数据导出** - 支持JSON格式备份
-- **主题切换** - 明暗主题自由选择
-
----
-
-## 🛠️ 技术栈
-
-### 前端框架
-- **React 18.3** - 用户界面库
-- **TypeScript 5.7** - 类型安全的JavaScript
-- **Vite 6.2** - 快速的构建工具
-
-### UI和样式
-- **Tailwind CSS 3.4** - 实用优先的CSS框架
-- **Framer Motion 12.9** - 动画库
-- **Font Awesome** - 图标库
-
-### 核心库
-- **React Router 7.3** - 路由管理
-- **React Flow 11.11** - 专业级思维导图引擎
-- **Dagre 0.8** - 自动层级布局
-- **Marked 16.2** - Markdown解析
-- **KaTeX 0.16** - 数学公式渲染
-- **Highlight.js 11.11** - 代码高亮
-- **DOMPurify 3.2** - HTML清理
-- **Sonner 2.0** - Toast通知
-
----
-
-## 🚀 快速开始
-
-### 环境要求
-- **Node.js**: 16.0 或更高版本
-- **包管理器**: npm、pnpm 或 yarn
-- **浏览器**: Chrome、Firefox、Safari、Edge（最新版本）
-
-### 安装步骤
-
-#### 方法一：使用脚本（Windows推荐）
-```bash
-# 双击运行
-Start-LabForest.ps1
-# 或备用脚本
-start-lab.bat
-```
-
-#### 方法二：手动安装
-```bash
-# 1. 克隆仓库
-git clone https://github.com/caizhiyu/experiment-forest.git
+```sh
+git clone https://github.com/ZJUZhiyuCai/experiment-forest.git
 cd experiment-forest
-
-# 2. 安装依赖
-npm install
-# 或使用 pnpm
-pnpm install
-
-# 3. 启动开发服务器
-npm run dev
-
-# 4. 在浏览器访问
-# http://localhost:3000
-```
-
-### 构建生产版本
-```bash
-# 构建
+npm ci --ignore-scripts
 npm run build
 
-# 预览构建结果
-npm run preview
+# 用项目的实际绝对路径替换下面的路径；安装到你使用的 profile
+dsh plugin --profile desktop add /absolute/path/experiment-forest
 ```
 
----
+重新打开该 profile 的 Harness，在会话右侧栏的引导页中选择 **实验森林**。Web 用户改为 `--profile web` 安装，然后运行 `dsh web --no-open`。插件无单独的 HTTP 数据接口、账户体系或模型密钥。
 
-## 📸 界面预览
+使用预构建安装包时，可直接执行 `dsh plugin --profile desktop add /absolute/path/dsh-experiment-forest-0.1.0.tgz`，无需先构建源码。
 
-### 主界面
-- 清新的森林主题设计
-- 左侧导航栏，右侧内容区
-- 快速访问所有功能模块
+开发预览使用 `npm run dev`，在隔离的 `.dsh-dev` 开发 profile 启动本机 Harness。此实例禁用模型供应商，适合不消耗模型额度的操作验收；实际地址以启动输出为准。正式使用的数据属于你安装插件的 Harness profile，不存在浏览器 localStorage。
 
-### 实验记录
-- 卡片式布局展示
-- 支持富文本编辑
-- 实时预览和保存
+## 工作流
 
-### AI助手
-- 流畅的对话界面
-- 智能实验建议
-- 会话历史管理
+- 新建课题，再关联实验、笔记、SOP、样本或计划；搜索、编辑和归档都作用于真实保存的数据。
+- 并发修改通过记录版本号检测；冲突时保留编辑内容，刷新核对后重试。归档不会删除原文或断开历史关联。
+- 在 Harness 聊天中让 DeepSeek 使用 `forest_search` 查找资料、`forest_read` 读取原文，或使用 `forest_create_draft` 保存草稿。AI 创建的记录带来源和未复核标记，不自动批准 SOP 或覆盖正式实验数据。
+- 导出 JSON 备份；导入前检查数量、缺失关联和冲突，再确认合并。同一份备份重复导入不会重复创建，也不会覆盖后来编辑的记录。
 
----
+课题关联不等于权限隔离。当前版本面向同一 Harness profile 的个人科研工作区；同 profile 的会话共享记录，插件 RPC 只允许拥有者连接，不同 profile 分开保存。模型工具沿用 Harness 的会话工具权限。使用默认 JSON 存储时，同一 profile 仅运行一个 Host 进程；多进程同时写入不受本插件的进程内版本检查保护。多人租户、附件文件管理、思维导图、旧版日程编辑暂未实现。
 
-## 🔧 配置说明
+## 迁移旧数据
 
-### AI助手配置
+旧版“导出所有数据”实际只导出了实验、笔记和 SOP，未包含课题、样本和计划。请先完整备份再迁移，见 [迁移说明](docs/MIGRATION.md)。新版不会主动访问、覆盖或清除旧站的浏览器数据。
 
-1. 进入"设置"页面
-2. 在"AI智能助手"部分配置：
-   ```
-   API端点: https://api.siliconflow.cn/v1/chat/completions
-   API密钥: 你的API密钥
-   模型名称: qwen2.5-72b-instruct
-   ```
-3. 点击"测试连接"验证配置
-4. 保存设置
+旧 `src/` 代码作为迁移参考保留，可用 `npm run dev:legacy` / `npm run build:legacy` 启动。旧版说明存于 [LEGACY_README](docs/LEGACY_README.md)，其中静态部署与 API Key 设置不适用于新插件。
 
-### 数据备份
+## 开发与验证
 
-由于数据存储在浏览器 localStorage，建议定期备份：
-
-1. 进入"设置" → "数据管理"
-2. 点击"导出数据"下载备份文件
-3. 需要时通过"导入数据"恢复
-
----
-
-## 🌐 部署
-
-本项目是纯前端应用，可以部署到任何静态网站托管服务：
-
-### 推荐方案
-
-| 平台 | 难度 | 费用 | 推荐度 |
-|------|------|------|--------|
-| [Vercel](#vercel-部署) | ⭐ | 免费 | ⭐⭐⭐⭐⭐ |
-| [Netlify](#netlify-部署) | ⭐ | 免费 | ⭐⭐⭐⭐⭐ |
-| [GitHub Pages](#github-pages-部署) | ⭐⭐ | 免费 | ⭐⭐⭐⭐ |
-| 阿里云OSS | ⭐⭐⭐ | 按量付费 | ⭐⭐⭐ |
-
-### Vercel 部署（推荐）
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/caizhiyu/experiment-forest)
-
-1. 点击上方按钮
-2. 使用 GitHub 账号登录
-3. 点击 "Deploy"
-4. 等待1-2分钟，部署完成！
-
-详细部署指南请查看 [部署指南.md](./部署指南.md)
-
----
-
-## 📁 项目结构
-
-```
-experiment-forest/
-├── src/
-│   ├── components/         # 可复用组件
-│   │   ├── AIChatComponent.tsx
-│   │   ├── MarkdownRenderer.tsx
-│   │   ├── MindMapEditor.tsx
-│   │   └── ...
-│   ├── pages/             # 页面组件
-│   │   ├── Dashboard.tsx
-│   │   ├── ExperimentRecords.tsx
-│   │   ├── AIChat.tsx
-│   │   └── ...
-│   ├── lib/               # 工具库
-│   │   ├── cachedStorage.ts
-│   │   ├── aiChatService.ts
-│   │   └── ...
-│   ├── types/             # TypeScript类型定义
-│   ├── hooks/             # 自定义Hooks
-│   └── utils/             # 工具函数
-├── public/                # 静态资源
-├── docs/                  # 文档
-├── index.html
-├── vite.config.ts
-├── package.json
-└── README.md
+```sh
+npm run typecheck
+npm test
+npm run build
+npm run test:host
+npm pack
 ```
 
----
+`test:host` 使用官方 Cordis、Storage、Tool Registry 和 RPC Gateway，验证加载、参数校验、版本冲突、磁盘持久化、重启和卸载，不请求模型。浏览器验收与已知限制见 [验证记录](docs/VERIFICATION.md)。
 
-## 🤝 参与贡献
+```text
+client/       Claude 重做的工作台与原生 Client 适配
+plugin/       Host 服务、工具、领域事务与迁移
+shared/       JSON 数据模型与前后端契约
+scripts/      构建、开发运行和原生 Host 集成验证
+tests/        工具、导出和接入行为检查
+src/          旧版前端，仅作为迁移参考
+```
 
-欢迎贡献代码、提出建议或报告问题！
+[后端审查](docs/BACKEND_REVIEW.md) · [Claude 前端审查](docs/FRONTEND_REVIEW.md) · [Claude 初步设计（含未实施设想）](docs/FRONTEND_DESIGN.md)
 
-### 如何贡献
+[原稿与本机适配说明](docs/LOCAL_ADAPTATIONS.md)
 
-1. Fork 本仓库
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 开启 Pull Request
-
-### 开发规范
-
-- 遵循现有代码风格
-- 添加必要的注释
-- 更新相关文档
-- 确保代码通过TypeScript类型检查
-
----
-
-## 📝 更新日志
-
-### v1.1.0 (2025-01-16)
-- 🎨 **UI 全面升级** - 采用莫兰迪色系（Morandi Design）与森林主题完全融合
-- 🧠 **思维导图重构** - 从 D3.js 迁移至 React Flow，支持更流畅的交互和自动布局
-- ⚡ **性能优化** - 移除冗余代码，优化构建体积
-- 🛠️ **组件标准化** - 统一的 Button、Input 和 Card 组件设计
-- 🐛 **修复** - 修复了多个类型定义错误和未使用的代码引用
-
-### 主要更新
-- ✅ 优化Settings.tsx自动保存逻辑
-- ✅ MarkdownRenderer动态导入，减少首屏加载体积99.3%
-- ✅ Dashboard日历使用真实数据
-- ✅ **全新改版**：实验笔记、SOP文档、样本管理、新建记录页面的视觉优化
-
----
-
-## 📄 许可证
-
-本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件
-
----
-
-## 👨‍💻 作者
-
-**蔡志宇 (Zhiyu Cai)**
-- 📧 邮箱: 22519085@zju.edu.cn
-- 🏫 学校: 浙江大学
-- 🔗 GitHub: [@caizhiyu](https://github.com/caizhiyu)
-
----
-
-## 🙏 致谢
-
-感谢所有为本项目做出贡献的开发者！
-
-本项目使用了以下优秀的开源库：
-- [React](https://reactjs.org/)
-- [Vite](https://vitejs.dev/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [D3.js](https://d3js.org/)
-- [Marked](https://marked.js.org/)
-- [KaTeX](https://katex.org/)
-- [Framer Motion](https://www.framer.com/motion/)
-
----
-
-## 📞 联系方式
-
-- 📧 **技术支持**: 22519085@zju.edu.cn
-- 🐛 **问题反馈**: [GitHub Issues](https://github.com/caizhiyu/experiment-forest/issues)
-- 💬 **讨论交流**: [GitHub Discussions](https://github.com/caizhiyu/experiment-forest/discussions)
-
----
-
-## ⭐ Star History
-
-如果这个项目对你有帮助，请给我们一个 ⭐
-
-[![Star History Chart](https://api.star-history.com/svg?repos=caizhiyu/experiment-forest&type=Date)](https://star-history.com/#caizhiyu/experiment-forest&Date)
-
----
-
-<div align="center">
-
-**实验小森林** - 让科研记录变得简单有趣 🌲
-
-Made with ❤️ by Zhiyu Cai
-
-</div>
+MIT · 蔡志宇（Zhiyu Cai）

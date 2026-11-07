@@ -1,8 +1,8 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
+  "buildCommand": "npm run build:legacy",
+  "outputDirectory": "dist-legacy",
   "framework": "vite",
-  "installCommand": "npm install",
+  "installCommand": "npm ci --ignore-scripts",
   "rewrites": [
     {
       "source": "/(.*)",

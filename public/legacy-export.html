@@ -1,0 +1,13 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>导出旧版实验小森林</title>
+<style>body{font:16px/1.7 system-ui,sans-serif;background:#f5f6f1;color:#26382e;max-width:680px;margin:8vh auto;padding:24px}button{font:inherit;padding:12px 20px;background:#275b46;color:white;border:0;border-radius:8px;cursor:pointer}pre{white-space:pre-wrap}code{background:#e6e9e0;padding:2px 5px}</style>
+<h1>带上你的实验记录</h1>
+<p>请在<strong>原来使用实验小森林的同一浏览器、同一地址</strong>打开此页。浏览器数据按地址隔离，其他地址无法读取。该工具只读取业务记录，不修改或清空原数据。</p>
+<p>导出包含课题、实验、笔记、SOP、样本、计划及旧版日程与操作历史。API 密钥、AI 聊天和个人设置不包含在内。旧版日程与操作历史会保留原文，新工作台暂不提供对应编辑功能。</p>
+<button id="export" type="button">检查并下载备份</button>
+<pre id="result" role="status" aria-live="polite"></pre>
+<script src="./legacy-export.js"></script>
+</html>

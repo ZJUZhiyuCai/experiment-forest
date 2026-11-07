@@ -1,0 +1,7 @@
+{
+  "meta": {
+    "title": "Experiment forest",
+    "description": "Manage research projects, experiments, notes, SOPs, samples, and plans in the Harness sidebar. Search source records and save AI drafts for review. Host persistence, separated by profile. For Harness 0.2.2-rc.1.",
+    "detail": "README.md"
+  }
+}
