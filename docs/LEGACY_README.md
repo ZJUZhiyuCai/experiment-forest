@@ -1,3 +1,7 @@
+> **旧版历史快照，不是当前使用指南。** 以下保留重构前 README 的原文，功能陈述、命令和外部服务信息可能过时。新版请看 [项目首页](../README.md)、[安装指南](../部署指南.md) 和 [使用说明](../👋给朋友的使用说明.md)。
+>
+> 当前仓库仅保留旧前端用于迁移参考，对应命令为 `npm run dev:legacy` / `npm run build:legacy`；不要把下文的 `npm run dev` / `npm run build` 当作旧版命令执行。迁移前先读 [旧版数据迁移](MIGRATION.md)。
+
 # 🌲 实验小森林 (Experiment Forest)
 
 <div align="center">

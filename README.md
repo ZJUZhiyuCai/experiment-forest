@@ -1,90 +1,132 @@
-# 实验小森林 · DeepSeek Harness 插件
+# Experiment Forest · 实验森林
 
-把课题、实验记录、研究笔记、SOP、样本和计划放在 DeepSeek Harness 的同一工作台里。AI 帮助检索资料和整理草稿，研究记录由你掌握。
+**在 Harness 管实验，在 Obsidian 读资料。**
 
-这次重构将原来的浏览器单机应用改为 **Harness 原生 Host + Client 插件**：右侧栏工作台、Host 持久化服务和四个模型工具使用同一份数据。模型与密钥沿用 Harness 的配置，无需在网页重复填写，不再提供模拟 AI 回复。
+一个为个人研究工作设计的 DeepSeek Harness 插件。把课题、方法、执行过程和观察连在一起，从 SOP 开始一次实验，回来时知道做到哪一步，也能在 Obsidian 中自然地阅读和整理。
 
-界面由远端 Claude 按现代 Apple / Notion 风格重做：中性底色、宽松留白、清晰的资料层级，以及浅色与深色模式。
+[下载 v0.2.0](https://github.com/ZJUZhiyuCai/experiment-forest/releases/tag/v0.2.0) · [安装指南](部署指南.md) · [上手使用](👋给朋友的使用说明.md) · [Obsidian 联动](docs/OBSIDIAN.md) · [全部文档](docs/INDEX.md)
 
-![实验森林工作台](docs/images/workspace.png)
+![实验森林：Harness 中的今日工作台](docs/images/workspace.png)
 
-上图为真实 Harness 中的插件页面，内容均为软件验收示例。
+*真实 Harness 运行截图，内容为软件验收示例。界面采用克制的中性色、宽松留白和清晰层级，支持浅色、深色及窄屏。*
 
-## 使用
+## 从计划到实验记录
 
-要求 Node.js **24.9 或以上**、DeepSeek Harness **0.2.2-rc.1**。当前只对这个已核验的 Harness 版本声明兼容；它的插件 API 仍在变化。
+| 你要做的事 | 实验森林如何帮助你 |
+| --- | --- |
+| 整理一个课题 | 关联实验、研究笔记、SOP、样本和计划，沿着资料关系继续阅读。 |
+| 按方法开始实验 | 从 SOP 创建执行草稿，固定当时的方法正文、修订和步骤；后续修改 SOP 不改变已有实验的依据。 |
+| 记录真实过程 | 逐步填写观察，标记完成或跳过并记录原因；保留进度，随时继续。 |
+| 安排今天的工作 | 查看逾期、今日、未来七天、未排期事项及 AI 待核对资料。 |
+| 请 DeepSeek 帮忙 | 在 Harness 对话中查找资料、读取关联上下文、整理草稿；草稿带来源并等待人工核对。 |
+| 回到知识库整理 | 保存后自动同步到本机 Obsidian，使用 Markdown、双向链接和 Bases 阅读。 |
+
+实验结果、实际日期和完成状态由你记录。清单完成不会自动生成成功结论；AI 生成内容保留待核对标记，观察和结论仍需人工确认。
+
+![一次实验的执行步骤、观察和固定 SOP 来源](docs/images/execution.png)
+
+## 安装
+
+当前版本为 **0.2.0**，已核验 **DeepSeek Harness 0.2.2-rc.1**。CLI 运行及源码构建要求 **Node.js ≥ 24.9**；Desktop 使用其内置运行时。Harness 的插件 API 仍在变化，暂不声明其他版本兼容。
+
+### 使用安装包
+
+从 [Release](https://github.com/ZJUZhiyuCai/experiment-forest/releases/tag/v0.2.0) 下载 `dsh-experiment-forest-0.2.0.tgz`。对于已经配置好的 Harness **web** profile，退出该 Host 后安装，再重新启动：
 
 ```sh
-# 进入包含 client/、plugin/ 的新版源码目录
-cd /absolute/path/experiment-forest
-npm ci --ignore-scripts
-npm run build
-
-# 用项目的实际绝对路径替换下面的路径；安装到你使用的 profile
-dsh plugin --profile desktop add /absolute/path/experiment-forest
+dsh plugin --profile web add /absolute/path/dsh-experiment-forest-0.2.0.tgz
+dsh web
 ```
 
-重新打开该 profile 的 Harness，在会话右侧栏的引导页中选择 **实验森林**。Web 用户改为 `--profile web` 安装，然后运行 `dsh web --no-open`。插件无单独的 HTTP 数据接口、账户体系或模型密钥。
+把路径替换成下载文件的实际绝对路径。在会话右侧栏选择 **实验森林**，也可以展开为完整工作台。模型和密钥沿用 Harness 配置。
 
-使用预构建安装包时，可直接执行 `dsh plugin --profile desktop add /absolute/path/dsh-experiment-forest-0.2.0.tgz`，无需先构建源码。
+**首次使用 Harness**：先安装并运行官方 `0.2.2-rc.1`，完成 web profile 初始化，再按上面的步骤添加插件。完整命令见 [安装指南](部署指南.md)。
 
-开发预览使用 `npm run dev`，在隔离的 `.dsh-dev` 开发 profile 启动本机 Harness。此实例禁用模型供应商，适合不消耗模型额度的操作验收；实际地址以启动输出为准。正式使用的数据属于你安装插件的 Harness profile，不存在浏览器 localStorage。
+**Desktop 用户**：需要使用该 Desktop 安装自带的内置命令，管理已经初始化的 `desktop` profile。npm 安装的 `dsh` 会拒绝 `--profile desktop` 插件管理请求；详见 [安装指南](部署指南.md)。
 
-## 工作流
-
-- 从 SOP 创建实验草稿，保存本次所依据的正文、修订及步骤快照。后来修改 SOP 不会改变已有实验的方法依据。
-- 逐步记录执行状态、观察和跳过原因；进度与下一步来自已保存的数据。完成清单不会自动产生实验结果或科学结论。
-- 在日常工作台查看今日、逾期、未来七天、未排期和 AI 待核对资料，直接回到对应记录继续工作。
-- 新建课题，再关联实验、笔记、SOP、样本或计划；搜索、编辑和归档都作用于真实保存的数据。
-- 并发修改通过记录版本号检测；冲突时保留编辑内容，刷新核对后重试。归档不会删除原文或断开历史关联。
-- 在 Harness 聊天中让 DeepSeek 使用 `forest_context` 读取目标及关联资料的有界上下文，使用 `forest_search` 查找资料、`forest_read` 补读完整原文，或使用 `forest_create_draft` 保存草稿。AI 创建的记录带来源和未复核标记，不自动批准 SOP 或覆盖正式实验数据。
-- 导出 JSON 备份；导入前检查数量、缺失关联和冲突，再确认合并。同一份备份重复导入不会重复创建，也不会覆盖后来编辑的记录。
-
-课题关联不等于权限隔离。当前版本面向同一 Harness profile 的个人科研工作区；同 profile 的会话共享记录，插件 RPC 只允许拥有者连接，不同 profile 分开保存。模型工具沿用 Harness 的会话工具权限。使用默认 JSON 存储时，同一 profile 仅运行一个 Host 进程；多进程同时写入不受本插件的进程内版本检查保护。多人租户、附件文件管理、思维导图、旧版日程编辑暂未实现。
-
-## Obsidian 自动同步
-
-**Harness 管理实验，Obsidian 阅读和整理。** 在插件的 Obsidian 连接面板选择本机已登记的资料库，连接一次；之后在 Harness 保存资料，就会在后台更新 Obsidian 的专用目录。Host 重启后会继续同步，无需手工导出，也无需保持 Obsidian 窗口打开。
-
-Harness Host 与 Obsidian 应运行在**同一台电脑、同一个操作系统用户**下。先用 Obsidian 打开过目标资料库，连接面板才能从它的本机登记信息中找到。远程 Host 无法直接同步浏览器所在电脑的资料库。插件自身只写本机文件，不请求模型。
-
-每个 Harness profile 使用独立目录，包含 Markdown 页面、来源与执行记录、关联链接、目录和 Bases 视图。可以在自己的 Obsidian 笔记中引用这些页面，整理文献和心得。实验内容仍在 Harness 修改；直接编辑或移动镜像页面会保留现状并提示冲突，Obsidian 的修改不会反向导回 Harness。
-
-`Forest.base` 资料视图只在首次连接时创建，之后可在 Obsidian 中自由调整筛选、排序和列；自动格式整理与这些设置都会保留，不会被后续同步或插件升级覆盖。Markdown 实验页面仍按上述规则更新。
-
-连接面板显示同步状态，并提供重试与断开。同步失败不影响已经保存的实验记录；重试不会强制覆盖人工修改，断开也不会删除 Obsidian 文件。目录中的隐藏 `.recovery` 文件夹保留更新前的副本，不会自动清理，会逐渐占用额外空间。完整备份仍使用 JSON 备份功能。
-
-连接步骤、阅读方式与同步范围见 [Obsidian 使用说明](docs/OBSIDIAN.md)。
-
-## 迁移旧数据
-
-旧版“导出所有数据”实际只导出了实验、笔记和 SOP，未包含课题、样本和计划。请先完整备份再迁移，见 [迁移说明](docs/MIGRATION.md)。新版不会主动访问、覆盖或清除旧站的浏览器数据。
-
-旧 `src/` 代码作为迁移参考保留，可用 `npm run dev:legacy` / `npm run build:legacy` 启动。旧版说明存于 [LEGACY_README](docs/LEGACY_README.md)，其中静态部署与 API Key 设置不适用于新插件。
-
-## 开发与验证
+### 从源码安装
 
 ```sh
+git clone https://github.com/ZJUZhiyuCai/experiment-forest.git
+cd experiment-forest
+npm ci --ignore-scripts
+npm run build
+dsh plugin --profile web add "$PWD"
+dsh web
+```
+
+同样需要先准备好 Harness web profile。安装包已包含构建产物，不需要在使用者电脑上重新构建。
+
+## Obsidian：连接一次，保存即同步
+
+1. 在运行 Harness Host 的同一台电脑、同一个操作系统用户下，用 Obsidian 打开目标资料库。
+2. 在实验森林的 Obsidian 面板选择该资料库并连接。
+3. 继续在 Harness 工作。每次保存都会在后台更新 Obsidian 的 `Experiment Forest-…` 专用目录，Host 重启后也会继续同步。
+
+**无需导出、解压或逐次手工同步。** Obsidian 窗口关闭时也能更新文件；重新打开即可阅读。
+
+每条资料都是带属性的 Markdown 页面，包含正文、来源、执行记录和关联链接。文件路径使用稳定 ID，修改标题不会改变链接目标。`Index.md` 提供目录，`Forest.base` 提供可筛选的资料视图；你可以在 Obsidian 调整视图，或在自己的文献笔记中引用实验页面。
+
+实验主数据在 Harness 编辑。直接修改、移动或删除生成的实验页面，会保留现状并提示冲突；其他页面继续同步。Obsidian 的编辑不会反向导回 Harness，断开连接也不会删除文件。`Forest.base` 首次创建后由你管理，后续同步保留其排序、筛选和列设置。
+
+远程服务器上的 Host 只能访问服务器本机资料库，不能直接写浏览器所在电脑。完整范围、故障处理和恢复副本说明见 [Obsidian 使用说明](docs/OBSIDIAN.md)。
+
+## 与 DeepSeek 一起工作
+
+插件向 Harness 提供四个工具，沿用会话中的工具权限：
+
+| 工具 | 用途 |
+| --- | --- |
+| `forest_search` | 搜索研究资料。 |
+| `forest_read` | 读取一条资料的完整记录。 |
+| `forest_context` | 获取目标及其关联资料的有界上下文。 |
+| `forest_create_draft` | 保存带 AI 来源、等待人工核对的新草稿。 |
+
+例如：“找出这个课题关联的方法和最近的实验记录，列出下次实验前要核对的问题。”也可以让模型依据已有资料整理草稿，再到工作台核对。实际模型调用由你的 Harness 供应商配置和权限决定。
+
+## 数据、备份与迁移
+
+- 资料保存在 Harness Host 的 Storage 中，属于当前 profile。同一 profile 的会话共享数据，不同 profile 分开保存。
+- 编辑使用修订号检测冲突；冲突时保留当前输入，核对后再保存。归档保留原文与历史关联。
+- JSON 备份用于完整恢复与迁移。导入前会显示数量、缺失关联和冲突；重复导入不会重复创建或覆盖后来编辑的资料。
+- Obsidian 是阅读镜像；隐藏 `.recovery` 目录保存同步前的副本，不自动清理，也不能代替独立备份。
+
+从原来的浏览器版升级，请先读 [迁移指南](docs/MIGRATION.md)。旧版“导出所有数据”遗漏了课题、样本和计划，新版不会主动覆盖或清除旧站的浏览器数据。
+
+## 当前边界
+
+面向个人研究工作区；课题关联不是权限隔离。RPC 限拥有者连接，同一 profile 使用一个 Host 进程，进程内冲突检查不提供跨进程事务。当前未实现多人协作审批、通用修订历史、电子签名、附件管理、仪器接入或样本库存扣减。
+
+自动化测试、真实浏览器与 Obsidian 验收均使用示例数据。模型工具已通过官方执行链验证，验收没有消耗真实模型请求；账号下的模型调用仍取决于使用者的 Harness 环境。详见 [验证记录与已知限制](docs/VERIFICATION.md)。
+
+## 开发
+
+```sh
+npm ci --ignore-scripts
+npm run dev        # 独立 .dsh-dev profile，禁用模型供应商
+
 npm run typecheck
 npm test
 npm run build
-npm run test:host
+npm run test:host  # 官方 Host 集成验证，不请求模型
 npm pack
 ```
 
-`test:host` 使用官方 Cordis、Storage、Tool Registry 和 RPC Gateway，验证加载、参数校验、版本冲突、磁盘持久化、重启和卸载，不请求模型。浏览器验收与已知限制见 [验证记录](docs/VERIFICATION.md)。
+开发地址以启动输出为准。v0.2.0 已通过 **118 项测试**、类型检查、构建、官方 Host 验证及独立安装包安装验证，并在真实 Chrome / Obsidian 中检查过保存、同步和窄屏布局。
 
 ```text
-client/       Claude 重做的工作台与原生 Client 适配
-plugin/       Host 服务、工具、领域事务与迁移
-shared/       JSON 数据模型与前后端契约
-scripts/      构建、开发运行和原生 Host 集成验证
-tests/        工具、导出和接入行为检查
-src/          旧版前端，仅作为迁移参考
+client/       工作台界面与 Harness Client 接入
+plugin/       Host 服务、模型工具、领域事务与同步
+shared/       数据模型与前后端契约
+scripts/      构建、开发与集成验证
+tests/        工具、资料输出与接入检查
+src/          旧浏览器版，保留供数据迁移参考
 ```
 
-[后端审查](docs/BACKEND_REVIEW.md) · [Claude 前端审查](docs/FRONTEND_REVIEW.md) · [Claude 最终视觉说明](docs/FRONTEND_VISUAL_NOTES.md) · [Claude 初步设计（历史稿，含未实施设想）](docs/FRONTEND_DESIGN.md)
+旧静态站不是当前插件的演示入口，旧 API Key 设置和启动脚本也不适用于新版。历史资料、审查记录及产品参照统一收录在 [文档索引](docs/INDEX.md)。
 
-[原稿与本机适配说明](docs/LOCAL_ADAPTATIONS.md)
+## 反馈与许可
 
-MIT · 蔡志宇（Zhiyu Cai）
+欢迎通过 [Issues](https://github.com/ZJUZhiyuCai/experiment-forest/issues) 反馈。请附上插件与 Harness 版本、操作步骤和错误信息，并移除研究隐私与凭据。
+
+[MIT License](LICENSE) · 蔡志宇（Zhiyu Cai）

@@ -1,8 +1,14 @@
 name: Harness plugin
 on: [push, pull_request]
+permissions:
+  contents: read
+concurrency:
+  group: harness-plugin-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4

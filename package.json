@@ -96,6 +96,10 @@
     "lib/",
     "cordis.patch.yml",
     "README.md",
+    "CHANGELOG.md",
+    "部署指南.md",
+    "👋给朋友的使用说明.md",
+    "legacy-launchers/README.md",
     "LICENSE",
     "docs/",
     "public/legacy-export.*",
@@ -133,10 +137,16 @@
     "type": "git",
     "url": "git+https://github.com/ZJUZhiyuCai/experiment-forest.git"
   },
+  "homepage": "https://github.com/ZJUZhiyuCai/experiment-forest#readme",
+  "bugs": {
+    "url": "https://github.com/ZJUZhiyuCai/experiment-forest/issues"
+  },
   "keywords": [
     "dsh-plugin",
     "deepseek-harness",
     "research",
-    "experiment"
+    "experiment",
+    "obsidian",
+    "electronic-lab-notebook"
   ]
 }
