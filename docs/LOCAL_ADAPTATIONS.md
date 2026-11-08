@@ -59,3 +59,21 @@ Codex 在实际浏览器中发现自绘复选框边线偏淡，以及强制配�
 | `client/ProposalReview.tsx` | `6bc9d153bb6a3e7e66671c1ccd6f880d5d935b43fbe7a9868d2a187b1f8e4eb2` |
 
 [前端打磨说明](FRONTEND_POLISH_NOTES.md) 原样保留 Claude 交付稿。版本、截图、文档、构建、浏览器回归与安装包验收由 Codex 完成，实际结果见 [验证记录](VERIFICATION.md)。
+
+## 0.3.2 日常流程与配色
+
+远端官方 Claude Code（Opus 5.5 / high）基于本次源码、实际走查记录及五张截图完成诊断与六份前端改动，正常退出。Claude 没有亲自操作浏览器；[日常流程诊断原稿](FRONTEND_DAILY_WORKFLOW.md) 已明确区分实测证据、代码观察和产品判断，原样保留。30 份只读输入未改变。
+
+六份原稿核验后独立保留，`ForestApp.tsx`、`OrganizePage.tsx`、`ProposalReview.tsx`、`icons.tsx` 与最终交付仍完全一致。以下两份原稿由 Codex 做了本机适配，未覆盖原件：
+
+- `ExperimentPage.tsx`：Obsidian 状态读取失败或无法确认目标笔记时不沿用旧成功状态；纯空白输入也纳入未保存提示；Host 保存结果未知时明确写“尚未确认”；达到内容块上限时保留原始 TSV 粘贴，不吞掉输入或误报已添加。
+- `forest.css`：实际 Harness 使用 `data-ds-dark-theme` / `data-ds-theme-source` 标记外观。补入主题选择器，修复切到深色后插件仍为白底的问题，已在宿主设置中复验。
+
+对应原稿 SHA-256：
+
+| 文件 | SHA-256 |
+| --- | --- |
+| `ExperimentPage.tsx` | `b7fd6d6c4e49e8ef8cc5bbffcdb5cd0508c6b7f0fe05f5585052ef1c46f72287` |
+| `forest.css` | `106e7e5d9bde10ca08b706c0ace7eb7140b3a0c2a7aec41885c33d1c54fc56e2` |
+
+Codex 实现 `pageStore.ts` 的每页输入状态、记下与整理前保存门槛，以及 `obsidian-note.ts` 的真实目标解析。客户端入口和镜像生成复用 `shared/obsidian.ts` 的稳定路径函数，已有文件路径不变。自动化、真实 Host 流程、附件字节核对、浏览器与安装包验收由 Codex 完成；测试模型不作为科学理解证据。

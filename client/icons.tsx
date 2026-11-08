@@ -36,7 +36,8 @@ export type IconName =
   | 'file'
   | 'lock'
   | 'list'
-  | 'skip';
+  | 'skip'
+  | 'external';
 
 const PATHS: Record<IconName, ReactElement> = {
   sprout: (
@@ -221,6 +222,13 @@ const PATHS: Record<IconName, ReactElement> = {
     <>
       <path d="M5.5 6v12l8.5-6-8.5-6Z" />
       <path d="M18 6v12" />
+    </>
+  ),
+  external: (
+    <>
+      <path d="M13.5 4.5h6v6" />
+      <path d="M19.5 4.5 11 13" />
+      <path d="M17 13.5V18a1.5 1.5 0 0 1-1.5 1.5H6A1.5 1.5 0 0 1 4.5 18V8.5A1.5 1.5 0 0 1 6 7h4.5" />
     </>
   ),
 };

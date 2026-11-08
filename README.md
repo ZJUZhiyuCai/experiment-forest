@@ -6,11 +6,11 @@
 
 在 Harness 管理实验，在 Obsidian 阅读、关联和整理资料。
 
-[下载 v0.3.1](https://github.com/ZJUZhiyuCai/experiment-forest/releases/tag/v0.3.1) · [安装指南](部署指南.md) · [上手使用](👋给朋友的使用说明.md) · [Obsidian 联动](docs/OBSIDIAN.md) · [验证记录](docs/VERIFICATION.md)
+[下载 v0.3.2](https://github.com/ZJUZhiyuCai/experiment-forest/releases/tag/v0.3.2) · [安装指南](部署指南.md) · [上手使用](👋给朋友的使用说明.md) · [Obsidian 联动](docs/OBSIDIAN.md) · [验证记录](docs/VERIFICATION.md)
 
-![实验页中的 AI 提案：并排核对原文与建议，逐项决定](docs/images/polish-review-light.png)
+![自由实验页：石墨灰界面、正文、表格与随手记录](docs/images/daily-page-light.jpg)
 
-*运行中的 0.3.1 界面，截图内为软件验收样本。[正文与表格](docs/images/polish-page.png) · [深色](docs/images/polish-review-dark.png) · [窄屏](docs/images/polish-narrow.png)*
+*运行中的 0.3.2 界面，截图内为软件验收样本。[就地审阅与数字差异](docs/images/daily-numeric-diff.jpg) · [深色](docs/images/daily-page-dark.jpg) · [Obsidian 笔记入口](docs/images/daily-obsidian-note.jpg) · [窄屏](docs/images/daily-narrow.jpg)*
 
 ## 一条完整的记录流程
 
@@ -18,13 +18,13 @@
 
 打开一张实验页，直接写。文字、标题、可编辑表格和材料说明可以混排，照片、视频与其他文件保留原件。粘贴规则的制表符表格时可转为表格；原始粘贴文本仍保留，空格、空值、`0` 和 `ND` 不替你改成“标准答案”。无法可靠拆分的内容保持原文。
 
-停笔后自动保存，界面显示 Host 是否已经确认。实验日期由你填写，默认留空，与创建时间分开。课题、方法和其他属性按需要补充。
+正文停笔后自动保存，界面显示 Host 是否已经确认。底部速记按“记下”进入正文；尚未记下的输入会在切页时保留，并明确显示待记下，关闭窗口前请保存。实验日期由你填写，默认留空，与创建时间分开。课题、方法和其他属性按需要补充。
 
 ### 2. 让 AI「理一理」
 
-先保存当前输入，再把整理要求发送到当前 Harness 会话。模型通过插件工具读取正文快照，按需读取文本文件或图片预览，提出适合这一页的组织方式。
+点击发送时，会先把底部尚未记下的输入一并保存，再把整理要求发送到当前 Harness 会话。材料上传或登记尚未完成、保存失败或保存期间又有新输入时，会保留内容并提示处理，不静默遗漏。模型通过插件工具读取正文快照，按需读取文本文件或图片预览，提出适合这一页的组织方式。
 
-提案不会自动覆盖正文。可以逐项查看来源、修改建议、接受或拒绝；接受后的 AI 内容保留待核对标记。你在模型整理期间补写的观察，会参与版本检查，过期提案不能静默覆盖它。
+提案不会自动覆盖正文。改动放在对应内容旁，文字替换标出增删和数字变化，可以逐项查看来源、修改建议、接受或拒绝；接受后的 AI 内容保留待核对标记。你在模型整理期间补写的观察，会参与版本检查，过期提案不能静默覆盖它。
 
 原始输入快照和文件原件继续保留。来源引用是追溯入口，不是科学正确性的证明；图片中的数值、单位、时间和样本归属尤其需要人工核对。
 
@@ -32,7 +32,7 @@
 
 选择一次本机 Obsidian 资料库，之后保存的正文、表格、材料与关联链接会在后台更新。**无需导出、解压或逐次同步。** 图片和支持的视频使用本地附件嵌入，其他材料提供真实文件链接。
 
-在自己的 Obsidian 文献笔记里链接实验页，整理心得与课题脉络。实验主数据继续在 Harness 编辑；镜像采用稳定 ID 文件名，改标题不会断链。
+页面同步后，可直接打开对应的 Obsidian 笔记，也可以复制内部链接，粘进自己的文献笔记，整理心得与课题脉络。实验主数据继续在 Harness 编辑；镜像采用稳定 ID 文件名，改标题不会断链。
 
 ## 能处理什么
 
@@ -53,12 +53,12 @@
 
 ## 安装
 
-当前版本 **0.3.1**，兼容已核验的 **DeepSeek Harness 0.2.2-rc.1**。CLI 和源码构建需要 **Node.js ≥ 24.9**。Harness 插件 API 仍在变化，暂不声明其他版本兼容。
+当前版本 **0.3.2**，兼容已核验的 **DeepSeek Harness 0.2.2-rc.1**。CLI 和源码构建需要 **Node.js ≥ 24.9**。Harness 插件 API 仍在变化，暂不声明其他版本兼容。
 
-从 [Release](https://github.com/ZJUZhiyuCai/experiment-forest/releases/tag/v0.3.1) 下载 `dsh-experiment-forest-0.3.1.tgz`。在已初始化的 web profile 中，退出 Host 后安装并重启：
+从 [Release](https://github.com/ZJUZhiyuCai/experiment-forest/releases/tag/v0.3.2) 下载 `dsh-experiment-forest-0.3.2.tgz`。在已初始化的 web profile 中，退出 Host 后安装并重启：
 
 ```sh
-dsh plugin --profile web add /absolute/path/dsh-experiment-forest-0.3.1.tgz
+dsh plugin --profile web add /absolute/path/dsh-experiment-forest-0.3.2.tgz
 dsh web
 ```
 

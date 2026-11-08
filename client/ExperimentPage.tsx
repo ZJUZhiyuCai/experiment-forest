@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
-import type { ClipboardEvent, DragEvent, KeyboardEvent, RefObject } from 'react';
+import { Fragment, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
+import type { ClipboardEvent, DragEvent, KeyboardEvent, ReactNode, RefObject } from 'react';
 import type { ForestApi, ForestEntity } from '../shared/model';
 import type { PageBlockInput, PageSource } from '../shared/page';
 import { getExperimentPage, pastedBlock } from '../shared/page';
@@ -9,12 +9,13 @@ import { Icon } from './icons';
 import { Notice, Spinner } from './bits';
 import type { Notify } from './EntityDetail';
 import type { ObsidianState } from './ObsidianSync';
+import { obsidianNoteTarget } from './obsidian-note';
 import { AutoTextarea, PageBlockView } from './PageBlocks';
 import type { BlockActions, BlockCtx } from './PageBlocks';
-import { ProposalTray } from './ProposalReview';
+import { InlineOps, ProposalTray, usePlacement, useReviewSelection } from './ProposalReview';
 import { OriginalView } from './OriginalView';
 import type { SourceTarget } from './OriginalView';
-import { AwaitingBanner, OrganizePanel } from './OrganizePage';
+import { AwaitingBanner, OrganizePanel, copyToClipboard } from './OrganizePage';
 import { usePage } from './pageStore';
 import type { PageController, PageState, UploadItem } from './pageStore';
 import { PAGE_LIMITS, UNTITLED, formatBytes, hhmm, looksTabular, newHeading, newTable, newText, uid } from './pageModel';
@@ -38,82 +39,383 @@ export interface ExperimentPageProps {
   focus?: { on: boolean; toggle: () => void };
 }
 
-/* ───────────────────────── 保存状态（与顶栏的数据刷新、Obsidian 状态分开） ───────────────────────── */
+/* ───────────────────────── 小弹层（点外面或 Esc 关闭；不抢焦点，不遮正文） ───────────────────────── */
 
-function SaveBadge({ state, ctrl }: { state: PageState; ctrl: PageController }) {
-  const s = state.save;
-  const moving = state.uploads.filter((u) => u.stage === 'queued' || u.stage === 'uploading').length;
-  const registering = state.uploads.filter((u) => u.stage === 'registering').length;
-  const rev = state.baseRevision !== null ? ` · r${state.baseRevision}` : '';
-  const save = () => void ctrl.saveNowFromUser();
-  const look: Record<PageState['save']['kind'], { label: string; tone: 'ok' | 'idle' | 'busy' | 'warn' | 'bad'; title: string; onClick?: () => void }> = {
-    clean: { label: '已在 Host', tone: 'ok', title: `这一版由 Host 保存${rev}` },
-    pending: { label: '未保存', tone: 'idle', title: '停笔后会自动保存；关闭页面前请等“已保存”出现', onClick: save },
-    saving: { label: '保存中…', tone: 'busy', title: '已发往 Host，等待确认' },
-    checking: { label: '核对中…', tone: 'busy', title: s.message ?? '正在向 Host 核对' },
-    saved: { label: `已保存 ${s.at ? hhmm(s.at) : ''}`.trim(), tone: 'ok', title: `Host 已确认${rev}。刷新或换会话后可以恢复。` },
-    failed: { label: '未能保存', tone: 'bad', title: `${s.message ?? ''} 点击重试`, onClick: save },
-    uncertain: { label: '结果不确定', tone: 'bad', title: `${s.message ?? ''} 点击核对`, onClick: () => void ctrl.recheck() },
-    conflict: { label: '有冲突', tone: 'warn', title: s.message ?? '' },
-  };
-  const { label, tone, title, onClick } = look[s.kind];
-  const extra = [moving ? `${moving} 个上传中` : '', registering ? `${registering} 个待登记` : ''].filter(Boolean).join(' · ');
-  const inner = (
-    <>
-      <span className="fa-savebadge__dot" aria-hidden="true" />
-      <span className="fa-savebadge__text">{label}</span>
-      {extra && <span className="fa-savebadge__extra">· {extra}</span>}
-    </>
-  );
-  const aria = `保存状态：${label}${extra ? `，${extra}` : ''}。${title}`;
-  return onClick ? (
-    <button type="button" className={`fa-savebadge is-${tone}`} title={title} aria-label={aria} onClick={onClick}>
-      {inner}
-    </button>
-  ) : (
-    <span className={`fa-savebadge is-${tone}`} title={title} role="status" aria-label={aria}>
-      {inner}
+function Pop({
+  label,
+  align = 'end',
+  trigger,
+  children,
+}: {
+  label: string;
+  align?: 'start' | 'end';
+  trigger: (p: { open: boolean; toggle: () => void; panelId: string }) => ReactNode;
+  children: (close: () => void) => ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLSpanElement>(null);
+  const panelId = useId();
+  const close = useCallback(() => setOpen(false), []);
+  useEffect(() => {
+    if (!open) return;
+    // composedPath：插件若渲染在 shadow root 里，事件目标会被重定向，contains 判断不可靠
+    const onDown = (e: PointerEvent) => {
+      if (ref.current && !e.composedPath().includes(ref.current)) setOpen(false);
+    };
+    document.addEventListener('pointerdown', onDown);
+    return () => document.removeEventListener('pointerdown', onDown);
+  }, [open]);
+  return (
+    <span
+      ref={ref}
+      className="fa-pop"
+      onKeyDown={(e) => {
+        if (e.key === 'Escape' && open) {
+          e.preventDefault();
+          e.stopPropagation();
+          setOpen(false);
+          ref.current?.querySelector<HTMLElement>('[aria-controls]')?.focus();
+        }
+      }}
+    >
+      {trigger({ open, toggle: () => setOpen((v) => !v), panelId })}
+      {open && (
+        <div id={panelId} className={`fa-pop__panel is-${align}`} role="dialog" aria-label={label}>
+          {children(close)}
+        </div>
+      )}
     </span>
   );
 }
 
-/* ───────────────────────── 本页在 Obsidian 的状态（来自宿主 obsidianStatus） ───────────────────────── */
+/* ───────────────────────── 这页到了哪一步：输入框 → 本页正文 → Host → Obsidian ───────────────────────── */
 
-function PageObsidian({ obsidian, state, onOpenData }: { obsidian: ObsidianState; state: PageState; onOpenData: () => void }) {
+type StepTone = 'done' | 'wait' | 'busy' | 'bad' | 'off';
+interface Step {
+  key: string;
+  name: string;
+  tone: StepTone;
+  text: string;
+  detail?: string;
+  action?: { label: string; run: () => void };
+}
+
+const clip = (s: string, n: number) => (s.length > n ? `${s.slice(0, n)}…` : s);
+
+/** 本页在 Obsidian 的真实状态（来自宿主 obsidianStatus 与 obsidianNoteTarget）；不做任何推断性的“已同步” */
+interface NoteInfo {
+  connected: boolean;
+  target: ReturnType<typeof obsidianNoteTarget>;
+  chip: string;
+  chipTone: 'is-quiet' | 'is-warn' | 'is-bad';
+  step: Step;
+  issues: { name: string; message: string }[];
+}
+
+function noteInfo(obsidian: ObsidianState, state: PageState): NoteInfo | null {
   const st = obsidian.status;
   const entity = state.view?.entity;
   if (!st || !entity) return null;
   const connected = st.enabled && !!st.vaultId && st.state !== 'disabled';
+  if (obsidian.error) return {
+    connected, target: null, chip: 'Obsidian 状态过期', chipTone: 'is-warn', issues: [],
+    step: { key: 'obsidian', name: 'Obsidian', tone: 'bad', text: '尚未确认同步状态', detail: `读取失败：${obsidian.error}。请到同步设置刷新后再确认。` },
+  };
   if (!connected) {
+    return {
+      connected,
+      target: null,
+      chip: 'Obsidian 未连接',
+      chipTone: 'is-quiet',
+      step: { key: 'obsidian', name: 'Obsidian', tone: 'off', text: '未连接', detail: '连接后，Host 保存的内容会自动单向同步到你的仓库。' },
+      issues: [],
+    };
+  }
+  const target = obsidianNoteTarget(st, entity);
+  const issues = st.materials?.issues.filter((i) => i.recordId === entity.id) ?? [];
+  const mats = state.view?.page.materials.length ?? 0;
+  const at = st.lastSyncedAt ? hhmm(st.lastSyncedAt) : '';
+  const draft = state.composer.length > 0;
+  // 本页还有尚未进入 Obsidian 的内容：输入框未记下，或正文未保存
+  const newer = draft ? '输入框里有未记下的文字' : state.dirty ? '正文有修改还没保存' : '';
+  let chip: string;
+  let step: Step;
+  if (st.state === 'syncing') {
+    chip = 'Obsidian 同步中';
+    step = { key: 'obsidian', name: 'Obsidian', tone: 'busy', text: '正在写入专用文件夹' };
+  } else if (st.state === 'error') {
+    chip = 'Obsidian 同步失败';
+    step = { key: 'obsidian', name: 'Obsidian', tone: 'bad', text: '同步失败', detail: `${st.lastError || '宿主没有给出原因'}。实验记录不受影响。` };
+  } else if (target?.state === 'synced') {
+    chip = newer ? 'Obsidian 是上次保存的版本' : `Obsidian 已同步${at ? ` ${at}` : ''}`;
+    step = newer
+      ? { key: 'obsidian', name: 'Obsidian', tone: 'wait', text: '笔记是上次保存的版本', detail: `${newer}；记下并保存后，宿主会自动更新这篇笔记。` }
+      : { key: 'obsidian', name: 'Obsidian', tone: 'done', text: `这篇笔记已同步${at ? ` · 上次同步 ${at}` : ''}` };
+  } else if (target?.state === 'pending') {
+    chip = 'Obsidian 等待同步';
+    step = { key: 'obsidian', name: 'Obsidian', tone: 'wait', text: '等待同步', detail: 'Host 保存后，宿主会自动写入这篇笔记；同步完成前不提供打开入口。' };
+  } else if (target?.state === 'conflict') {
+    chip = 'Obsidian 笔记有冲突';
+    step = {
+      key: 'obsidian',
+      name: 'Obsidian',
+      tone: 'bad',
+      text: '笔记在 Obsidian 里被改动或移动过',
+      detail: '宿主保留了你在 Obsidian 里的版本，没有覆盖，所以这篇笔记暂时不会更新。实验记录以这里为准。',
+    };
+  } else {
+    // 缺少已登记仓库或本页路径时，不以历史全库时间猜测本页成功。
+    chip = 'Obsidian 笔记位置未确认';
+    step = {
+      key: 'obsidian',
+      name: 'Obsidian',
+      tone: 'wait',
+      text: '笔记位置未确认',
+      detail: '暂未取得已登记仓库中的本页位置，请到同步设置重新核对。',
+    };
+  }
+  let chipTone: NoteInfo['chipTone'] = st.state === 'error' ? 'is-bad' : target?.state === 'conflict' ? 'is-warn' : 'is-quiet';
+  if (issues.length) {
+    chip += ` · ${issues.length} 个素材未镜像`;
+    chipTone = chipTone === 'is-bad' ? chipTone : 'is-warn';
+  } else if (mats && !st.materials) chip += ' · 素材镜像状态未知';
+  return { connected, target, chip, chipTone, step, issues };
+}
+
+function PageTrail({ state, ctrl, obsidianStep, onCommitDraft }: { state: PageState; ctrl: PageController; obsidianStep: Step | null; onCommitDraft: () => void }) {
+  const s = state.save;
+  const draft = state.composer;
+  const moving = state.uploads.filter((u) => u.stage === 'queued' || u.stage === 'uploading').length;
+  const registering = state.uploads.filter((u) => u.stage === 'registering').length;
+  const rev = state.baseRevision !== null ? `r${state.baseRevision}` : '';
+  const save = () => void ctrl.saveNowFromUser();
+  const look: Record<PageState['save']['kind'], { label: string; tone: 'ok' | 'idle' | 'busy' | 'warn' | 'bad' | 'hold'; title: string }> = {
+    clean: { label: '已在 Host', tone: 'ok', title: `这一版由 Host 保存${rev ? ` · ${rev}` : ''}` },
+    pending: { label: '未保存', tone: 'idle', title: '停笔后会自动保存；关闭页面前请等“已保存”出现' },
+    saving: { label: '保存中…', tone: 'busy', title: '已发往 Host，等待确认' },
+    checking: { label: '核对中…', tone: 'busy', title: s.message ?? '正在向 Host 核对' },
+    saved: { label: `已保存 ${s.at ? hhmm(s.at) : ''}`.trim(), tone: 'ok', title: `Host 已确认${rev ? ` · ${rev}` : ''}。刷新或换会话后可以恢复。` },
+    failed: { label: '未能保存', tone: 'bad', title: s.message ?? '' },
+    uncertain: { label: '结果不确定', tone: 'bad', title: s.message ?? '' },
+    conflict: { label: '有冲突', tone: 'warn', title: s.message ?? '' },
+  };
+  let { label, tone, title } = look[s.kind];
+  const blocking = s.kind === 'failed' || s.kind === 'uncertain' || s.kind === 'conflict';
+  let draftExtra = false;
+  // 正文已保存、输入框里却还有字：徽章不再只说“已保存”，而是显示最靠前、仍需处理的那一层
+  if (draft && !blocking) {
+    if (s.kind === 'clean' || s.kind === 'saved') {
+      label = '输入框未记下';
+      tone = 'hold';
+      title = `正文${s.kind === 'saved' ? '已保存' : '在 Host'}${rev ? ` · ${rev}` : ''}；底部输入框里的文字还没记下，AI 和 Obsidian 都看不到。`;
+    } else draftExtra = true;
+  }
+  const extra = [draftExtra ? '输入框未记下' : '', moving ? `${moving} 个上传中` : '', registering ? `${registering} 个待登记` : ''].filter(Boolean).join(' · ');
+
+  /* 四层逐行如实写出 */
+  const steps: Step[] = [];
+  steps.push(
+    draft
+      ? {
+          key: 'draft',
+          name: '输入框',
+          tone: 'wait',
+          text: `「${clip(draft, 22)}」还没记下`,
+          detail: '只在这个 Harness 窗口里：切换页面会保留，关闭或刷新会丢失。AI 和 Obsidian 都看不到它。',
+          action: { label: '记下', run: onCommitDraft },
+        }
+      : { key: 'draft', name: '输入框', tone: 'done', text: '没有未记下的输入' },
+  );
+  const upDetail = [moving ? `${moving} 个文件上传中` : '', registering ? `${registering} 个已到 Host、正在登记到本页` : ''].filter(Boolean).join(' · ') || undefined;
+  if (s.kind === 'conflict') steps.push({ key: 'page', name: '本页正文', tone: 'bad', text: '和别处的修改有重叠', detail: '在页面上方选择保留哪一边；选择之前不会保存，你的输入都还在。' });
+  else if (s.kind === 'uncertain') steps.push({ key: 'page', name: '本页正文', tone: 'bad', text: '保存结果不确定', detail: s.message, action: { label: '核对', run: () => void ctrl.recheck() } });
+  else if (s.kind === 'failed' && state.dirty) steps.push({ key: 'page', name: '本页正文', tone: 'bad', text: '这次没有保存', detail: s.message, action: { label: '立即保存', run: save } });
+  else if (s.kind === 'checking') steps.push({ key: 'page', name: '本页正文', tone: 'busy', text: '正在向 Host 核对', detail: s.message });
+  else if (state.dirty && s.kind === 'saving') steps.push({ key: 'page', name: '本页正文', tone: 'busy', text: '正在发往 Host', detail: upDetail });
+  else if (state.dirty) steps.push({ key: 'page', name: '本页正文', tone: 'wait', text: '有修改还没保存', detail: upDetail ?? '停笔约 1 秒后自动保存。', action: { label: '立即保存', run: save } });
+  else steps.push({ key: 'page', name: '本页正文', tone: moving || registering ? 'busy' : 'done', text: `${state.local.blocks.length} 块，与 Host 一致`, detail: upDetail });
+
+  const unconfirmed = s.kind === 'uncertain' || s.kind === 'conflict' || (s.kind === 'failed' && state.dirty);
+  if (state.dirty || unconfirmed || s.kind === 'saving' || s.kind === 'checking') {
+    steps.push({ key: 'host', name: 'Host', tone: unconfirmed ? 'bad' : 'wait', text: `当前修改尚未确认${rev ? ` · 最近确认 ${rev}` : ''}`, detail: unconfirmed ? '以核对后的 Host 结果为准。' : undefined });
+  } else {
+    steps.push({
+      key: 'host',
+      name: 'Host',
+      tone: 'done',
+      text: s.kind === 'saved' ? `已保存${rev ? ` · ${rev}` : ''}${s.at ? ` · ${hhmm(s.at)}` : ''}` : `这一版由 Host 保存${rev ? ` · ${rev}` : ''}`,
+      detail: '刷新或换会话后可以恢复。',
+    });
+  }
+  if (obsidianStep) steps.push(obsidianStep);
+
+  return (
+    <Pop
+      label="这页到了哪一步"
+      trigger={({ open, toggle, panelId }) => (
+        <>
+          <button
+            type="button"
+            className={`fa-savebadge is-${tone}`}
+            title={title}
+            aria-haspopup="dialog"
+            aria-expanded={open}
+            aria-controls={panelId}
+            aria-label={`保存状态：${label}${extra ? `，${extra}` : ''}。${title} 点击查看这页到了哪一步`}
+            onClick={toggle}
+          >
+            <span className="fa-savebadge__dot" aria-hidden="true" />
+            <span className="fa-savebadge__text">{label}</span>
+            {extra && <span className="fa-savebadge__extra">· {extra}</span>}
+          </button>
+          <span className="fa-sr" role="status">
+            {label}
+          </span>
+        </>
+      )}
+    >
+      {() => (
+        <div className="fa-trail">
+          <p className="fa-trail__h">这页到了哪一步</p>
+          <ol className="fa-trail__steps">
+            {steps.map((st) => (
+              <li key={st.key} className={`fa-trail__step is-${st.tone}`}>
+                <span className="fa-trail__dot" aria-hidden="true" />
+                <div className="fa-trail__main">
+                  <p className="fa-trail__row">
+                    <span className="fa-trail__name">{st.name}</span>
+                    <span className="fa-trail__text">{st.text}</span>
+                  </p>
+                  {st.detail && <p className="fa-trail__detail">{st.detail}</p>}
+                </div>
+                {st.action && (
+                  <button type="button" className="fa-btn fa-btn--sm" onClick={st.action.run}>
+                    {st.action.label}
+                  </button>
+                )}
+              </li>
+            ))}
+          </ol>
+          <p className="fa-trail__foot">“理一理”读取的是 Host 上保存好的版本；发送前会先记下输入框、保存本页，并等文件登记完成。</p>
+        </div>
+      )}
+    </Pop>
+  );
+}
+
+/* ───────────────────────── 本页在 Obsidian：状态标签 + 笔记小卡 ───────────────────────── */
+
+function NoteCard({ info, onOpenData, close }: { info: NoteInfo; onOpenData: () => void; close: () => void }) {
+  const t = info.target;
+  const [copied, setCopied] = useState<'ok' | 'manual' | null>(null);
+  const manualRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (copied === 'manual') manualRef.current?.select();
+    if (copied !== 'ok') return;
+    const tm = setTimeout(() => setCopied(null), 2200);
+    return () => clearTimeout(tm);
+  }, [copied]);
+  const copy = async () => {
+    if (!t) return;
+    setCopied((await copyToClipboard(t.wikilink, null)) ? 'ok' : 'manual');
+  };
+  const synced = t?.state === 'synced';
+  return (
+    <div className="fa-note">
+      <p className="fa-note__h">
+        <Icon name="vault" size={14} />
+        <span>Obsidian 笔记</span>
+        <span className={`fa-note__state is-${info.step.tone}`}>{info.step.text}</span>
+      </p>
+      {t && (
+        <p className="fa-note__path" title={t.relativePath}>
+          {t.relativePath}
+        </p>
+      )}
+      {info.step.detail && <p className="fa-help">{info.step.detail}</p>}
+      {synced && t && (
+        <>
+          <div className="fa-note__acts">
+            {/* 真实的 obsidian:// 链接，由用户点击打开；不自动唤起原生应用 */}
+            <a className="fa-btn fa-btn--sm fa-btn--primary" href={t.uri}>
+              <Icon name="external" size={13} />
+              在 Obsidian 中打开
+            </a>
+            <button type="button" className="fa-btn fa-btn--sm" onClick={() => void copy()} aria-live="polite">
+              <Icon name={copied === 'ok' ? 'check' : 'copy'} size={13} />
+              {copied === 'ok' ? '已复制' : '复制笔记链接'}
+            </button>
+          </div>
+          {copied === 'manual' ? (
+            <div className="fa-note__manual">
+              <p className="fa-help fa-text-warn">宿主没有允许写入剪贴板，链接已选中，请按 Ctrl/⌘ + C。</p>
+              <input ref={manualRef} className="fa-input fa-note__wikilink" readOnly value={t.wikilink} onFocus={(e) => e.currentTarget.select()} aria-label="笔记链接" />
+            </div>
+          ) : (
+            <p className="fa-note__link" title="粘贴到你的研究笔记、周报里，即可链接到这一页">
+              {t.wikilink}
+            </p>
+          )}
+        </>
+      )}
+      {info.issues.length > 0 && (
+        <ul className="fa-note__issues">
+          {info.issues.map((i) => (
+            <li key={`${i.name}:${i.message}`}>
+              <span className="fa-note__issue-name">{i.name}</span>
+              <span className="fa-muted">{i.message}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="fa-note__foot">
+        <span>单向同步：在 Obsidian 里的改动不会回写这里。</span>
+        <button
+          type="button"
+          className="fa-link"
+          onClick={() => {
+            close();
+            onOpenData();
+          }}
+        >
+          同步设置与详情
+        </button>
+      </p>
+    </div>
+  );
+}
+
+function PageObsidian({ info, onOpenData }: { info: NoteInfo | null; onOpenData: () => void }) {
+  if (!info) return null;
+  if (!info.connected) {
     return (
-      <button type="button" className="fa-pagechip is-quiet" onClick={onOpenData} title="连接后保存即自动单向同步到 Obsidian">
+      <button type="button" className={`fa-pagechip ${info.chipTone}`} onClick={onOpenData} title={info.step.detail}>
         <Icon name="vault" size={12} />
-        Obsidian 未连接
+        {info.chip}
       </button>
     );
   }
-  const mats = state.view?.page.materials.length ?? 0;
-  const issues = st.materials?.issues.filter((i) => i.recordId === entity.id) ?? [];
-  // lastSyncedRevision 是全库修订，不能和单条记录的 revision 比较；这里只如实对比时间
-  let text =
-    st.state === 'syncing'
-      ? 'Obsidian 同步中'
-      : st.state === 'error'
-        ? 'Obsidian 同步失败'
-        : st.lastSyncedAt && st.lastSyncedAt >= entity.updatedAt
-          ? `Obsidian 正文已同步 ${hhmm(st.lastSyncedAt)}`
-          : 'Obsidian 等待同步';
-  let tone = st.state === 'error' ? 'is-bad' : 'is-quiet';
-  if (issues.length) {
-    text += ` · ${issues.length} 个素材未镜像`;
-    tone = 'is-warn';
-  } else if (mats && !st.materials) text += ' · 素材镜像状态未知';
-  const detail = issues.map((i) => `${i.name}：${i.message}`).join('\n');
   return (
-    <button type="button" className={`fa-pagechip ${tone}`} onClick={onOpenData} title={detail || '查看同步详情'}>
-      <Icon name="vault" size={12} />
-      {text}
-    </button>
+    <Pop
+      label="Obsidian 笔记"
+      align="start"
+      trigger={({ open, toggle, panelId }) => (
+        <button
+          type="button"
+          className={`fa-pagechip ${info.chipTone}`}
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          aria-controls={panelId}
+          onClick={toggle}
+          title={info.target?.state === 'synced' ? '打开这篇笔记或复制它的链接' : '查看这篇笔记的同步状态'}
+        >
+          <Icon name="vault" size={12} />
+          {info.chip}
+        </button>
+      )}
+    >
+      {(close) => <NoteCard info={info} onOpenData={onOpenData} close={close} />}
+    </Pop>
   );
 }
 
@@ -247,7 +549,11 @@ export function ExperimentPageView(props: ExperimentPageProps) {
   const [organizing, setOrganizing] = useState(false);
   const [dragging, setDragging] = useState(false);
   const [undo, setUndo] = useState<{ block: PageBlockInput; index: number } | null>(null);
-  const [draft, setDraft] = useState('');
+  // 输入框内容放在页面控制器里（state.composer）：切页保留、计入未保存摘要；不再是组件内的临时状态
+  const draft = state.composer;
+  const selection = useReviewSelection();
+  const placement = usePlacement(state);
+  const [opFlash, setOpFlash] = useState<{ id: string; n: number } | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
   const composerRef = useRef<HTMLTextAreaElement>(null);
@@ -290,6 +596,27 @@ export function ExperimentPageView(props: ExperimentPageProps) {
     const t = setTimeout(() => setFlash(null), 1800);
     return () => clearTimeout(t);
   }, [flash]);
+
+  // 逐处看：滚到那一处改动并轻闪一下
+  useEffect(() => {
+    if (!opFlash) return;
+    document.getElementById(opFlash.id)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    const t = setTimeout(() => setOpFlash(null), 1800);
+    return () => clearTimeout(t);
+  }, [opFlash]);
+  const goOp = useCallback((id: string) => {
+    setFace('page');
+    setOpFlash((f) => ({ id, n: (f?.n ?? 0) + 1 }));
+  }, []);
+  const nextOp = useCallback(
+    (from: string) => {
+      const order = placement.order;
+      if (!order.length) return;
+      const next = order[(order.indexOf(from) + 1) % order.length];
+      if (next && next !== from) goOp(next);
+    },
+    [placement.order, goOp],
+  );
 
   const metaById = useMemo(() => new Map((page?.blocks ?? []).map((b) => [b.id, b])), [page]);
   const projects = useMemo(() => entities.filter((e) => e.kind === 'project' && (!isArchived(e) || e.id === entity?.projectId)), [entities, entity?.projectId]);
@@ -381,11 +708,10 @@ export function ExperimentPageView(props: ExperimentPageProps) {
   );
 
   /* ── 托盘输入 ── */
+  // 记下：由控制器原子地把输入转成文字 / 表格块并清空；失败（如块数上限）时保留原输入并给出提示
   const commitDraft = () => {
-    const text = draft;
-    if (!text.trim()) return;
-    addBlocks([looksTabular(text) ? pastedBlock(text, uid) : newText(text.replace(/\n+$/, ''))], false);
-    setDraft('');
+    if (!ctrl.getState().composer.length) return;
+    ctrl.commitComposer();
   };
 
   const onComposerPaste = (e: ClipboardEvent<HTMLTextAreaElement>) => {
@@ -399,6 +725,10 @@ export function ExperimentPageView(props: ExperimentPageProps) {
     if (!looksTabular(text)) return;
     const pb = pastedBlock(text, uid);
     if (pb.type !== 'table') return; // 不规则：原文粘进输入框，按文字记下
+    if (ctrl.getState().local.blocks.length >= PAGE_LIMITS.blocks) {
+      tooMany();
+      return; // 不拦截原生粘贴：满页时仍将完整原文留在输入框。
+    }
     e.preventDefault();
     addBlocks([pb], false);
     setFlash(pb.id);
@@ -450,6 +780,8 @@ export function ExperimentPageView(props: ExperimentPageProps) {
     }
   };
 
+  const note = noteInfo(obsidian, state);
+
   /* ── 非就绪状态 ── */
   const head = (
     <header className="fa-pane__head fa-xp__head">
@@ -472,7 +804,15 @@ export function ExperimentPageView(props: ExperimentPageProps) {
       <span className="fa-spacer" />
       {state.load === 'ready' && (
         <>
-          <SaveBadge state={state} ctrl={ctrl} />
+          <PageTrail
+            state={state}
+            ctrl={ctrl}
+            obsidianStep={note?.step ?? null}
+            onCommitDraft={() => {
+              commitDraft();
+              composerRef.current?.focus();
+            }}
+          />
           <div className="fa-xseg" role="group" aria-label="页面视图">
             <button type="button" className={`fa-xseg__btn${face === 'page' ? ' is-on' : ''}`} aria-pressed={face === 'page'} onClick={() => setFace('page')}>
               成页
@@ -635,7 +975,7 @@ export function ExperimentPageView(props: ExperimentPageProps) {
           </p>
         )}
 
-        <AwaitingBanner state={state} ctrl={ctrl} />
+        <AwaitingBanner state={state} ctrl={ctrl} onReview={placement.order.length ? () => goOp(placement.order[0]) : undefined} />
 
         <article className="fa-xp__doc">
           <input
@@ -718,7 +1058,7 @@ export function ExperimentPageView(props: ExperimentPageProps) {
               <Icon name="file" size={12} />
               素材 {page.materials.length}
             </span>
-            <PageObsidian obsidian={obsidian} state={state} onOpenData={onOpenData} />
+            <PageObsidian info={note} onOpenData={onOpenData} />
             {state.pollError && (
               <span className="fa-pagechip is-warn" title={state.pollError}>
                 刷新失败，显示的是上次读取的内容
@@ -728,7 +1068,7 @@ export function ExperimentPageView(props: ExperimentPageProps) {
 
           {face === 'page' ? (
             <>
-              <ProposalTray state={state} ctrl={ctrl} ctx={ctx} onJumpBlock={jumpBlock} />
+              <ProposalTray state={state} ctrl={ctrl} ctx={ctx} selection={selection} placement={placement} onGo={goOp} onJumpBlock={jumpBlock} />
               {state.local.blocks.length === 0 ? (
                 <div className="fa-xp__empty">
                   <svg className="fa-xp__empty-art" viewBox="0 0 64 64" aria-hidden="true">
@@ -756,22 +1096,30 @@ export function ExperimentPageView(props: ExperimentPageProps) {
                 </div>
               ) : (
                 <div className="fa-xp__blocks">
-                  {state.local.blocks.map((b, i) => (
-                    <PageBlockView
-                      key={b.id}
-                      block={b}
-                      meta={metaById.get(b.id)}
-                      index={i}
-                      total={state.local.blocks.length}
-                      ctx={ctx}
-                      actions={blockActions}
-                      focus={focusId === b.id}
-                      onFocused={onFocused}
-                      highlight={flash === b.id}
-                    />
-                  ))}
+                  {state.local.blocks.map((b, i) => {
+                    const ops = placement.byBlock.get(b.id);
+                    return (
+                      <Fragment key={b.id}>
+                        <PageBlockView
+                          block={b}
+                          meta={metaById.get(b.id)}
+                          index={i}
+                          total={state.local.blocks.length}
+                          ctx={ctx}
+                          actions={blockActions}
+                          focus={focusId === b.id}
+                          onFocused={onFocused}
+                          highlight={flash === b.id}
+                        />
+                        {ops && (
+                          <InlineOps items={ops} state={state} ctrl={ctrl} ctx={ctx} selection={selection} onJumpBlock={jumpBlock} flashId={opFlash?.id ?? null} onNext={nextOp} />
+                        )}
+                      </Fragment>
+                    );
+                  })}
                 </div>
               )}
+              <InlineOps items={placement.tail} tail state={state} ctrl={ctrl} ctx={ctx} selection={selection} onJumpBlock={jumpBlock} flashId={opFlash?.id ?? null} onNext={nextOp} />
               {undo && (
                 <div className="fa-xp__undo" role="status">
                   已删除一块（{undo.block.type === 'media' ? '素材原件仍保留' : '保存后原样里仍有它的快照'}）
@@ -804,15 +1152,15 @@ export function ExperimentPageView(props: ExperimentPageProps) {
             )}
           </div>
         )}
-        <div className="fa-composer">
+        <div className={`fa-composer${draft.length ? ' has-draft' : ''}`}>
           <AutoTextarea
             ref={composerRef}
             className="fa-composer__input"
             value={draft}
             maxLength={PAGE_LIMITS.text}
             placeholder="放点什么…  回车记下，粘贴表格或拖入文件"
-            aria-label={`记到「${title || UNTITLED}」`}
-            onChange={(e) => setDraft(e.target.value)}
+            aria-label={`记到「${title || UNTITLED}」${draft.trim() ? '（还没记下）' : ''}`}
+            onChange={(e) => ctrl.setComposer(e.target.value)}
             onPaste={onComposerPaste}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
@@ -854,7 +1202,13 @@ export function ExperimentPageView(props: ExperimentPageProps) {
               }}
             />
             <span className="fa-spacer" />
-            {draft.trim() && (
+            {draft.length > 0 && (
+              <span className="fa-composer__hold" title="还没记下：只在这个 Harness 窗口里，AI 和 Obsidian 都看不到。回车记下，Shift + 回车换行。">
+                <span className="fa-composer__hold-dot" aria-hidden="true" />
+                <span className="fa-composer__lbl">未记下</span>
+              </span>
+            )}
+            {draft.length > 0 && (
               <button type="button" className="fa-composer__tool is-commit" onClick={commitDraft} title="记下（回车）">
                 <Icon name="check" size={14} />
                 <span className="fa-composer__lbl">记下</span>
@@ -865,8 +1219,14 @@ export function ExperimentPageView(props: ExperimentPageProps) {
               className={`fa-organize-btn${organizing ? ' is-on' : ''}`}
               aria-expanded={organizing}
               onClick={() => setOrganizing((v) => !v)}
-              disabled={state.local.blocks.length === 0 && page.materials.length === 0}
-              title={state.local.blocks.length === 0 && page.materials.length === 0 ? '先放点内容进来' : '请模型提议怎么整理这一页'}
+              disabled={state.local.blocks.length === 0 && page.materials.length === 0 && !draft.trim()}
+              title={
+                state.local.blocks.length === 0 && page.materials.length === 0 && !draft.trim()
+                  ? '先放点内容进来'
+                  : draft.trim()
+                    ? '请模型提议怎么整理这一页（发送前会先记下输入框里的文字）'
+                    : '请模型提议怎么整理这一页'
+              }
             >
               <Icon name="spark" size={14} />
               理一理

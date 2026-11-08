@@ -25,8 +25,9 @@
   --fa-accent-ink: #ffffff;
   --fa-accent-soft: rgba(47, 122, 85, 0.1);
   --fa-accent-soft-2: rgba(47, 122, 85, 0.16);
-  --fa-ai: #6e56cf;
-  --fa-ai-soft: rgba(110, 86, 207, 0.08);
+  /* AI 相关一律用“墨色”（中性石墨），不再另起一种色相；森林绿仍是唯一的强调色 */
+  --fa-ai: #3a3a3c;
+  --fa-ai-soft: rgba(55, 53, 47, 0.055);
   --fa-warn: #a15c00;
   --fa-warn-soft: rgba(214, 140, 20, 0.12);
   --fa-danger: #d0312d;
@@ -39,12 +40,18 @@
   --fa-k-sample: #0e7c86;
   --fa-k-note: #a17a12;
   --fa-k-project: #2f7a55;
-  --fa-ai-solid: #6e56cf;
+  --fa-ai-solid: #1d1d1f;
   --fa-ai-ink: #ffffff;
-  --fa-ai-line: rgba(110, 86, 207, 0.2);
-  /* 自绘复选框：未选中边线与键盘焦点环，按白底 #fff 核算 ≥ 3:1（边线约 3.6:1，焦点约 5.4:1） */
+  --fa-ai-line: rgba(55, 53, 47, 0.14);
+  /* 逐字差异：删去 = 红底划线，新增 = 绿底；文字色按白底核算 ≥ 4.5:1 */
+  --fa-diff-del: #b42318;
+  --fa-diff-del-soft: rgba(208, 49, 45, 0.1);
+  --fa-diff-add: #1f6b45;
+  --fa-diff-add-soft: rgba(47, 122, 85, 0.15);
+  /* 自绘复选框：未选中边线与键盘焦点环，按白底 #fff 核算 ≥ 3:1（边线约 3.6:1，焦点约 5.3:1）；
+     选中是墨色实底，焦点环用绿色，两者一眼可分 */
   --fa-check-edge: #86868b;
-  --fa-check-focus: #6e56cf;
+  --fa-check-focus: #2f7a55;
   /* 分层阴影：一圈发丝描边 + 贴地的短影 + 远处的柔影 */
   --fa-shadow-sm: 0 0 0 1px rgba(0, 0, 0, 0.055), 0 1px 2px rgba(0, 0, 0, 0.04);
   --fa-shadow-md: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.05), 0 12px 32px -12px rgba(0, 0, 0, 0.14);
@@ -108,8 +115,8 @@
     --fa-accent-ink: #0b1f15;
     --fa-accent-soft: rgba(79, 191, 139, 0.12);
     --fa-accent-soft-2: rgba(79, 191, 139, 0.2);
-    --fa-ai: #a594f9;
-    --fa-ai-soft: rgba(165, 148, 249, 0.12);
+    --fa-ai: #d4d4d4;
+    --fa-ai-soft: rgba(255, 255, 255, 0.06);
     --fa-warn: #e5a43b;
     --fa-warn-soft: rgba(229, 164, 59, 0.13);
     --fa-danger: #ff6b63;
@@ -122,12 +129,16 @@
     --fa-k-sample: #4cc9d1;
     --fa-k-note: #d9b64a;
     --fa-k-project: #4fbf8b;
-    --fa-ai-solid: #7357d9;
-    --fa-ai-ink: #ffffff;
-    --fa-ai-line: rgba(165, 148, 249, 0.24);
-    /* 按 #222 卡片底核算：边线约 4.9:1，焦点约 6.2:1 */
+    --fa-ai-solid: #ececec;
+    --fa-ai-ink: #191919;
+    --fa-ai-line: rgba(255, 255, 255, 0.14);
+    --fa-diff-del: #ff8a80;
+    --fa-diff-del-soft: rgba(255, 107, 99, 0.16);
+    --fa-diff-add: #7fd8aa;
+    --fa-diff-add-soft: rgba(79, 191, 139, 0.18);
+    /* 按 #222 卡片底核算：边线约 4.9:1，焦点约 7:1 */
     --fa-check-edge: #8e8e93;
-    --fa-check-focus: #a594f9;
+    --fa-check-focus: #4fbf8b;
     --fa-shadow-sm: 0 0 0 1px rgba(255, 255, 255, 0.065), 0 1px 2px rgba(0, 0, 0, 0.3);
     --fa-shadow-md: 0 0 0 1px rgba(255, 255, 255, 0.075), 0 2px 6px -1px rgba(0, 0, 0, 0.35), 0 14px 34px -12px rgba(0, 0, 0, 0.6);
     --fa-shadow-lg: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 6px 16px -6px rgba(0, 0, 0, 0.45), 0 24px 60px -18px rgba(0, 0, 0, 0.75);
@@ -138,7 +149,7 @@
 }
 
 /* 宿主显式浅色 */
-:where(.light, [data-theme='light'], [data-color-mode='light']) .forest-app {
+:where(.light, [data-theme='light'], [data-color-mode='light'], [data-ds-theme-source='light']) .forest-app {
   --fa-bg: #ffffff;
   --fa-bg-side: #f7f7f5;
   --fa-bg-sunken: #f4f4f2;
@@ -157,8 +168,9 @@
   --fa-accent-ink: #ffffff;
   --fa-accent-soft: rgba(47, 122, 85, 0.1);
   --fa-accent-soft-2: rgba(47, 122, 85, 0.16);
-  --fa-ai: #6e56cf;
-  --fa-ai-soft: rgba(110, 86, 207, 0.08);
+  /* AI 相关一律用“墨色”（中性石墨），不再另起一种色相；森林绿仍是唯一的强调色 */
+  --fa-ai: #3a3a3c;
+  --fa-ai-soft: rgba(55, 53, 47, 0.055);
   --fa-warn: #a15c00;
   --fa-warn-soft: rgba(214, 140, 20, 0.12);
   --fa-danger: #d0312d;
@@ -171,12 +183,18 @@
   --fa-k-sample: #0e7c86;
   --fa-k-note: #a17a12;
   --fa-k-project: #2f7a55;
-  --fa-ai-solid: #6e56cf;
+  --fa-ai-solid: #1d1d1f;
   --fa-ai-ink: #ffffff;
-  --fa-ai-line: rgba(110, 86, 207, 0.2);
-  /* 自绘复选框：未选中边线与键盘焦点环，按白底 #fff 核算 ≥ 3:1（边线约 3.6:1，焦点约 5.4:1） */
+  --fa-ai-line: rgba(55, 53, 47, 0.14);
+  /* 逐字差异：删去 = 红底划线，新增 = 绿底；文字色按白底核算 ≥ 4.5:1 */
+  --fa-diff-del: #b42318;
+  --fa-diff-del-soft: rgba(208, 49, 45, 0.1);
+  --fa-diff-add: #1f6b45;
+  --fa-diff-add-soft: rgba(47, 122, 85, 0.15);
+  /* 自绘复选框：未选中边线与键盘焦点环，按白底 #fff 核算 ≥ 3:1（边线约 3.6:1，焦点约 5.3:1）；
+     选中是墨色实底，焦点环用绿色，两者一眼可分 */
   --fa-check-edge: #86868b;
-  --fa-check-focus: #6e56cf;
+  --fa-check-focus: #2f7a55;
   /* 分层阴影：一圈发丝描边 + 贴地的短影 + 远处的柔影 */
   --fa-shadow-sm: 0 0 0 1px rgba(0, 0, 0, 0.055), 0 1px 2px rgba(0, 0, 0, 0.04);
   --fa-shadow-md: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 2px 6px -1px rgba(0, 0, 0, 0.05), 0 12px 32px -12px rgba(0, 0, 0, 0.14);
@@ -187,7 +205,7 @@
 }
 
 /* 宿主显式深色 */
-:where(.dark, [data-theme='dark'], [data-color-mode='dark']) .forest-app {
+:where(.dark, [data-theme='dark'], [data-color-mode='dark'], [data-ds-dark-theme]) .forest-app {
   --fa-bg: #191919;
   --fa-bg-side: #202020;
   --fa-bg-sunken: #252525;
@@ -206,8 +224,8 @@
   --fa-accent-ink: #0b1f15;
   --fa-accent-soft: rgba(79, 191, 139, 0.12);
   --fa-accent-soft-2: rgba(79, 191, 139, 0.2);
-  --fa-ai: #a594f9;
-  --fa-ai-soft: rgba(165, 148, 249, 0.12);
+  --fa-ai: #d4d4d4;
+  --fa-ai-soft: rgba(255, 255, 255, 0.06);
   --fa-warn: #e5a43b;
   --fa-warn-soft: rgba(229, 164, 59, 0.13);
   --fa-danger: #ff6b63;
@@ -220,11 +238,15 @@
   --fa-k-sample: #4cc9d1;
   --fa-k-note: #d9b64a;
   --fa-k-project: #4fbf8b;
-  --fa-ai-solid: #7357d9;
-  --fa-ai-ink: #ffffff;
-  --fa-ai-line: rgba(165, 148, 249, 0.24);
+  --fa-ai-solid: #ececec;
+  --fa-ai-ink: #191919;
+  --fa-ai-line: rgba(255, 255, 255, 0.14);
+  --fa-diff-del: #ff8a80;
+  --fa-diff-del-soft: rgba(255, 107, 99, 0.16);
+  --fa-diff-add: #7fd8aa;
+  --fa-diff-add-soft: rgba(79, 191, 139, 0.18);
   --fa-check-edge: #8e8e93;
-  --fa-check-focus: #a594f9;
+  --fa-check-focus: #4fbf8b;
   --fa-shadow-sm: 0 0 0 1px rgba(255, 255, 255, 0.065), 0 1px 2px rgba(0, 0, 0, 0.3);
   --fa-shadow-md: 0 0 0 1px rgba(255, 255, 255, 0.075), 0 2px 6px -1px rgba(0, 0, 0, 0.35), 0 14px 34px -12px rgba(0, 0, 0, 0.6);
   --fa-shadow-lg: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 6px 16px -6px rgba(0, 0, 0, 0.45), 0 24px 60px -18px rgba(0, 0, 0, 0.75);
@@ -657,8 +679,8 @@
   place-items: center;
   font-weight: 600;
   font-size: 11px;
-  color: #fff;
-  background: var(--fa-ai);
+  color: var(--fa-ai-ink);
+  background: var(--fa-ai-solid);
 }
 
 /* ───────────── 面板与页面 ───────────── */
@@ -4403,14 +4425,21 @@
   }
   .forest-app .fa-prop,
   .forest-app .fa-organize,
-  .forest-app .fa-composer {
+  .forest-app .fa-composer,
+  .forest-app .fa-inline-ops .fa-op,
+  .forest-app .fa-pop .fa-pop__panel {
     border: 1px solid CanvasText;
+  }
+  /* 差异底色在强制配色下会被去掉：删去保留删除线，新增改用下划线，仍可分辨 */
+  .forest-app .fa-diff .fa-diff__ins,
+  .forest-app .fa-op .fa-op__legend ins {
+    text-decoration: underline;
   }
 }
 
 /* ═════════════════════════ 自适应实验页 ═════════════════════════
-   正文优先：一栏阅读宽度、发丝线分隔、安静的灰；只有“待核”“待定提案”“AI 来源”用紫色，
-   只有失败与冲突用暖色。所有令牌沿用上方的浅色 / 深色两套。 */
+   正文优先：一栏阅读宽度、发丝线分隔、安静的灰；“待核”“待定提案”“AI 来源”用墨色（不另起色相），
+   “你的决定”（接受、已接受）用森林绿，只有失败与冲突用暖色。所有令牌沿用上方的浅色 / 深色两套。 */
 
 /* ───────────── 入口：导航与林地 ───────────── */
 
@@ -4543,6 +4572,248 @@
 }
 .forest-app .fa-savebadge__extra {
   color: var(--fa-text-3);
+}
+/* 正文已保存、输入框还有字：空心暖色圆点 + 正常字色——提醒，但不是错误 */
+.forest-app .fa-savebadge.is-hold {
+  color: var(--fa-text-2);
+}
+.forest-app .fa-savebadge.is-hold .fa-savebadge__dot {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--fa-warn);
+}
+.forest-app .fa-savebadge[aria-expanded='true'] {
+  background: var(--fa-bg-active);
+  color: var(--fa-text);
+}
+
+/* ───────────── 小弹层 ───────────── */
+
+.forest-app .fa-pop {
+  position: relative;
+  display: inline-flex;
+  min-width: 0;
+  max-width: 100%;
+}
+.forest-app .fa-pop__panel {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 6px);
+  width: min(360px, calc(100cqw - 24px));
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--fa-bg-raised);
+  box-shadow: var(--fa-shadow-lg);
+  color: var(--fa-text);
+  font-size: 13px;
+  line-height: 1.55;
+  white-space: normal;
+  text-align: left;
+  animation: forest-rise 160ms var(--fa-ease);
+}
+.forest-app .fa-pop__panel.is-end {
+  right: 0;
+}
+.forest-app .fa-pop__panel.is-start {
+  left: 0;
+}
+
+/* 这页到了哪一步：四层竖排，圆点 + 一根细线串起来 */
+.forest-app .fa-trail {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.forest-app .fa-trail__h {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-trail__steps {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.forest-app .fa-trail__steps::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  bottom: 8px;
+  left: 4px;
+  width: 1px;
+  background: var(--fa-line-strong);
+}
+.forest-app .fa-trail__step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 9px minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 10px;
+}
+.forest-app .fa-trail__dot {
+  position: relative;
+  z-index: 1;
+  width: 9px;
+  height: 9px;
+  margin-top: 5px;
+  border-radius: 50%;
+  background: var(--fa-bg-raised);
+  box-shadow: inset 0 0 0 1.5px var(--fa-text-4), 0 0 0 3px var(--fa-bg-raised);
+}
+.forest-app .fa-trail__step.is-done .fa-trail__dot {
+  background: var(--fa-accent);
+  box-shadow: 0 0 0 3px var(--fa-bg-raised);
+}
+.forest-app .fa-trail__step.is-wait .fa-trail__dot {
+  box-shadow: inset 0 0 0 1.5px var(--fa-warn), 0 0 0 3px var(--fa-bg-raised);
+}
+.forest-app .fa-trail__step.is-busy .fa-trail__dot {
+  background: var(--fa-text-3);
+  box-shadow: 0 0 0 3px var(--fa-bg-raised);
+  animation: forest-pulse 1.2s var(--fa-ease) infinite;
+}
+.forest-app .fa-trail__step.is-bad .fa-trail__dot {
+  border-radius: 2px;
+  transform: rotate(45deg) scale(0.85);
+  background: var(--fa-danger);
+  box-shadow: 0 0 0 3px var(--fa-bg-raised);
+}
+.forest-app .fa-trail__main {
+  min-width: 0;
+}
+.forest-app .fa-trail__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+}
+.forest-app .fa-trail__name {
+  flex: none;
+  min-width: 56px;
+  font-size: 12px;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-trail__text {
+  min-width: 0;
+  font-weight: 500;
+  color: var(--fa-text);
+  word-break: break-word;
+  font-variant-numeric: tabular-nums;
+}
+.forest-app .fa-trail__step.is-off .fa-trail__text {
+  font-weight: 400;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-trail__step.is-bad .fa-trail__text {
+  color: var(--fa-danger);
+}
+.forest-app .fa-trail__detail {
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-trail__foot {
+  padding-top: 10px;
+  border-top: 1px solid var(--fa-line);
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--fa-text-3);
+}
+
+/* Obsidian 笔记小卡 */
+.forest-app .fa-note {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.forest-app .fa-note__h {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  font-weight: 600;
+}
+.forest-app .fa-note__h > .fa-icon {
+  color: var(--fa-text-3);
+}
+.forest-app .fa-note__state {
+  margin-left: auto;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-note__state.is-done {
+  color: var(--fa-accent);
+}
+.forest-app .fa-note__state.is-wait {
+  color: var(--fa-warn);
+}
+.forest-app .fa-note__state.is-bad {
+  color: var(--fa-danger);
+}
+.forest-app .fa-note__path {
+  padding: 5px 8px;
+  border-radius: var(--fa-r-sm);
+  background: var(--fa-bg-sunken);
+  font-family: var(--fa-mono);
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--fa-text-2);
+  word-break: break-all;
+}
+.forest-app .fa-note__acts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.forest-app .fa-note__acts a.fa-btn {
+  text-decoration: none;
+}
+.forest-app .fa-note__link {
+  font-family: var(--fa-mono);
+  font-size: 11.5px;
+  color: var(--fa-text-3);
+  word-break: break-all;
+}
+.forest-app .fa-note__manual {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.forest-app .fa-note__wikilink {
+  width: 100%;
+  font-family: var(--fa-mono);
+  font-size: 12px;
+}
+.forest-app .fa-note__issues {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 12px;
+}
+.forest-app .fa-note__issues li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+}
+.forest-app .fa-note__issue-name {
+  font-weight: 500;
+  color: var(--fa-warn);
+}
+.forest-app .fa-note__foot {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+  padding-top: 8px;
+  border-top: 1px solid var(--fa-line);
+  font-size: 11.5px;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-note__foot .fa-link {
+  font-size: 12px;
 }
 
 /* 小型分段控件（成页 / 原样） */
@@ -4900,10 +5171,10 @@
   border-radius: var(--fa-r-sm);
 }
 
-/* AI 来源与待核：左侧一条淡紫细线；待核时多一层浅底 */
+/* AI 来源与待核：左侧一条淡墨细线；待核时多一层纸色浅底、细线加深 */
 .forest-app .fa-blk.is-ai .fa-blk__body {
   padding-left: 12px;
-  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--fa-ai) 35%, transparent);
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--fa-ai) 22%, transparent);
 }
 .forest-app .fa-blk.is-pending .fa-blk__body {
   padding: 6px 8px 6px 12px;
@@ -4996,8 +5267,9 @@
   border-radius: 999px;
   font-size: 11.5px;
   font-weight: 600;
-  color: var(--fa-ai);
-  background: color-mix(in srgb, var(--fa-ai) 14%, transparent);
+  /* 待核：墨色实底小签，不靠色相也足够醒目 */
+  color: var(--fa-ai-ink);
+  background: var(--fa-ai-solid);
 }
 .forest-app .fa-blk__confirm {
   height: 24px;
@@ -5487,9 +5759,10 @@
 
 /* ───────────── AI 提案 ───────────── */
 
-/* 设计语言：卡片只有一层；改动之间用发丝线分开；左侧细线沿用页面里 AI 块的约定——
-   实线 = 待定的 AI 提议，虚线 = 推断，绿 = 已接受，灰 = 已拒绝。顶部一道紫→绿的极细光带，
-   表示“模型提议、由你决定”。 */
+/* 设计语言：就地审阅。页首只有一张安静的提案条（自述、系统记录、批量、逐处看）；
+   每处改动是一张贴在目标块下方的小卡。左侧细线沿用页面里 AI 块的约定——
+   墨色实线 = 待定的 AI 提议，墨色虚线 = 推断，绿 = 已接受，灰 = 已拒绝。
+   不用色相区分“AI”，靠细线形状、✦ 图标与文字标签；绿色只留给“你的决定”。 */
 .forest-app .fa-props-tray {
   display: flex;
   flex-direction: column;
@@ -5534,18 +5807,18 @@
 .forest-app .fa-prop {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: 18px 20px 16px;
-  border-radius: 16px;
-  background:
-    linear-gradient(90deg, transparent 4%, color-mix(in srgb, var(--fa-ai) 65%, transparent) 30%, color-mix(in srgb, var(--fa-accent) 55%, transparent) 72%, transparent 96%) top / 100% 1.5px no-repeat,
-    radial-gradient(70% 56px at 50% 0%, var(--fa-ai-soft), transparent),
-    var(--fa-bg-raised);
-  box-shadow: 0 0 0 1px var(--fa-ai-line), var(--fa-shadow-md);
+  gap: 12px;
+  padding: 14px 16px 14px;
+  border-radius: 14px;
+  background: var(--fa-bg-sunken);
 }
 .forest-app .fa-prop.is-fresh {
   animation: forest-rise 320ms var(--fa-ease-spring);
-  box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--fa-ai) 45%, transparent), var(--fa-shadow-md), 0 10px 36px -14px color-mix(in srgb, var(--fa-ai) 45%, transparent);
+  box-shadow: 0 0 0 1px var(--fa-accent-soft-2), 0 0 0 4px var(--fa-accent-soft);
+}
+.forest-app .fa-prop.is-done {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--fa-line);
 }
 .forest-app .fa-prop__head {
   display: flex;
@@ -5557,10 +5830,13 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: var(--fa-ai);
+  color: var(--fa-text);
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.01em;
+}
+.forest-app .fa-prop__eyebrow > .fa-icon {
+  color: var(--fa-ai);
 }
 .forest-app .fa-prop__eyebrow .fa-muted {
   font-weight: 400;
@@ -5572,7 +5848,8 @@
   height: 22px;
   padding: 0 9px;
   border-radius: 999px;
-  background: var(--fa-bg-sunken);
+  background: var(--fa-bg-raised);
+  box-shadow: inset 0 0 0 1px var(--fa-line);
   font-size: 12px;
   font-weight: 500;
   color: var(--fa-text-2);
@@ -5594,6 +5871,34 @@
   color: var(--fa-text-2);
   white-space: pre-wrap;
   font-style: italic;
+}
+.forest-app .fa-prop__claim p.is-clamped {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.forest-app .fa-prop__more {
+  font-size: 12px;
+}
+/* 改动在哪里 + 逐处看 */
+.forest-app .fa-prop__nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+.forest-app .fa-prop__where {
+  flex: 1 1 240px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--fa-text-2);
+}
+.forest-app .fa-prop__go {
+  flex: none;
+}
+.forest-app .fa-prop__chosen {
+  font-size: 12px;
 }
 .forest-app .fa-prop__tag {
   align-self: flex-start;
@@ -5759,6 +6064,147 @@
 .forest-app .fa-op.is-rejected {
   opacity: 0.72;
 }
+
+/* 就地改动：贴在目标块下方的一张小卡；左缘与正文对齐，像页边的一条批注 */
+.forest-app .fa-inline-ops {
+  margin: 4px 0 12px;
+}
+.forest-app .fa-inline-ops > ol {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.forest-app .fa-inline-ops.is-tail {
+  margin-top: 14px;
+}
+.forest-app .fa-inline-ops__label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-inline-ops__label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--fa-line);
+}
+.forest-app .fa-op.is-inline,
+.forest-app .fa-op.is-inline:first-child,
+.forest-app .fa-op.is-inline:last-child {
+  gap: 10px;
+  padding: 12px 14px 12px 18px;
+  border-radius: 12px;
+  background: var(--fa-bg-raised);
+  box-shadow: 0 0 0 1px var(--fa-ai-line), var(--fa-shadow-sm);
+  scroll-margin: 96px;
+  transition: box-shadow 200ms var(--fa-ease);
+}
+.forest-app .fa-op.is-inline + .fa-op.is-inline {
+  border-top: 0;
+}
+.forest-app .fa-op.is-inline::before,
+.forest-app .fa-op.is-inline:first-child::before,
+.forest-app .fa-op.is-inline:last-child::before {
+  left: 7px;
+  top: 14px;
+  bottom: 14px;
+}
+.forest-app .fa-op.is-inline.is-fresh {
+  animation: forest-rise 320ms var(--fa-ease-spring);
+}
+.forest-app .fa-op.is-inline.is-flash {
+  box-shadow: 0 0 0 1.5px var(--fa-accent), 0 0 0 5px var(--fa-accent-soft), var(--fa-shadow-sm);
+}
+.forest-app .fa-op.is-inline .fa-op__what {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.forest-app .fa-op.is-inline .fa-op__what > .fa-icon {
+  color: var(--fa-ai);
+}
+.forest-app .fa-op__next {
+  color: var(--fa-text-3);
+}
+
+/* 逐字差异：读一遍就知道改了哪几个字；数字整体成词，改动一眼可见 */
+.forest-app .fa-op__diffbox {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px 10px;
+  border-radius: 10px;
+  background: var(--fa-bg-sunken);
+}
+.forest-app .fa-op__diffbox.is-editing .fa-op__side.is-next {
+  padding: 6px 10px 8px;
+  background: var(--fa-bg-raised);
+}
+.forest-app .fa-op__side-label.is-sub {
+  margin-top: 4px;
+}
+.forest-app .fa-op__side-label.is-sub::before {
+  display: none;
+}
+.forest-app .fa-op__legend {
+  display: inline-flex;
+  gap: 6px;
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 400;
+}
+.forest-app .fa-op__legend del,
+.forest-app .fa-op__legend ins {
+  padding: 0 4px;
+  border-radius: 3px;
+}
+.forest-app .fa-op__legend del {
+  color: var(--fa-diff-del);
+  background: var(--fa-diff-del-soft);
+}
+.forest-app .fa-op__legend ins {
+  color: var(--fa-diff-add);
+  background: var(--fa-diff-add-soft);
+  text-decoration: none;
+}
+.forest-app .fa-op__diffacts {
+  display: inline-flex;
+  gap: 12px;
+  font-size: 12px;
+}
+.forest-app .fa-diff {
+  font-size: 14px;
+  line-height: 1.75;
+  color: var(--fa-text);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.forest-app .fa-diff.is-heading {
+  font-size: 15.5px;
+  font-weight: 650;
+}
+.forest-app .fa-diff__del,
+.forest-app .fa-diff__ins {
+  padding: 1px 2px;
+  border-radius: 3px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+.forest-app .fa-diff__del {
+  color: var(--fa-diff-del);
+  background: var(--fa-diff-del-soft);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+.forest-app .fa-diff__ins {
+  color: var(--fa-diff-add);
+  background: var(--fa-diff-add-soft);
+  text-decoration: none;
+}
 .forest-app .fa-op__head {
   display: flex;
   align-items: center;
@@ -5773,7 +6219,7 @@
   color: var(--fa-text);
 }
 
-/* 复选框：圆角方块，选中时紫色填充 + 弹出的对勾（强制配色模式下回退原生控件） */
+/* 复选框：圆角方块，选中时墨色填充 + 弹出的对勾（强制配色模式下回退原生控件） */
 .forest-app .fa-op__check,
 .forest-app .fa-prop__foot .fa-check input {
   -webkit-appearance: none;
@@ -5815,7 +6261,7 @@
 .forest-app .fa-prop__foot .fa-check input:checked::after {
   transform: rotate(45deg) scale(1);
 }
-/* 键盘焦点：双重提示——实色 2px 焦点环（隔 2px 底色缝，选中的紫色实底上也分得清）
+/* 键盘焦点：双重提示——绿色实色 2px 焦点环（隔 2px 底色缝，选中的墨色实底上也分得清）
    + 未选中时边线同步变成焦点色；不依赖半透明，不依赖动画 */
 .forest-app .fa-op__check:focus-visible,
 .forest-app .fa-prop__foot .fa-check input:focus-visible {
@@ -5935,12 +6381,12 @@
   color: var(--fa-text-3);
 }
 .forest-app .fa-op__side.is-next {
-  background: color-mix(in srgb, var(--fa-ai) 6%, transparent);
+  background: var(--fa-bg-sunken);
   box-shadow: inset 0 0 0 1px var(--fa-ai-line);
 }
 .forest-app .fa-op__side.is-next:focus-within {
   background: var(--fa-bg-raised);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fa-ai) 50%, transparent), 0 0 0 3px var(--fa-ai-soft);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--fa-accent) 40%, transparent), 0 0 0 3px var(--fa-accent-soft);
 }
 .forest-app .fa-op__side-label {
   display: flex;
@@ -5992,15 +6438,15 @@
   gap: 4px;
   margin-left: auto;
 }
-/* 接受：柔紫实底，比“拒绝”多一级权重，但不抢正文 */
+/* 接受：柔绿实底（与“已接受”的绿细线同一语义：这是你的决定），比“拒绝”多一级权重，但不抢正文 */
 .forest-app .fa-op__accept {
-  color: var(--fa-ai);
-  background: var(--fa-ai-soft);
+  color: var(--fa-accent);
+  background: var(--fa-accent-soft);
   box-shadow: none;
 }
 .forest-app .fa-btn.fa-op__accept:hover:not(:disabled):not(.is-disabled) {
-  color: var(--fa-ai);
-  background: color-mix(in srgb, var(--fa-ai) 17%, transparent);
+  color: var(--fa-accent);
+  background: var(--fa-accent-soft-2);
   box-shadow: none;
 }
 .forest-app .fa-btn.fa-op__accept:disabled {
@@ -6127,7 +6573,8 @@
 
 /* ───────────── 理一理 ───────────── */
 
-/* “理一理”：实心紫（两套主题都保证白字对比度 ≥ 4.5:1），顶部一线高光，像一颗被按下会回弹的键 */
+/* “理一理”：墨色胶囊（浅色主题纸白上的墨，深色主题反过来；两套对比度都远超 4.5:1），
+   顶部一线高光，像一颗被按下会回弹的键 */
 .forest-app .fa-organize-btn {
   display: inline-flex;
   align-items: center;
@@ -6140,23 +6587,23 @@
   letter-spacing: 0.01em;
   color: var(--fa-ai-ink);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0) 55%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0) 55%),
     var(--fa-ai-solid);
   box-shadow:
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.28),
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.22),
     0 1px 2px rgba(0, 0, 0, 0.14),
-    0 4px 14px -6px color-mix(in srgb, var(--fa-ai-solid) 70%, transparent);
+    0 4px 12px -6px rgba(0, 0, 0, 0.32);
   transition: filter 150ms var(--fa-ease), transform 160ms var(--fa-ease-spring), box-shadow 150ms var(--fa-ease);
 }
 .forest-app .fa-organize-btn .fa-icon {
   transition: transform 420ms var(--fa-ease-spring);
 }
 .forest-app .fa-organize-btn:hover:not(:disabled) {
-  filter: brightness(1.07);
+  filter: brightness(1.12);
   box-shadow:
-    inset 0 0.5px 0 rgba(255, 255, 255, 0.28),
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.22),
     0 1px 2px rgba(0, 0, 0, 0.14),
-    0 8px 20px -8px color-mix(in srgb, var(--fa-ai-solid) 80%, transparent);
+    0 8px 18px -8px rgba(0, 0, 0, 0.38);
 }
 .forest-app .fa-organize-btn:hover:not(:disabled) .fa-icon {
   transform: rotate(18deg) scale(1.08);
@@ -6169,7 +6616,7 @@
   box-shadow: none;
 }
 .forest-app .fa-organize-btn.is-on {
-  box-shadow: 0 0 0 3px var(--fa-ai-soft), inset 0 0.5px 0 rgba(255, 255, 255, 0.28), 0 1px 2px rgba(0, 0, 0, 0.14);
+  box-shadow: 0 0 0 3px var(--fa-ai-line), inset 0 0.5px 0 rgba(255, 255, 255, 0.22), 0 1px 2px rgba(0, 0, 0, 0.14);
 }
 .forest-app .fa-organize {
   display: flex;
@@ -6178,11 +6625,57 @@
   margin-bottom: 10px;
   padding: 14px 16px;
   border-radius: 16px;
-  background:
-    linear-gradient(90deg, transparent 4%, color-mix(in srgb, var(--fa-ai) 65%, transparent) 30%, color-mix(in srgb, var(--fa-accent) 55%, transparent) 72%, transparent 96%) top / 100% 1.5px no-repeat,
-    var(--fa-bg-raised);
-  box-shadow: 0 0 0 1px var(--fa-ai-line), var(--fa-shadow-lg);
+  background: var(--fa-bg-raised);
+  box-shadow: var(--fa-shadow-lg);
   animation: forest-rise 220ms var(--fa-ease-spring);
+}
+/* 发送前会发生什么、模型读到哪一版：如实列出 */
+.forest-app .fa-organize__scope {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: var(--fa-bg-sunken);
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--fa-text-2);
+}
+.forest-app .fa-organize__scope-h {
+  font-weight: 500;
+}
+.forest-app .fa-organize__steps {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  counter-reset: fa-step;
+}
+.forest-app .fa-organize__steps li {
+  display: flex;
+  gap: 6px;
+  counter-increment: fa-step;
+}
+.forest-app .fa-organize__steps li::before {
+  content: counter(fa-step);
+  flex: none;
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  margin-top: 1px;
+  border-radius: 50%;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--fa-text-2);
+  box-shadow: inset 0 0 0 1px var(--fa-line-strong);
+  font-variant-numeric: tabular-nums;
+}
+.forest-app .fa-organize__reads {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--fa-text-3);
+  font-variant-numeric: tabular-nums;
 }
 .forest-app .fa-organize__head {
   display: flex;
@@ -6195,6 +6688,9 @@
   gap: 6px;
   font-size: 14px;
   font-weight: 600;
+  color: var(--fa-text);
+}
+.forest-app .fa-organize__title > .fa-icon {
   color: var(--fa-ai);
 }
 .forest-app .fa-organize__target {
@@ -6221,9 +6717,9 @@
   transition: background-color 120ms var(--fa-ease), color 120ms var(--fa-ease), box-shadow 120ms var(--fa-ease);
 }
 .forest-app .fa-organize__chip:hover:not(:disabled) {
-  color: var(--fa-ai);
-  background: var(--fa-ai-soft);
-  box-shadow: inset 0 0 0 1px var(--fa-ai-line);
+  color: var(--fa-text);
+  background: var(--fa-bg-hover);
+  box-shadow: inset 0 0 0 1px var(--fa-line-strong);
 }
 .forest-app .fa-organize__chip:disabled {
   opacity: 0.5;
@@ -6265,42 +6761,49 @@
 }
 .forest-app .fa-btn.fa-organize__go:hover:not(:disabled):not(.is-disabled) {
   color: var(--fa-ai-ink);
-  background: color-mix(in srgb, var(--fa-ai-solid) 88%, #000);
-  box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.25), 0 4px 12px -4px color-mix(in srgb, var(--fa-ai-solid) 60%, transparent);
+  background: var(--fa-ai-solid);
+  filter: brightness(1.12);
+  box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.22), 0 4px 12px -4px rgba(0, 0, 0, 0.32);
 }
 .forest-app .fa-await {
   display: flex;
   align-items: center;
-  gap: 10px;
+  flex-wrap: wrap;
+  gap: 6px 10px;
   padding: 9px 12px 9px 14px;
   border-radius: 12px;
-  background: var(--fa-ai-soft);
-  box-shadow: inset 0 0 0 1px var(--fa-ai-line);
+  background: var(--fa-bg-sunken);
   color: var(--fa-text-2);
   font-size: 12.5px;
   line-height: 1.5;
   animation: forest-rise 220ms var(--fa-ease);
 }
 .forest-app .fa-await > span:not(.fa-await__pulse) {
-  flex: 1;
+  flex: 1 1 220px;
 }
 .forest-app .fa-await > .fa-icon {
   color: var(--fa-ai);
 }
 .forest-app .fa-await.is-arrived {
-  color: var(--fa-ai);
+  color: var(--fa-text);
   font-weight: 500;
+  box-shadow: inset 0 0 0 1px var(--fa-accent-soft-2);
+  background: var(--fa-accent-soft);
 }
 .forest-app .fa-await .fa-link {
   flex: none;
-  color: var(--fa-ai);
+  color: var(--fa-accent);
+}
+.forest-app .fa-await .fa-await__dismiss {
+  color: var(--fa-text-3);
+  font-weight: 400;
 }
 .forest-app .fa-await__pulse {
   flex: none;
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--fa-ai);
+  background: var(--fa-accent);
   animation: fa-breathe 1.8s ease-in-out infinite;
 }
 @keyframes fa-breathe {
@@ -6398,6 +6901,27 @@
 .forest-app .fa-composer__tool.is-commit {
   color: var(--fa-accent);
   font-weight: 500;
+}
+/* 输入框里有还没记下的字：卡片多一圈极淡的暖色描边，工具栏写明“未记下” */
+.forest-app .fa-composer.has-draft:not(:focus-within) {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--fa-warn) 30%, transparent), var(--fa-shadow-float);
+}
+.forest-app .fa-composer__hold {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 6px;
+  font-size: 12px;
+  color: var(--fa-text-3);
+  white-space: nowrap;
+  cursor: default;
+}
+.forest-app .fa-composer__hold-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1.5px var(--fa-warn);
 }
 .forest-app .fa-composer__glyph {
   display: inline-grid;
@@ -6633,6 +7157,19 @@
   }
   .forest-app .fa-op {
     padding-left: 12px;
+  }
+  .forest-app .fa-op.is-inline,
+  .forest-app .fa-op.is-inline:first-child,
+  .forest-app .fa-op.is-inline:last-child {
+    padding: 10px 10px 10px 14px;
+  }
+  .forest-app .fa-op.is-inline::before,
+  .forest-app .fa-op.is-inline:first-child::before,
+  .forest-app .fa-op.is-inline:last-child::before {
+    left: 5px;
+  }
+  .forest-app .fa-op__legend {
+    display: none;
   }
 }
 

@@ -16,7 +16,7 @@ export function buildOrganizeInstruction(id: string, requirement: string): strin
   return organizationPrompt(id, requirement);
 }
 
-async function copyToClipboard(text: string, fallback: HTMLTextAreaElement | null): Promise<boolean> {
+export async function copyToClipboard(text: string, fallback: HTMLTextAreaElement | HTMLInputElement | null): Promise<boolean> {
   try {
     if (navigator.clipboard?.writeText) {
       await navigator.clipboard.writeText(text);
@@ -59,16 +59,29 @@ export function OrganizePanel({
   const title = state.local.title.trim() || '未命名实验';
   const busy = phase.kind === 'saving' || phase.kind === 'sending';
 
+  // 发送前如实预告：哪些内容会先被记下、保存，模型读到的是哪一版
+  const draft = state.composer.trim();
+  const moving = state.uploads.filter((u) => u.stage === 'queued' || u.stage === 'uploading' || u.stage === 'registering').length;
+  const willBlocks = state.local.blocks.length + (draft ? 1 : 0);
+  const mats = state.view?.page.materials.length ?? 0;
+  const steps: string[] = [];
+  if (draft) steps.push(`把输入框里的「${draft.length > 28 ? `${draft.slice(0, 28)}…` : draft}」记进本页`);
+  if (draft || state.dirty) steps.push('保存到 Host');
+  if (moving) steps.push(`等 ${moving} 个文件上传并登记到本页（没完成就不会发送）`);
+
   useEffect(() => {
     areaRef.current?.focus();
   }, []);
 
   const go = async () => {
     setPhase({ kind: 'saving' });
-    // 调用前先把本页保存好：模型读到的是 Host 上已确认的版本
-    const saved = await ctrl.flush();
-    if (!saved) {
-      setPhase({ kind: 'error', message: '本页还有没保存成功的修改，先处理页面顶部的保存状态，再来理一理。这样模型读到的才是你现在看到的内容。' });
+    // 交接前：确认素材登记完成、把输入框记进本页并保存全部内容；模型读到的是 Host 已确认的这一版
+    const ready = await ctrl.prepareOrganize();
+    if (!ready) {
+      setPhase({
+        kind: 'error',
+        message: ctrl.getState().notice?.text ?? '本页还有内容没准备好（未保存或文件未登记完），先处理页面上方的提示，再来理一理。这样模型读到的才是你现在看到的全部内容。',
+      });
       return;
     }
     setPhase({ kind: 'sending' });
@@ -142,6 +155,22 @@ export function OrganizePanel({
           </button>
         ))}
       </div>
+      <div className="fa-organize__scope" role="note">
+        {steps.length > 0 && (
+          <>
+            <p className="fa-organize__scope-h">{organizePage ? '发送' : '复制'}前会先：</p>
+            <ol className="fa-organize__steps">
+              {steps.map((s) => (
+                <li key={s}>{s}</li>
+              ))}
+            </ol>
+          </>
+        )}
+        <p className="fa-organize__reads">
+          <Icon name="lock" size={12} />
+          模型读取 Host 上保存好的这一版：{willBlocks} 块 · 素材 {mats} 个
+        </p>
+      </div>
       <details className="fa-organize__peek">
         <summary>查看将{organizePage ? '发送' : '复制'}的指令</summary>
         <pre>{instruction}</pre>
@@ -176,7 +205,7 @@ export function OrganizePanel({
           取消
         </button>
         <button type="button" className="fa-btn fa-btn--sm fa-organize__go" onClick={() => void go()} disabled={busy}>
-          {phase.kind === 'saving' ? '先保存本页…' : phase.kind === 'sending' ? (organizePage ? '正在发送…' : '正在复制…') : organizePage ? '发送' : '复制指令'}
+          {phase.kind === 'saving' ? (draft ? '先记下并保存…' : '先保存本页…') : phase.kind === 'sending' ? (organizePage ? '正在发送…' : '正在复制…') : organizePage ? '发送' : '复制指令'}
         </button>
       </div>
     </div>
@@ -189,7 +218,7 @@ function elapsed(ms: number): string {
 }
 
 /** 发出（或复制）指令之后：如实显示“在等”，直到真实提案出现；从不声称 AI 已经完成 */
-export function AwaitingBanner({ state, ctrl }: { state: PageState; ctrl: PageController }) {
+export function AwaitingBanner({ state, ctrl, onReview }: { state: PageState; ctrl: PageController; onReview?: () => void }) {
   const [now, setNow] = useState(() => Date.now());
   const a = state.awaiting;
   useEffect(() => {
@@ -205,9 +234,21 @@ export function AwaitingBanner({ state, ctrl }: { state: PageState; ctrl: PageCo
       <div className="fa-await is-arrived" role="status">
         <Icon name="spark" size={14} />
         <span>
-          收到 {fresh.length} 份新提案，就在下方。逐处看过再决定接受哪些。
+          收到 {fresh.length} 份新提案：改动已放进正文里要改的位置，逐处看过再决定接受哪些。
         </span>
-        <button type="button" className="fa-link" onClick={() => ctrl.stopAwaiting()}>
+        {onReview && (
+          <button
+            type="button"
+            className="fa-link"
+            onClick={() => {
+              onReview();
+              ctrl.stopAwaiting();
+            }}
+          >
+            从第一处开始
+          </button>
+        )}
+        <button type="button" className="fa-link fa-await__dismiss" onClick={() => ctrl.stopAwaiting()}>
           知道了
         </button>
       </div>

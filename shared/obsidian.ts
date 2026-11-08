@@ -22,6 +22,10 @@ function basename(id: string): string {
   if (bits) out += alphabet[(accumulator << (5 - bits)) & 31];
   return `ef-${out}`;
 }
+/** Same stable path for mirror generation and client navigation; titles never enter paths. */
+export function obsidianEntityPath(id: string): string {
+  return `entities/${basename(id)}.md`;
+}
 function text(value: string): string {
   return value.replace(/[\r\n\t\u0000-\u001f]+/g, ' ').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/[\\`*_[\]{}()#+.!|~^-]/g, '\\$&');
@@ -221,6 +225,6 @@ export function createObsidianMirror(snapshot: ForestSnapshot, mirroredAt?: stri
     views: [view('全部资料'), view('未归档', 'note.status != "archived"'), view('待核对', 'note.needs_review == true && note.status != "archived"'),
       ...ENTITY_KINDS.map(kind => view(LABEL[kind], `note.type == "${kind}"`))],
   }, null, 2)}\n` });
-  for (const entity of entities) files.push({ path: `entities/${basename(entity.id)}.md`, content: entityNote(entity, outgoing.get(entity.id)!, incoming.get(entity.id) ?? [], byId, rootFolder, materialIssues) });
+  for (const entity of entities) files.push({ path: obsidianEntityPath(entity.id), content: entityNote(entity, outgoing.get(entity.id)!, incoming.get(entity.id) ?? [], byId, rootFolder, materialIssues) });
   return { files, fileCount: files.length, entityCount: entities.length };
 }

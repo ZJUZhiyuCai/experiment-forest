@@ -1026,14 +1026,18 @@ export function ForestApp({ api, sessionId, organizePage }: ForestAppProps) {
   );
 }
 
+/**
+ * 顶栏：从 Host 读取列表数据的刷新状态。
+ * 它既不是某一页的“已保存”，也不是 Obsidian 的“已同步”，所以用“刷新”一词，避免三种状态长得一样。
+ */
 function SyncState({ store }: { store: ReturnType<typeof useForest> }) {
   const label = store.syncing
-    ? '同步中'
+    ? '刷新中'
     : store.syncError
-      ? '同步失败'
+      ? '刷新失败'
       : store.lastSyncedAt
-        ? `已同步 ${formatTime(store.lastSyncedAt).slice(0, 5)}`
-        : '未同步';
+        ? `已刷新 ${formatTime(store.lastSyncedAt).slice(0, 5)}`
+        : '未刷新';
   const tone = store.syncError ? 'is-bad' : store.syncing ? 'is-busy' : 'is-ok';
   return (
     <button
@@ -1041,8 +1045,8 @@ function SyncState({ store }: { store: ReturnType<typeof useForest> }) {
       className={`fa-sync ${tone}`}
       onClick={() => void store.refresh()}
       disabled={store.syncing}
-      title={`${store.lastSyncedAt && !store.syncing && !store.syncError ? `已同步 ${formatTime(store.lastSyncedAt)}` : label}${store.revision !== null ? ` · 数据修订 r${store.revision}` : ''}。点击立即刷新（面板可见时每 5 秒自动刷新）`}
-      aria-label={`${label}，点击立即刷新`}
+      title={`列表数据${store.lastSyncedAt && !store.syncing && !store.syncError ? `于 ${formatTime(store.lastSyncedAt)} 从 Host 刷新` : `：${label}`}${store.revision !== null ? ` · 数据修订 r${store.revision}` : ''}。这里不表示某一页已保存，也不表示 Obsidian 已同步（各页的保存状态在页面右上角）。点击立即刷新（面板可见时每 5 秒自动刷新）`}
+      aria-label={`列表数据${label}，点击立即刷新`}
     >
       <span className="fa-sync__dot" aria-hidden="true" />
       <span className="fa-sync__text">{label}</span>

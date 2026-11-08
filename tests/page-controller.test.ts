@@ -5,7 +5,7 @@ import type {ForestApi,ForestState} from '../shared/model';
 import type {PageBlockInput,PageMaterial,PageView} from '../shared/page';
 import {ForestRepository} from '../plugin/domain';
 import {PageRepository} from '../plugin/pages';
-import {PageController,reviewEditKey} from '../client/pageStore';
+import {PageController,pageController,reviewEditKey} from '../client/pageStore';
 import {merge3,contentOf,type Content} from '../client/pageModel';
 import {beginPageCreation,clearPageCreation} from '../client/pageCreation';
 const text=(id:string,value=id):PageBlockInput=>({id,type:'text',text:value});
@@ -103,4 +103,65 @@ test('a multi-file batch waits for registration before starting the third upload
   assert.equal(begun,2);assert.equal(c.getState().uploads[2]?.stage,'queued');
   gate.resolve();await until(()=>c.getState().uploads.every(u=>u.stage==='done'));
   assert.equal(begun,3);assert.equal(peak,2);await repo.close();
+});
+
+test('uncommitted capture survives a page switch and is saved before the model reads',async()=>{
+  const {api,view,pages,repo}=await fixture();
+  const c=pageController(api,view.entity.id);await c.load();
+  const release=c.subscribe(()=>{});
+  const note='11:30 补记：B 需要复测，第三组数据待补。\n';
+  c.setComposer(note);release();
+  assert.equal(c.hasUnsaved(),true);assert.match(c.unsavedLabel()!.label,/待记下/);
+  const reopened=pageController(api,view.entity.id);assert.equal(reopened,c);assert.equal(reopened.getState().composer,note);
+  assert.equal(await reopened.prepareOrganize(),true);
+  const read=await pages.readForModel(view.entity.id);
+  assert.ok(read.blocks.some(b=>b.block.type==='text'&&b.block.text===note));
+  assert.equal(c.getState().composer,'');assert.equal(c.hasUnsaved(),false);
+  assert.equal(await c.prepareOrganize(),true);assert.equal((await pages.getPage(view.entity.id)).page.blocks.length,1);
+  await repo.close();
+});
+
+test('capture at block limit stays intact and blocks AI instead of silently discarding it',async()=>{
+  const {api,view,pages,repo}=await fixture();
+  const full=await pages.savePage({id:view.entity.id,expectedRevision:view.entity.revision,requestId:'full',title:'full',experimentDate:null,
+    blocks:Array.from({length:200},(_,i)=>text(`b${i}`))});
+  const c=new PageController(api,view.entity.id,full);c.setComposer('keep original input\n');
+  assert.equal(c.commitComposer(),false);assert.equal(await c.prepareOrganize(),false);
+  assert.equal(c.getState().composer,'keep original input\n');assert.equal(c.getState().local.blocks.length,200);
+  assert.match(c.getState().notice!.text,/200/);assert.equal((await pages.getPage(view.entity.id)).entity.revision,full.entity.revision);
+  await repo.close();
+});
+
+test('input typed while preparing AI is retained and prevents a partial handoff',async()=>{
+  const {api,pages,view,repo}=await fixture(),gate=deferred<void>(),arrived=deferred<void>();
+  let first=true;api.savePage=async input=>{const saved=await pages.savePage(input);if(first){first=false;arrived.resolve();await gate.promise;}return saved;};
+  const c=new PageController(api,view.entity.id,view);c.setComposer('before send');
+  const preparing=c.prepareOrganize();await arrived.promise;c.setComposer('new observation during save');gate.resolve();
+  assert.equal(await preparing,false);assert.equal(c.getState().composer,'new observation during save');assert.equal(c.hasUnsaved(),true);
+  assert.equal(await c.prepareOrganize(),true);
+  assert.deepEqual((await pages.getPage(view.entity.id)).page.blocks.map(b=>b.type==='text'?b.text:null),['before send','new observation during save']);
+  await repo.close();
+});
+
+test('failed persistence retains committed capture and blocks the AI handoff',async()=>{
+  const {api,pages,view,repo}=await fixture();api.savePage=async()=>{throw new TypeError('offline');};
+  const c=new PageController(api,view.entity.id,view);c.setComposer('must remain available');
+  assert.equal(await c.prepareOrganize(),false);assert.equal(c.getState().dirty,true);assert.equal(c.hasUnsaved(),true);
+  assert.equal((c.getState().local.blocks[0] as {text:string}).text,'must remain available');
+  api.savePage=i=>pages.savePage(i);assert.equal(await c.saveNowFromUser(),true);
+  assert.equal((await pages.getPage(view.entity.id)).page.blocks.length,1);await repo.close();
+});
+
+test('AI preparation waits for chosen materials and preserves TSV missing-value distinctions',async()=>{
+  const {api,pages,view,repo}=await fixture(),gate=deferred<void>();
+  api.beginMaterial=async()=>{await gate.promise;return {uploadId:'material',received:0,chunkBytes:256000};};
+  api.appendMaterial=async()=>({received:1});api.finishMaterial=async()=>view;
+  const c=new PageController(api,view.entity.id,view);c.addFiles([new File(['a'],'sample.txt',{type:'text/plain'})]);
+  c.setComposer('样品\t读数\nA\t0\nB\tND\nC\t\n');
+  assert.equal(await c.prepareOrganize(),false);assert.match(c.getState().notice!.text,/上传或登记/);
+  assert.ok(c.getState().composer.length);gate.resolve();await until(()=>c.getState().uploads.every(u=>u.stage==='done'));
+  assert.equal(await c.prepareOrganize(),true);
+  const table=(await pages.getPage(view.entity.id)).page.blocks[0]!;assert.equal(table.type,'table');
+  if(table.type==='table') assert.deepEqual(table.rows.map(r=>r.cells[table.columns[1]!.id]),['0','ND','']);
+  await repo.close();
 });

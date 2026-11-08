@@ -1,14 +1,18 @@
 import { useEffect, useMemo, useSyncExternalStore } from 'react';
 import type { ForestApi } from '../shared/model';
 import type { PageBlockInput, PageView } from '../shared/page';
+import { pastedBlock } from '../shared/page';
 import { stageMaterial } from './material-transfer';
 import { classifyError } from './forest-model';
 import {
   EMPTY_CONTENT,
+  PAGE_LIMITS,
   blockInput,
   cloneContent,
   contentOf,
   merge3,
+  looksTabular,
+  newText,
   sameBlock,
   sameContent,
   titleForSave,
@@ -63,6 +67,8 @@ export interface PageState {
   pollError: string | null;
   view: PageView | null;
   local: Content;
+  /** 还未记入正文的输入；随页面控制器保留，不把它误报为 Host 已保存。 */
+  composer: string;
   baseRevision: number | null;
   /** 本地工作版与 Host 已确认版本不同 */
   dirty: boolean;
@@ -117,6 +123,7 @@ export class PageController {
       pollError: null,
       view: null,
       local: EMPTY_CONTENT,
+      composer: '',
       baseRevision: null,
       dirty: false,
       save: { kind: 'clean' },
@@ -153,6 +160,7 @@ export class PageController {
     const s = this.state;
     return (
       s.dirty ||
+      s.composer.length > 0 ||
       s.uploads.some((u) => u.stage === 'queued' || u.stage === 'uploading' || u.stage === 'registering' || (u.stage === 'failed' && u.failedAt === 'register')) ||
       Object.keys(s.reviewEdits).length > 0
     );
@@ -162,6 +170,7 @@ export class PageController {
   unsavedLabel(): { label: string; attention: boolean } | null {
     const s = this.state;
     const parts: string[] = [];
+    if (s.composer.length > 0) parts.push('输入待记下');
     const alert = s.save.kind === 'conflict' || s.save.kind === 'uncertain' || (s.save.kind === 'failed' && s.dirty);
     if (s.save.kind === 'conflict') parts.push('保存冲突待处理');
     else if (alert) parts.push('正文未能保存');
@@ -270,6 +279,37 @@ export class PageController {
 
   /* ── 编辑 ── */
 
+  setComposer(text: string): void {
+    if (this.state.load === 'ready' && text !== this.state.composer) this.set({ composer: text });
+  }
+
+  /** 同步提交到本页缓冲；先校验再清空，失败时输入一字不丢。 */
+  commitComposer(): boolean {
+    const text = this.state.composer;
+    if (text.length === 0) return true;
+    if (!text.trim()) {
+      this.note('warn', '输入只有空白，尚未记下；请补充内容或清空输入。');
+      return false;
+    }
+    if (this.state.load !== 'ready') return false;
+    if (this.state.local.blocks.length >= PAGE_LIMITS.blocks) {
+      this.note('warn', `本页已达 ${PAGE_LIMITS.blocks} 块，输入已保留。请移到新实验页后再记下。`);
+      return false;
+    }
+    const block = looksTabular(text) ? pastedBlock(text, uid) : newText(text);
+    const local = { ...this.state.local, blocks: [...this.state.local.blocks, block] };
+    const invalid = validateContent(local);
+    if (invalid) {
+      this.note('warn', `输入已保留，尚未记下：${invalid}`);
+      return false;
+    }
+    // 单次通知避免订阅者见到“正文已加、输入未清”的中间状态。
+    const kind = this.state.save.kind;
+    this.set({ local, composer: '', dirty: true, save: ['clean', 'saved', 'failed'].includes(kind) ? { kind: 'pending' } : this.state.save });
+    this.schedule();
+    return true;
+  }
+
   edit(fn: (c: Content) => Content): void {
     if (this.state.load !== 'ready') return;
     const local = fn(this.state.local);
@@ -304,12 +344,37 @@ export class PageController {
   /** 立即保存（用户点击）；返回本地是否已全部被 Host 确认 */
   saveNowFromUser(): Promise<boolean> {
     if (this.state.save.kind === 'failed') this.autoResaves = 0;
-    return this.enqueue(() => this.saveNow(true));
+    return this.enqueue(async () => this.commitComposer() && await this.saveNow(true) && this.state.composer.length === 0);
   }
 
   /** 供“理一理”等动作使用：先把最新编辑保存好 */
   flush(): Promise<boolean> {
-    return this.enqueue(() => this.saveNow());
+    return this.enqueue(async () => this.commitComposer() && await this.saveNow() && this.state.composer.length === 0);
+  }
+
+  /** AI 不能越过尚未登记的材料，也不能漏掉等待保存期间新敲的输入。 */
+  async prepareOrganize(): Promise<boolean> {
+    this.clearNotice();
+    if (this.state.load !== 'ready') {
+      this.note('warn', '尚未读到本页，请等页面加载完成后再整理。');
+      return false;
+    }
+    const materialsReady = (): boolean => {
+      const pending = this.state.uploads.filter(u => u.stage !== 'done' && u.stage !== 'cancelled');
+      if (!pending.length) return true;
+      this.note('warn', pending.some(u => u.stage === 'failed')
+        ? `${pending.length} 个文件还没登记成功，请重试或取消这些文件后再整理。`
+        : `${pending.length} 个文件仍在上传或登记，请完成后再整理，避免漏掉材料。`);
+      return false;
+    };
+    if (!materialsReady()) return false;
+    if (!await this.flush()) {
+      if (!this.state.notice) this.note('warn', this.state.composer.length
+        ? '保存期间又有新输入，已保留。请再次发送，将它一并交给 AI。'
+        : '本页还有没保存成功的修改，请先处理保存状态再整理。');
+      return false;
+    }
+    return materialsReady();
   }
 
   /** 只能在队列内调用 */

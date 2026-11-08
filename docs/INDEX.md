@@ -1,6 +1,6 @@
 # 文档导航
 
-当前版本为 **0.3.1 DeepSeek Harness 插件**。先按使用目的选择文档；旧静态应用的说明和早期设计保留作历史资料，不作为当前功能承诺。
+当前版本为 **0.3.2 DeepSeek Harness 插件**。先按使用目的选择文档；旧静态应用的说明和早期设计保留作历史资料，不作为当前功能承诺。
 
 ## 安装与日常使用
 
@@ -19,7 +19,8 @@
 - [后端审查](BACKEND_REVIEW.md)、[前端审查](FRONTEND_REVIEW.md)：重构前的问题与改进依据。
 - [早期前端设计](FRONTEND_DESIGN.md)：历史设计稿，包含未实施的设想。
 - [前端视觉说明](FRONTEND_VISUAL_NOTES.md)、[前端产品说明原稿](FRONTEND_PRODUCT_NOTES.md)：实现阶段记录，需结合 [集成适配说明](LOCAL_ADAPTATIONS.md) 阅读。
-- [0.3.1 前端打磨原稿](FRONTEND_POLISH_NOTES.md)：Claude 的视觉诊断、改动和静态检查说明；浏览器验证见当前验证记录。
+- [0.3.2 日常流程诊断原稿](FRONTEND_DAILY_WORKFLOW.md)：本轮从自由记录、逐项核对到 Obsidian 引用的诊断与实现。
+- [0.3.1 前端打磨原稿](FRONTEND_POLISH_NOTES.md)：Claude 的视觉诊断、改动和静态检查说明；浏览器验证见 [0.3.1 验证记录](VERIFICATION-v0.3.1.md)。
 - [0.3.0 验证记录](VERIFICATION-v0.3.md)、[0.2.0 验证记录](VERIFICATION-v0.2.md)、[0.1.0 验证记录](VERIFICATION-v0.1.md)：历史验证证据。
 - [旧版 README](LEGACY_README.md)：重构前静态应用的历史快照；其中的部署命令、API Key 设置与功能描述不适用于新版插件。
 - [旧版启动器归档](../legacy-launchers/README.md)：旧脚本的非执行文本；根目录同名入口仅显示退役说明。
