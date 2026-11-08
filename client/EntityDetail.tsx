@@ -1,16 +1,22 @@
 import { useEffect, useId, useState } from 'react';
 import type { RefObject } from 'react';
 import type { ForestApi, ForestEntity, JsonObject } from '../shared/model';
+import { WORKFLOW_KEY, getRunWorkflow, getSopWorkflow, hasWorkflowMarker } from '../shared/workflow';
+import { createMarkdownReport } from '../shared/report';
 import { Icon, KIND_ICON } from './icons';
 import { AiBadge, InlineConfirm, Notice, Paragraphs, Properties, StatusPill } from './bits';
 import type { PropertyRow } from './bits';
 import { CopyToDeepSeek } from './CopyToDeepSeek';
+import { RunChecklist, RunSourceCard } from './RunChecklist';
+import { SopRunPanel } from './StartRun';
+import type { ActionCtx } from './runActions';
 import {
   CHILD_KINDS,
   FIELDS,
   KIND,
   STATUS,
   classifyError,
+  downloadText,
   fieldList,
   fieldString,
   formatDateTime,
@@ -42,12 +48,34 @@ export interface DetailProps {
   onOpen: (id: string) => void;
   onOpenProject: (id: string) => void;
   onClose: () => void;
+  /** 会话键与执行动作（步骤保存、创建实验） */
+  sessKey: string;
+  actions: ActionCtx;
+  /** 从“今天”工作台“继续”进入：定位到下一步 */
+  focusNextStep?: boolean;
+  onFocusedNextStep?: () => void;
+}
+
+/** 生成并下载普通 Markdown 阅读报告（与 Obsidian 自动同步是独立用途） */
+export function downloadReport(primary: ForestEntity, entities: readonly ForestEntity[], near: Element | null, notify: Notify): void {
+  try {
+    const r = createMarkdownReport(primary, entities);
+    const size = downloadText(r.text, r.filename, r.mimeType, near);
+    notify(`已生成 Markdown 报告「${r.filename}」（${r.entityCount} 条资料，${size < 1024 ? `${size} B` : `${(size / 1024).toFixed(1)} KB`}）。若没有开始下载，请检查宿主是否拦截了下载。`, 'ok');
+  } catch (err) {
+    notify(`生成报告失败：${classifyError(err).message}`, 'danger');
+  }
 }
 
 type ActionState = { kind: 'idle' } | { kind: 'busy'; what: string } | { kind: 'error'; message: string; conflict: boolean };
 
 export function EntityDetail(props: DetailProps) {
-  const { entity, api, entities, byId, hasDraft, headingRef, applyEntity, refresh, notify, onEdit, onOpen, onOpenProject, onClose } = props;
+  const { entity, api, entities, byId, hasDraft, headingRef, applyEntity, refresh, notify, onEdit, onOpen, onOpenProject, onClose, sessKey, actions } = props;
+  const runWf = getRunWorkflow(entity);
+  const sopWf = getSopWorkflow(entity);
+  // 带有 v1 标记却无法通过校验的结构化数据：原样保留并如实提示，不尝试修复
+  const brokenWorkflow = !runWf && !sopWf && hasWorkflowMarker(entity.data[WORKFLOW_KEY]);
+  const legacySopId = entity.kind === 'record' && !runWf && typeof entity.data.sopId === 'string' && entity.data.sopId ? entity.data.sopId : null;
   const uid = useId();
   const [action, setAction] = useState<ActionState>({ kind: 'idle' });
   const prov = provenanceOf(entity);
@@ -101,7 +129,8 @@ export function EntityDetail(props: DetailProps) {
   const refsIn = entities.filter((e) => e.id !== entity.id && referencedIds(e, byId).indexOf(entity.id) !== -1);
   const siblings = entity.projectId ? entities.filter((e) => e.projectId === entity.projectId && e.id !== entity.id && !isArchived(e)) : [];
   const known = knownKeys(entity.kind);
-  const extraKeys = Object.keys(entity.data).filter((k) => !known.has(k));
+  // 可识别的工作流已在清单 / 步骤中展示，不再作为“其他字段”重复；无法识别时照常原样展示
+  const extraKeys = Object.keys(entity.data).filter((k) => !known.has(k) && !(k === WORKFLOW_KEY && (runWf || sopWf)));
   const reviewLocked = prov.needsReview ? lockedStatusesForReview(entity.kind) : [];
   const busy = action.kind === 'busy';
 
@@ -330,9 +359,42 @@ export function EntityDetail(props: DetailProps) {
 
           <Properties rows={rows} label="属性" />
 
+          {legacySopId && (
+            <p className="fa-legacy-sop">
+              <Icon name="alert" size={13} />
+              <span>
+                这条记录只关联了 SOP 的当前条目，未记录所用版本：SOP 之后的修改都会反映在关联里。从 SOP 详情“创建实验草稿”可以冻结当时的版本。
+              </span>
+            </p>
+          )}
+
+          {brokenWorkflow && (
+            <Notice tone="warn" title="结构化执行数据无法识别">
+              <p>这条内容的 {WORKFLOW_KEY} 不符合当前格式，界面不展示也不修改它，保存时原样保留。可在“详细信息”中查看原始值。</p>
+            </Notice>
+          )}
+
+          {runWf && (
+            <>
+              <RunChecklist
+                entity={entity}
+                sessKey={sessKey}
+                ctx={actions}
+                focusNext={props.focusNextStep}
+                onFocused={props.onFocusedNextStep}
+              />
+              <RunSourceCard run={runWf} byId={byId} onOpen={onOpen} />
+            </>
+          )}
+
           <section className="fa-doc__body" aria-label="正文">
+            {runWf && <h3 className="fa-h3 fa-doc__body-h">记录正文</h3>}
             <Paragraphs text={entity.content} limit={1600} />
           </section>
+
+          {entity.kind === 'sop' && (
+            <SopRunPanel sop={entity} entities={entities} byId={byId} sessKey={sessKey} ctx={actions} hasDraft={hasDraft} onOpen={onOpen} onEdit={onEdit} />
+          )}
 
           {(refsOut.length > 0 || refsIn.length > 0) && (
             <section className="fa-section">
@@ -425,7 +487,16 @@ export function EntityDetail(props: DetailProps) {
           </details>
 
           <footer className="fa-detail__foot">
-            <CopyToDeepSeek primary={entity} project={project} />
+            <CopyToDeepSeek primary={entity} project={project} api={api} />
+            <button
+              type="button"
+              className="fa-btn fa-btn--ghost"
+              title="下载这条内容及其关联资料的 Markdown 阅读报告（完整保存的原文、来源与结构化数据）"
+              onClick={(e) => downloadReport(entity, entities, e.currentTarget, notify)}
+            >
+              <Icon name="file" />
+              Markdown 报告
+            </button>
             <span className="fa-spacer" />
             {!archived && (
               <InlineConfirm

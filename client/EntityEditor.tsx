@@ -17,6 +17,8 @@ import {
 import type { FieldSpec } from './forest-model';
 import { compareRows, draftHeading, isDirty, reviewLockedStatuses, switchKind, validate } from './drafts';
 import type { Draft, DraftErrors } from './drafts';
+import { SopStepsEditor } from './SopSteps';
+import { getRunWorkflow, runProgress } from '../shared/workflow';
 
 export interface EditorProps {
   draft: Draft;
@@ -67,6 +69,10 @@ export function EntityEditor(props: EditorProps) {
   const lockableLabels = lockedStatusesForReview(draft.kind).map((s) => statusOption(draft.kind, s).label);
   const saving = draft.phase === 'saving';
   const dirty = isDirty(draft);
+  // 展示用：以服务端最新已知版本为准（步骤可能在编辑期间被单独保存过）
+  const runEntity = draft.base ? byId.get(draft.base.id) ?? draft.base : null;
+  const runInfo = runEntity ? getRunWorkflow(runEntity) : null;
+  const runPending = runEntity && runInfo ? runProgress(runEntity).pending : 0;
 
   const submit = (e?: FormEvent) => {
     e?.preventDefault();
@@ -297,6 +303,33 @@ export function EntityEditor(props: EditorProps) {
             }}
           />
         </Field>
+
+        {draft.kind === 'sop' && (
+          <SopStepsEditor
+            idPrefix={uid}
+            steps={draft.steps ?? []}
+            locked={!!draft.stepsLocked}
+            errors={errors}
+            onChange={(steps) => set({ steps })}
+          />
+        )}
+
+        {runInfo && (
+          <div className="fa-run-editnote">
+            <Icon name="list" size={14} />
+            <div>
+              <p>
+                这是从 SOP「{runInfo.source.sopTitle}」r{runInfo.source.sopRevision} 创建的实验：执行步骤与冻结的 SOP 快照由服务端保护，
+                在详情页的执行清单里逐步记录。这里的保存不会改动它们。
+              </p>
+              {draft.status === 'completed' && draft.base?.status !== 'completed' && runPending > 0 && (
+                <p className="fa-run-editnote__warn">
+                  还有 {runPending} 步处于“待做”。设为已完成后步骤将不能再修改；如需先补记，请保留草稿状态。
+                </p>
+              )}
+            </div>
+          </div>
+        )}
 
         {triedSubmit && Object.keys(errors).length > 0 && (
           <Notice tone="danger" live title="还有需要修改的地方">

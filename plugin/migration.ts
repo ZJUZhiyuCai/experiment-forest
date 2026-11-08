@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { ENTITY_KINDS, type EntityKind, type ForestEntity, type ForestState, type ImportArchive, type Json, type JsonObject } from '../shared/model.js';
+import { getRunWorkflow, hasWorkflowMarker, workflowSchema, WORKFLOW_KEY } from '../shared/workflow.js';
 
 export class ForestError extends Error {
   constructor(public readonly code: 'invalid' | 'conflict' | 'not-found' | 'reference' | 'closed', message: string) {
@@ -122,6 +123,14 @@ export function validateEntity(value: unknown): ForestEntity {
   if (!Array.isArray(e.tags) || e.tags.length > 30) throw new ForestError('invalid', '标签须为数组，最多 30 项');
   const tags = [...new Set(e.tags.map(tag => text(tag, '标签', 80).trim()))];
   const data = jsonObject(e.data);
+  if (hasWorkflowMarker(data[WORKFLOW_KEY])) {
+    const parsed = workflowSchema.safeParse(data[WORKFLOW_KEY]);
+    if (!parsed.success) throw new ForestError('invalid', `工作流结构无效：${parsed.error.issues[0]?.message ?? '未知错误'}`);
+    if (parsed.data.type === 'sop' && kind !== 'sop' || parsed.data.type === 'run' && kind !== 'record') {
+      throw new ForestError('invalid', '工作流与记录类型不匹配');
+    }
+    if (parsed.data.type === 'run' && data.sopId !== parsed.data.source.sopId) throw new ForestError('invalid', '运行记录必须保留来源 SOP 关联');
+  }
   entityRelations({ kind, data });
   for (const field of ['date', 'startDate', 'endDate', 'plannedDate', 'expiryDate']) {
     if (data[field] !== undefined && data[field] !== null && data[field] !== '') date(data[field], field);
@@ -138,9 +147,15 @@ export function validateEntity(value: unknown): ForestEntity {
 }
 export function validateReferences(entities: ForestEntity[]): void {
   const all = new Map<string, ForestEntity>();
+  const requests = new Set<string>();
   for (const e of entities) {
     if (all.has(e.id)) throw new ForestError('invalid', `重复记录 ID：${e.id}`);
     all.set(e.id, e);
+    const run = getRunWorkflow(e);
+    if (run) {
+      if (requests.has(run.requestId)) throw new ForestError('invalid', '运行创建请求 ID 重复');
+      requests.add(run.requestId);
+    }
   }
   for (const e of entities) {
     if (e.kind === 'project' && e.projectId) throw new ForestError('reference', '课题不能归属于另一个课题');

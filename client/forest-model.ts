@@ -127,8 +127,9 @@ export const FIELDS: Record<EntityKind, FieldSpec[]> = {
     { key: 'endDate', label: '结束日期', type: 'date' },
   ],
   record: [
-    { key: 'date', label: '实验日期', type: 'date' },
-    { key: 'sopId', label: '依据的 SOP', type: 'ref', refKind: 'sop', hint: '记录按哪份 SOP 执行（可不选）' },
+    { key: 'date', label: '实验日期', type: 'date', hint: '实际做实验的日期' },
+    { key: 'plannedDate', label: '计划日期', type: 'date', hint: '安排在哪天做；会出现在“今天”工作台，不等于实际实验日期' },
+    { key: 'sopId', label: '关联 SOP', type: 'ref', refKind: 'sop', hint: '指向 SOP 的当前版本；从 SOP 创建的实验另有冻结快照' },
     { key: 'relatedSamples', label: '使用的样本', type: 'refs', refKind: 'sample' },
   ],
   plan: [
@@ -148,6 +149,37 @@ export function knownKeys(kind: EntityKind): Set<string> {
   const keys = new Set<string>(['provenance']);
   for (const f of FIELDS[kind]) keys.add(f.key);
   return keys;
+}
+
+/** 下载纯文本文件（Markdown / JSON），锚点临时挂在插件根节点内 */
+export function downloadText(text: string, filename: string, mime: string, near: Element | null): number {
+  const blob = new Blob([text], { type: mime });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.rel = 'noopener';
+  a.style.display = 'none';
+  (near?.closest('.forest-app') ?? document.body).appendChild(a);
+  a.click();
+  a.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 30_000);
+  return blob.size;
+}
+
+/** 本地日的友好写法：11月8日 周日 */
+export function friendlyDay(day: string): string {
+  if (!isDateString(day)) return day;
+  const [y, m, d] = day.split('-').map(Number);
+  const wd = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][new Date(y, m - 1, d).getDay()];
+  return `${m}月${d}日 ${wd}`;
+}
+
+/** 两个本地日之间相差的天数（b - a） */
+export function dayDiff(a: string, b: string): number {
+  const [y1, m1, d1] = a.split('-').map(Number);
+  const [y2, m2, d2] = b.split('-').map(Number);
+  return Math.round((Date.UTC(y2, m2 - 1, d2) - Date.UTC(y1, m1 - 1, d1)) / 86_400_000);
 }
 
 function readPath(data: JsonObject, path: string[]): Json | undefined {

@@ -2,6 +2,7 @@
 import { z } from 'zod';
 import type { InvocationDescriptor, RemoteResult, TypertRemoteContribution } from '@deepseek-ai/dsh-typert-protocol';
 import type { ForestApi } from '../shared/model';
+import { contextInputSchema, contextSchema, createRunInputSchema, updateRunStepInputSchema } from '../shared/workflow';
 
 export const PACKAGE_NAME = 'dsh-experiment-forest';
 export const SERVICE_NAME = 'experimentForest';
@@ -28,6 +29,11 @@ const preview = z.object({ fingerprint: z.string(), source: z.enum(['legacy', 'f
   unchangedCount: revision, byKind: z.record(kind, revision), conflicts: z.array(z.object({ id: z.string(), title: z.string(), reason: z.string() })),
   warnings: z.array(z.string()), alreadyImported: z.boolean(), revision });
 const imported = z.object({ imported: revision, unchanged: revision, alreadyImported: z.boolean(), revision, warnings: z.array(z.string()) });
+const obsidianStatus = z.object({ enabled: z.boolean(), vaultId: z.string().nullable(), folder: z.string(),
+  vaults: z.array(z.object({ id: z.string(), name: z.string(), path: z.string(), open: z.boolean() })),
+  state: z.enum(['disabled', 'idle', 'syncing', 'synced', 'conflict', 'error']), lastError: z.string().nullable(),
+  conflicts: z.array(z.object({ path: z.string(), reason: z.string() })), stale: z.array(z.string()),
+  lastSyncedRevision: revision.nullable(), lastSyncedAt: z.string().nullable() });
 function descriptor(method: keyof ForestApi, parameters: [string, z.ZodType, boolean?][], result: z.ZodType): InvocationDescriptor {
   return { id: `${PACKAGE_NAME}#${SERVICE_NAME}/${method}`, service: SERVICE_NAME, namespace: SERVICE_NAME, method,
     invocation: { kind: 'direct' }, parameters: parameters.map(([name, schema, optional]) => ({ name, wire: name, source: 'json',
@@ -40,6 +46,12 @@ export const descriptors: readonly InvocationDescriptor[] = [
   descriptor('update', [['input', archive.extend({ patch })]], entity), descriptor('archive', [['input', archive]], entity),
   descriptor('export', [], exportSchema), descriptor('previewImport', [['input', z.object({ data: z.json() }).strict()]], preview),
   descriptor('import', [['input', z.object({ data: z.json(), expectedRevision: revision }).strict()]], imported),
+  descriptor('createRun', [['input', createRunInputSchema]], entity),
+  descriptor('updateRunStep', [['input', updateRunStepInputSchema]], entity),
+  descriptor('context', [['input', contextInputSchema]], contextSchema),
+  descriptor('obsidianStatus', [], obsidianStatus),
+  descriptor('configureObsidian', [['input', z.object({ vaultId: z.string().min(1).max(256).nullable() }).strict()]], obsidianStatus),
+  descriptor('syncObsidian', [], obsidianStatus),
 ];
 const contribution: TypertRemoteContribution = { package: PACKAGE_NAME, descriptors };
 export default contribution;

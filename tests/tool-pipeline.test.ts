@@ -8,6 +8,7 @@ import type { ToolCallId } from '@deepseek-ai/dsh-llm';
 import { ForestRepository, type ForestPersistence } from '../plugin/domain';
 import { createForestTools, registerForestTools } from '../plugin/tools';
 import type { ForestEntity, ForestState } from '../shared/model';
+import { WORKFLOW_FORMAT, type ForestContext } from '../shared/workflow';
 
 async function fixture(t: TestContext, persistence?: ForestPersistence, register = true) {
   const ctx = new Context();
@@ -74,6 +75,22 @@ test('official Native pipeline contains malformed tool output as an error, provi
   assert.equal(result.error.info?.code, 'INVALID_TOOL_OUTPUT');
   assert.equal('value' in result, false);
   assert.equal((await repo.snapshot()).entities.length, 0);
+});
+
+test('official Native context tool validates bounded source-aware results without granting execution writes', async t => {
+  const { call, repo } = await fixture(t);
+  const sop = await repo.create({ kind: 'sop', title: '来源流程', content: '已保存的流程正文'.repeat(500),
+    data: { forestWorkflow: { format: WORKFLOW_FORMAT, version: 1, type: 'sop', steps: [{ id: 's1', title: '用户填写的步骤', instruction: '', required: true }] } } });
+  const run = await repo.createRun({ sopId: sop.id, expectedSopRevision: 1, title: '未执行的模板', requestId: 'native-context-run' });
+  const revision = (await repo.snapshot()).revision;
+  const context = success(await call('forest_context', { id: run.id, maxChars: 1000 })).value as unknown as ForestContext;
+  assert.equal(context.primaryId, run.id); assert.equal(context.snapshotRevision, revision);
+  assert.equal(context.entries[0]!.workflowSource!.revision, 1);
+  assert.ok(context.entries.reduce((sum, entry) => sum + entry.content.text.length + entry.data.text.length, 0) <= 1000);
+  assert.equal(context.truncated, true); assert.equal(context.omittedTotal, 0);
+  assert.equal((await repo.snapshot()).revision, revision);
+  assert.equal((await call('forest_context', { id: run.id, maxChars: 999 })).isError, true);
+  assert.equal((await call('forest_context', { id: run.id, maxItems: 1.5 })).isError, true);
 });
 
 test('official Native pipeline rejects pre-cancelled calls before saving any draft', async t => {

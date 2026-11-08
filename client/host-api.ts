@@ -19,5 +19,7 @@ async function value<T>(result: Promise<RemoteResult<T>>): Promise<T> {
 export function createHostApi(remote: ForestRemote): ForestApi {
   return { list: filter => value(remote.list(filter)), get: id => value(remote.get(id)), snapshot: () => value(remote.snapshot()),
     create: input => value(remote.create(input)), update: input => value(remote.update(input)), archive: input => value(remote.archive(input)),
+    createRun: input => value(remote.createRun(input)), updateRunStep: input => value(remote.updateRunStep(input)), context: input => value(remote.context(input)),
+    obsidianStatus: () => value(remote.obsidianStatus()), configureObsidian: input => value(remote.configureObsidian(input)), syncObsidian: () => value(remote.syncObsidian()),
     export: () => value(remote.export()), previewImport: input => value(remote.previewImport(input)), import: input => value(remote.import(input)) };
 }

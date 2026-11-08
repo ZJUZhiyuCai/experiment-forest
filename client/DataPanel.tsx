@@ -6,6 +6,8 @@ import { Icon, KIND_ICON } from './icons';
 import { Notice, Spinner } from './bits';
 import type { Notify } from './EntityDetail';
 import { KIND, classifyError, localDate } from './forest-model';
+import { ObsidianSection } from './ObsidianSync';
+import type { ObsidianState } from './ObsidianSync';
 
 type ImportState =
   | { step: 'idle' }
@@ -31,6 +33,7 @@ export function DataPanel({
   headingRef,
   refresh,
   notify,
+  obsidian,
   onClose,
 }: {
   api: ForestApi;
@@ -38,6 +41,7 @@ export function DataPanel({
   headingRef: RefObject<HTMLHeadingElement>;
   refresh: () => Promise<boolean>;
   notify: Notify;
+  obsidian: ObsidianState;
   onClose: () => void;
 }) {
   const uid = useId();
@@ -155,7 +159,7 @@ export function DataPanel({
         <nav className="fa-crumbs" aria-label="位置">
           <span className="fa-crumbs__here">
             <Icon name="data" size={14} />
-            导入与导出
+            同步与导出
           </span>
         </nav>
       </header>
@@ -163,11 +167,13 @@ export function DataPanel({
         <header className="fa-page-head">
           <div className="fa-page-head__text">
             <h2 id={`${uid}-h`} ref={headingRef} tabIndex={-1} className="fa-page-title">
-              导入与导出
+              同步与导出
             </h2>
-            <p className="fa-page-sub">备份全部数据，或从旧版实验小森林迁移。</p>
+            <p className="fa-page-sub">自动同步到 Obsidian 阅读整理；备份全部数据，或从旧版实验小森林迁移。</p>
           </div>
         </header>
+
+        <ObsidianSection api={api} obsidian={obsidian} />
 
         <section className="fa-section">
           <h3 className="fa-h3">当前数据</h3>
@@ -188,7 +194,7 @@ export function DataPanel({
         <section className="fa-card fa-block">
           <div className="fa-block__text">
             <h3 className="fa-block__title">导出</h3>
-            <p className="fa-help">从服务端导出完整数据（包括已归档条目与导入记录），保存为 JSON 文件。</p>
+            <p className="fa-help">从服务端导出完整数据（包括已归档条目与导入记录），保存为 JSON 文件，用于备份或迁移。日常在 Obsidian 中阅读不需要导出，用上面的自动同步即可。</p>
           </div>
           <button type="button" className="fa-btn" onClick={() => void doExport()} disabled={exporting}>
             {exporting ? <Spinner label="正在导出…" /> : (<><Icon name="download" />导出 JSON</>)}

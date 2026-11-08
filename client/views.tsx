@@ -16,7 +16,10 @@ import {
   StatusPill,
 } from './bits';
 import { CopyToDeepSeek } from './CopyToDeepSeek';
+import { downloadReport } from './EntityDetail';
 import type { Notify } from './EntityDetail';
+import type { ObsidianTone } from './ObsidianSync';
+import { TodayCard, useAgenda } from './TodayView';
 import type { Draft } from './drafts';
 import {
   CHILD_KINDS,
@@ -58,6 +61,9 @@ export function ScopeNav({
   onNewProject,
   onData,
   dataOpen,
+  todayCount,
+  todayLate,
+  obsidian,
 }: {
   entities: ForestEntity[];
   scope: string;
@@ -67,11 +73,15 @@ export function ScopeNav({
   onNewProject: () => void;
   onData: () => void;
   dataOpen: boolean;
+  /** 今天 + 逾期的真实数量 */
+  todayCount: number;
+  todayLate: boolean;
+  obsidian: { label: string; tone: ObsidianTone };
 }) {
   const projects = entities
     .filter((e) => e.kind === 'project' && !isArchived(e))
     .sort((a, b) => (PROJECT_ORDER[a.status] ?? 5) - (PROJECT_ORDER[b.status] ?? 5) || a.title.localeCompare(b.title, 'zh-CN'));
-  const item = (key: string, label: string, icon: IconName, count?: number, accent?: boolean) => (
+  const item = (key: string, label: string, icon: IconName, count?: number, accent?: boolean | 'late') => (
     <li>
       <button
         type="button"
@@ -81,7 +91,7 @@ export function ScopeNav({
       >
         <Icon name={icon} />
         <span className="fa-nav__label">{label}</span>
-        {count ? <span className={`fa-nav__count${accent ? ' is-accent' : ''}`}>{count}</span> : null}
+        {count ? <span className={`fa-nav__count${accent ? ' is-accent' : ''}${accent === 'late' ? ' is-late' : ''}`}>{count}</span> : null}
       </button>
     </li>
   );
@@ -89,6 +99,7 @@ export function ScopeNav({
     <nav className="fa-nav" aria-label="实验小森林导航">
       <ul className="fa-nav__group">
         {item('home', '林地', 'forest')}
+        {item('today', '今天', 'today', todayCount, todayLate ? 'late' : false)}
         {reviewCount > 0 && item('review', '待核对', 'spark', reviewCount, true)}
         {inboxCount > 0 && item('inbox', '未归入课题', 'inbox', inboxCount)}
       </ul>
@@ -125,7 +136,12 @@ export function ScopeNav({
         <li>
           <button type="button" className={`fa-nav__item${dataOpen ? ' is-on' : ''}`} onClick={onData} aria-current={dataOpen ? 'page' : undefined}>
             <Icon name="data" />
-            <span className="fa-nav__label">导入与导出</span>
+            <span className="fa-nav__label">同步与导出</span>
+            {obsidian.tone !== 'off' && (
+              <span className={`fa-nav__obs is-${obsidian.tone}`} title={`Obsidian：${obsidian.label}`}>
+                <span className="fa-sr">Obsidian：{obsidian.label}</span>
+              </span>
+            )}
           </button>
         </li>
       </ul>
@@ -148,6 +164,9 @@ export function Grove({
   onScope,
   onData,
   onOpenDraft,
+  pendingInputs,
+  today,
+  onContinue,
 }: {
   entities: ForestEntity[];
   freshIds: Set<string>;
@@ -161,6 +180,10 @@ export function Grove({
   onScope: (scope: string) => void;
   onData: () => void;
   onOpenDraft: (key: string) => void;
+  /** 执行清单中未保存的步骤输入、未确认的“创建实验”请求（按条目汇总） */
+  pendingInputs: { id: string; title: string; label: string; attention: boolean }[];
+  today: string;
+  onContinue: (id: string) => void;
 }) {
   const uid = useId();
   const allProjects = entities.filter((e) => e.kind === 'project');
@@ -173,6 +196,8 @@ export function Grove({
   const freshAi = review.filter((e) => freshIds.has(e.id));
   const activeProjects = allProjects.filter((p) => !isArchived(p)).length;
   const recordCount = entities.filter((e) => e.kind === 'record' && !isArchived(e)).length;
+
+  const unsavedTotal = drafts.length + pendingInputs.length;
 
   if (entities.length === 0 && drafts.length === 0) {
     return (
@@ -229,11 +254,13 @@ export function Grove({
           </Notice>
         )}
 
-        {drafts.length > 0 && (
-          <section className="fa-section" aria-label="未保存的草稿">
+        <TodayCard entities={entities} today={today} onToday={() => onScope('today')} onOpen={onOpen} onContinue={onContinue} />
+
+        {unsavedTotal > 0 && (
+          <section className="fa-section" aria-label="未保存的输入">
             <div className="fa-section__head">
               <h3 className="fa-h3">
-                未保存的输入 <span className="fa-count">{drafts.length}</span>
+                未保存的输入 <span className="fa-count">{unsavedTotal}</span>
               </h3>
             </div>
             <p className="fa-help fa-unsaved-note">
@@ -249,6 +276,18 @@ export function Grove({
                     <span className="fa-mini__title">{d.title.trim() || `未命名${KIND[d.kind].label}`}</span>
                     <span className="fa-mini__dir">{d.mode === 'create' ? '新建' : '修改'}</span>
                     {d.phase !== 'editing' && <span className="fa-chip fa-chip--warn">{d.phase === 'saving' ? '保存中' : '需处理'}</span>}
+                  </button>
+                </li>
+              ))}
+              {pendingInputs.map((p) => (
+                <li key={`p-${p.id}`}>
+                  <button type="button" className="fa-mini" onClick={() => onOpen(p.id)}>
+                    <span className="fa-mini__icon fa-kind-record">
+                      <Icon name="list" size={14} />
+                    </span>
+                    <span className="fa-mini__title">{p.title}</span>
+                    <span className="fa-mini__dir">{p.label}</span>
+                    {p.attention && <span className="fa-chip fa-chip--warn">需处理</span>}
                   </button>
                 </li>
               ))}
@@ -381,7 +420,12 @@ export function ProjectView({
   onNew,
   onEdit,
   onBack,
+  today,
+  onAgenda,
 }: {
+  today: string;
+  /** 打开按本课题筛选的“今天”工作台 */
+  onAgenda: (projectId: string) => void;
   project: ForestEntity;
   api: ForestApi;
   entities: ForestEntity[];
@@ -413,6 +457,8 @@ export function ProjectView({
   const end = str(project.data, 'endDate');
   const projArchived = isArchived(project);
   const prov = provenanceOf(project);
+  const agenda = useAgenda(entities, today, project.id);
+  const agendaScheduled = agenda.overdue.length + agenda.today.length + agenda.upcoming.length + agenda.undated.length;
 
   const tabs: { key: TabKey; label: string; count: number }[] = [
     { key: 'all', label: '时间线', count: visible.length },
@@ -505,6 +551,19 @@ export function ProjectView({
           <Notice tone="info" title="课题已归档">
             <p>不能再把新条目关联到这个课题；已有条目保留原关联。可在“编辑”里改回其他状态以恢复。</p>
           </Notice>
+        )}
+
+        {agendaScheduled > 0 && !projArchived && (
+          <button type="button" className="fa-agenda-link" onClick={() => onAgenda(project.id)}>
+            <Icon name="today" size={15} />
+            <span className="fa-agenda-link__text">
+              {agenda.overdue.length > 0 && <span className="is-late">逾期 {agenda.overdue.length}</span>}
+              <span>今天 {agenda.today.length}</span>
+              {agenda.upcoming.length > 0 && <span>未来七天 {agenda.upcoming.length}</span>}
+              {agenda.undated.length > 0 && <span>未排期 {agenda.undated.length}</span>}
+            </span>
+            <span className="fa-agenda-link__go">本课题的安排</span>
+          </button>
         )}
 
         {project.content.trim() && (
@@ -602,7 +661,16 @@ export function ProjectView({
         </div>
 
         <footer className="fa-detail__foot">
-          <CopyToDeepSeek primary={project} related={visible.filter((e) => !isArchived(e))} project={project} />
+          <CopyToDeepSeek primary={project} related={visible.filter((e) => !isArchived(e))} project={project} api={api} />
+          <button
+            type="button"
+            className="fa-btn fa-btn--ghost"
+            title="下载课题及其条目的 Markdown 阅读报告（完整保存的原文、来源与结构化数据）"
+            onClick={(e) => downloadReport(project, entities, e.currentTarget, notify)}
+          >
+            <Icon name="file" />
+            Markdown 报告
+          </button>
           <span className="fa-spacer" />
           {!projArchived && (
             <InlineConfirm

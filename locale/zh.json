@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "实验小森林",
-    "description": "在 Harness 侧栏管理课题、实验记录、笔记、SOP、样本与计划；AI 检索原文、保存待复核草稿。资料由 Host 持久化，按 profile 分开。适用于 Harness 0.2.2-rc.1。",
+    "description": "在 Harness 管理课题、实验、SOP 和样本，从方法快照创建执行草稿，记录步骤与观察、查看今日待办。资料自动同步到本机 Obsidian，AI 可读取关联上下文并保存待复核草稿。适用于 Harness 0.2.2-rc.1。",
     "detail": "README.md"
   }
 }

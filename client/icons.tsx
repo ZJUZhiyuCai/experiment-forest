@@ -26,7 +26,17 @@ export type IconName =
   | 'link'
   | 'inbox'
   | 'forest'
-  | 'data';
+  | 'data'
+  | 'today'
+  | 'play'
+  | 'up'
+  | 'down'
+  | 'trash'
+  | 'vault'
+  | 'file'
+  | 'lock'
+  | 'list'
+  | 'skip';
 
 const PATHS: Record<IconName, ReactElement> = {
   sprout: (
@@ -165,6 +175,52 @@ const PATHS: Record<IconName, ReactElement> = {
       <ellipse cx="12" cy="6" rx="7" ry="2.5" />
       <path d="M5 6v6c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5V6" />
       <path d="M5 12v6c0 1.4 3.1 2.5 7 2.5s7-1.1 7-2.5v-6" />
+    </>
+  ),
+  today: (
+    <>
+      <circle cx="12" cy="12" r="3.6" />
+      <path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M6 6l1.4 1.4M16.6 16.6 18 18M6 18l1.4-1.4M16.6 7.4 18 6" />
+    </>
+  ),
+  play: <path d="M8 5.5v13l10-6.5-10-6.5Z" />,
+  up: <path d="m6.5 14.5 5.5-5.5 5.5 5.5" />,
+  down: <path d="m6.5 9.5 5.5 5.5 5.5-5.5" />,
+  trash: (
+    <>
+      <path d="M4.5 7h15M9.5 7V4.8h5V7" />
+      <path d="M6.5 7l.8 12.2a1 1 0 0 0 1 .8h7.4a1 1 0 0 0 1-.8L17.5 7" />
+    </>
+  ),
+  vault: (
+    <>
+      <path d="M12 3 4.5 7.2v9.6L12 21l7.5-4.2V7.2L12 3Z" />
+      <path d="M12 3v18M4.5 7.2 12 11.4l7.5-4.2" />
+    </>
+  ),
+  file: (
+    <>
+      <path d="M13.5 3.5H7a1.5 1.5 0 0 0-1.5 1.5v14A1.5 1.5 0 0 0 7 20.5h10a1.5 1.5 0 0 0 1.5-1.5V8.5l-5-5Z" />
+      <path d="M13.5 3.5v5h5M9 13h6M9 16.5h4" />
+    </>
+  ),
+  lock: (
+    <>
+      <rect x="5" y="10.5" width="14" height="9.5" rx="2" />
+      <path d="M8.5 10.5V8a3.5 3.5 0 0 1 7 0v2.5" />
+    </>
+  ),
+  list: (
+    <>
+      <path d="M9.5 6.5h10M9.5 12h10M9.5 17.5h10" />
+      <path d="m4 6.5 1.2 1.2L7 5.5M4 12l1.2 1.2L7 11" />
+      <circle cx="5.5" cy="17.5" r="1.3" />
+    </>
+  ),
+  skip: (
+    <>
+      <path d="M5.5 6v12l8.5-6-8.5-6Z" />
+      <path d="M18 6v12" />
     </>
   ),
 };

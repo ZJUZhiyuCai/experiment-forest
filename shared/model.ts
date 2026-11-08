@@ -1,4 +1,8 @@
 /** JSON-only contract shared by the Harness host and the browser client. */
+import type { CreateRunInput, UpdateRunStepInput, ForestContextInput, ForestContext } from './workflow';
+import type { ConfigureObsidianInput, ObsidianStatus } from './obsidian-contract';
+export type { CreateRunInput, UpdateRunStepInput, ForestContextInput, ForestContext } from './workflow';
+export type { ConfigureObsidianInput, ObsidianStatus } from './obsidian-contract';
 export type Json = null | boolean | number | string | Json[] | { [key: string]: Json };
 export type JsonObject = { [key: string]: Json };
 export const ENTITY_KINDS = ['project', 'record', 'note', 'sop', 'sample', 'plan'] as const;
@@ -96,6 +100,12 @@ export interface ForestApi {
   create(input: CreateEntity): Promise<ForestEntity>;
   update(input: UpdateEntity): Promise<ForestEntity>;
   archive(input: { id: string; expectedRevision: number }): Promise<ForestEntity>;
+  createRun(input: CreateRunInput): Promise<ForestEntity>;
+  updateRunStep(input: UpdateRunStepInput): Promise<ForestEntity>;
+  context(input: ForestContextInput): Promise<ForestContext>;
+  obsidianStatus(): Promise<ObsidianStatus>;
+  configureObsidian(input: ConfigureObsidianInput): Promise<ObsidianStatus>;
+  syncObsidian(): Promise<ObsidianStatus>;
   export(): Promise<ForestExport>;
   previewImport(input: { data: unknown }): Promise<ImportPreview>;
   import(input: { data: unknown; expectedRevision: number }): Promise<ImportResult>;

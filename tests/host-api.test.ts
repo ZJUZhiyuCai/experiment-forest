@@ -6,7 +6,8 @@ import type { ForestRemote } from '../plugin/remote';
 import type { ForestEntity } from '../shared/model';
 const unused = async (): Promise<never> => { throw new Error('Unexpected fixture method'); };
 function remote(snapshot: ForestRemote['snapshot'] = unused, update: ForestRemote['update'] = unused): ForestRemote {
-  return { snapshot, update, list: unused, get: unused, create: unused, archive: unused, export: unused, previewImport: unused, import: unused };
+  return { snapshot, update, list: unused, get: unused, create: unused, archive: unused, export: unused, previewImport: unused, import: unused,
+    createRun: unused, updateRunStep: unused, context: unused, obsidianStatus: unused, configureObsidian: unused, syncObsidian: unused };
 }
 test('Host adapter unwraps a successful native RPC value', async () => {
   const expected = { revision: 3, entities: [] };

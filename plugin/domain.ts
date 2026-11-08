@@ -1,7 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { ENTITY_KINDS, type CreateEntity, type EntityFilter, type ForestApi, type ForestEntity, type ForestExport, type ForestSnapshot, type ForestState, type ImportPreview, type ImportResult, type UpdateEntity } from '../shared/model.js';
-import { canonical, DEFAULT_STATUS, entityId, entityKind, entityRelations, ForestError, json, MAX_BACKUP_BYTES, MAX_ENTITIES, object, prepareImport, revision, text, validateEntity, validateReferences, validateState, type PreparedImport } from './migration.js';
+import { canonical, DEFAULT_STATUS, entityId, entityKind, entityRelations, fingerprint, ForestError, json, MAX_BACKUP_BYTES, MAX_ENTITIES, object, prepareImport, revision, text, validateEntity, validateReferences, validateState, type PreparedImport } from './migration.js';
+import { buildForestContext, contextInputSchema, createRunInputSchema, getRunWorkflow, getSopWorkflow, needsHumanReview,
+  updateRunStepInputSchema, WORKFLOW_FORMAT, WORKFLOW_KEY, type CreateRunInput, type UpdateRunStepInput,
+  type ForestContextInput, type ForestContext, type RunWorkflow } from '../shared/workflow.js';
 
 export { ForestError, validateState } from './migration.js';
 export interface ForestPersistence {
@@ -20,11 +23,11 @@ export const stateSchema = z.unknown().transform((value, ctx): ForestState => {
 const clone = <T>(value: T): T => structuredClone(value);
 
 /** Serial domain transactions shared by UI RPCs and model tools. */
-export class ForestRepository implements ForestApi {
+export class ForestRepository implements Omit<ForestApi, 'obsidianStatus' | 'configureObsidian' | 'syncObsidian'> {
   private state: ForestState | undefined;
   private queue: Promise<unknown> = Promise.resolve();
   private closing = false;
-  constructor(private readonly persistence: ForestPersistence) {}
+  constructor(private readonly persistence: ForestPersistence, private readonly onCommitted?: (snapshot: ForestSnapshot) => void) {}
 
   private enqueue<T>(work: (state: ForestState) => Promise<T> | T): Promise<T> {
     if (this.closing) return Promise.reject(new ForestError('closed', '实验小森林服务已关闭'));
@@ -59,6 +62,10 @@ export class ForestRepository implements ForestApi {
       throw error;
     }
     this.state = next;
+    // External mirrors observe durable data but never change the outcome of a business write.
+    if (this.onCommitted) {
+      try { Promise.resolve(this.onCommitted(clone({ revision: next.revision, entities: next.entities }))).catch(() => undefined); } catch { /* Observer owns reporting/retry. */ }
+    }
   }
 
   snapshot(): Promise<ForestSnapshot> {
@@ -101,6 +108,8 @@ export class ForestRepository implements ForestApi {
         ...i, id: randomUUID(), kind, content: i.content ?? '', status: i.status ?? DEFAULT_STATUS[kind],
         tags: i.tags ?? [], data: i.data ?? {}, revision: 1, createdAt: now, updatedAt: now,
       });
+      if (getRunWorkflow(entity)) throw new ForestError('invalid', '运行记录须通过从 SOP 创建操作建立');
+      this.requireReviewedCompletion(entity);
       this.requireActiveProject(entity, state);
       this.requireActiveRelations(entity, state);
       const next = clone(state);
@@ -127,6 +136,8 @@ export class ForestRepository implements ForestApi {
       const merged = { ...existing, ...patch, revision: existing.revision + 1, updatedAt: new Date().toISOString() };
       if (patch.projectId === null) delete merged.projectId;
       const entity = validateEntity(merged);
+      this.protectWorkflowAndOrigin(existing, entity);
+      this.requireReviewedCompletion(entity);
       if (entity.projectId !== existing.projectId) this.requireActiveProject(entity, state);
       this.requireActiveRelations(entity, state, existing);
       const next = clone(state);
@@ -138,6 +149,116 @@ export class ForestRepository implements ForestApi {
 
   archive(input: { id: string; expectedRevision: number }): Promise<ForestEntity> {
     return this.update({ id: input.id, expectedRevision: input.expectedRevision, patch: { status: 'archived' } });
+  }
+
+  createRun(input: CreateRunInput, signal?: AbortSignal): Promise<ForestEntity> {
+    let request: CreateRunInput;
+    try { request = this.parse(createRunInputSchema, clone(input)); } catch (error) { return Promise.reject(error); }
+    const requestHash = fingerprint(json(request));
+    return this.enqueue(async state => {
+      const prior = state.entities.find(e => getRunWorkflow(e)?.requestId === request.requestId);
+      if (prior) {
+        if (getRunWorkflow(prior)!.requestHash !== requestHash) throw new ForestError('conflict', '同一创建请求不能用于不同内容，请重新发起操作');
+        return clone(prior);
+      }
+      const sop = state.entities.find(e => e.id === request.sopId && e.kind === 'sop');
+      if (!sop) throw new ForestError('reference', '来源 SOP 不存在');
+      if (sop.revision !== request.expectedSopRevision) throw new ForestError('conflict', 'SOP 已更新，请重新读取后创建记录');
+      if (sop.status === 'archived') throw new ForestError('reference', '不能从已归档 SOP 创建记录');
+      const template = getSopWorkflow(sop);
+      if (sop.data[WORKFLOW_KEY] !== undefined && !template) throw new ForestError('invalid', '该 SOP 包含无法识别的工作流数据，请保留原文并先检查');
+      const steps = clone(template?.steps ?? []);
+      const originalProvenance = sop.data.provenance;
+      const provenance = originalProvenance && typeof originalProvenance === 'object' && !Array.isArray(originalProvenance) ? clone(originalProvenance) : null;
+      const workflow: RunWorkflow = { format: WORKFLOW_FORMAT, version: 1, type: 'run', requestId: request.requestId, requestHash,
+        source: { sopId: sop.id, sopRevision: sop.revision, sopTitle: sop.title, sopContent: sop.content, sopStatus: sop.status,
+          sopVersion: typeof sop.data.version === 'string' ? sop.data.version : null, provenance, steps },
+        steps: steps.map(step => ({ stepId: step.id, status: 'pending', observation: '', updatedAt: null })) };
+      const projectId = request.projectId === undefined ? sop.projectId : request.projectId;
+      const now = new Date().toISOString();
+      const entity = validateEntity({ id: randomUUID(), kind: 'record', title: request.title, content: '', status: 'draft',
+        ...(projectId ? { projectId } : {}), tags: [], revision: 1, createdAt: now, updatedAt: now,
+        data: { sopId: sop.id, [WORKFLOW_KEY]: workflow, ...(request.plannedDate ? { plannedDate: request.plannedDate } : {}),
+          ...(provenance?.source === 'deepseek-harness' ? { provenance: { ...provenance, reviewStatus: 'unreviewed', derivedFrom: { id: sop.id, revision: sop.revision } } } : {}) } });
+      this.requireActiveProject(entity, state);
+      this.requireActiveRelations(entity, state);
+      const next = clone(state); next.entities.push(entity);
+      await this.commit(state, next, signal);
+      return clone(entity);
+    });
+  }
+
+  updateRunStep(input: UpdateRunStepInput): Promise<ForestEntity> {
+    let request: UpdateRunStepInput;
+    try { request = this.parse(updateRunStepInputSchema, clone(input)); } catch (error) { return Promise.reject(error); }
+    return this.enqueue(async state => {
+      const existing = state.entities.find(e => e.id === request.id);
+      if (!existing) throw new ForestError('not-found', '运行记录不存在');
+      if (existing.revision !== request.expectedRevision) throw new ForestError('conflict', '记录已被其他操作修改，请刷新后重试');
+      const run = getRunWorkflow(existing);
+      if (!run) throw new ForestError('invalid', '该条目不是结构化运行记录');
+      if (existing.status !== 'draft') throw new ForestError('invalid', '已完成或归档的运行不能修改步骤，请先明确重新打开记录');
+      if (needsHumanReview(existing)) throw new ForestError('invalid', '请先人工核对 AI 草稿，再记录实际执行步骤');
+      const step = run.steps.find(s => s.stepId === request.stepId);
+      if (!step) throw new ForestError('not-found', '运行步骤不存在');
+      if (request.status === 'skipped' && !request.observation.trim()) throw new ForestError('invalid', '跳过步骤须填写原因');
+      if (step.status === request.status && step.observation === request.observation) return clone(existing);
+      const now = new Date().toISOString();
+      step.status = request.status; step.observation = request.observation; step.updatedAt = now;
+      const entity = validateEntity({ ...existing, data: { ...existing.data, [WORKFLOW_KEY]: run }, revision: existing.revision + 1, updatedAt: now });
+      const next = clone(state); next.entities = next.entities.map(e => e.id === entity.id ? entity : e);
+      await this.commit(state, next);
+      return clone(entity);
+    });
+  }
+
+  context(input: ForestContextInput): Promise<ForestContext> {
+    let request: ForestContextInput;
+    try { request = this.parse(contextInputSchema, clone(input)); } catch (error) { return Promise.reject(error); }
+    return this.enqueue(state => {
+      if (!state.entities.some(e => e.id === request.id)) throw new ForestError('not-found', '记录不存在');
+      return buildForestContext(state, request);
+    });
+  }
+
+  private parse<T>(schema: z.ZodType<T>, value: unknown): T {
+    const result = schema.safeParse(value);
+    if (!result.success) throw new ForestError('invalid', `请求无效：${result.error.issues[0]?.message ?? '字段格式错误'}`);
+    return result.data;
+  }
+  private requireReviewedCompletion(entity: ForestEntity): void {
+    const finalized = entity.kind === 'sop' && entity.status === 'approved'
+      || (entity.kind === 'record' || entity.kind === 'plan') && entity.status === 'completed';
+    if (finalized && needsHumanReview(entity)) throw new ForestError('invalid', 'AI 草稿须先人工核对，才能设为已完成或已批准');
+    const run = getRunWorkflow(entity);
+    if (run && entity.status === 'completed' && run.source.steps.some((step, index) => step.required && run.steps[index]!.status === 'pending')) {
+      throw new ForestError('invalid', '仍有必需步骤未处理，不能标记完成');
+    }
+  }
+  private protectWorkflowAndOrigin(previous: ForestEntity, next: ForestEntity): void {
+    const oldRun = getRunWorkflow(previous);
+    const newRun = getRunWorkflow(next);
+    const opaque = previous.data[WORKFLOW_KEY];
+    if (opaque !== undefined && opaque !== null && !oldRun && !getSopWorkflow(previous)
+      && canonical(opaque) !== (next.data[WORKFLOW_KEY] === undefined ? undefined : canonical(next.data[WORKFLOW_KEY]!))) {
+      throw new ForestError('invalid', '无法识别的旧版或未来工作流字段须保留原文，不能由普通编辑覆盖');
+    }
+    if (oldRun || newRun) {
+      if (!oldRun || !newRun || canonical(json(oldRun)) !== canonical(json(newRun))) {
+        throw new ForestError('invalid', '运行来源和执行清单不能通过普通编辑改写，请使用步骤操作');
+      }
+    }
+    const before = previous.data.provenance;
+    if (before && typeof before === 'object' && !Array.isArray(before) && before.source === 'deepseek-harness') {
+      const after = next.data.provenance;
+      if (!after || typeof after !== 'object' || Array.isArray(after) || after.source !== before.source) throw new ForestError('invalid', '不能删除或改写 AI 来源');
+      for (const [key, value] of Object.entries(before)) {
+        if (key !== 'reviewStatus' && canonical(value) !== (after[key] === undefined ? undefined : canonical(after[key]!))) {
+          throw new ForestError('invalid', '不能改写原始 AI 来源字段');
+        }
+      }
+      if (after.reviewStatus !== before.reviewStatus && !['reviewed', 'unreviewed'].includes(String(after.reviewStatus))) throw new ForestError('invalid', '人工核对状态无效');
+    }
   }
 
   export(): Promise<ForestExport> {

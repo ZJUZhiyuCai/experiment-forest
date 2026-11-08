@@ -9,6 +9,9 @@ import { EntityEditor } from './EntityEditor';
 import { DataPanel } from './DataPanel';
 import { CollectionView, Grove, ProjectView, ScopeNav } from './views';
 import type { TabKey } from './views';
+import { TodayView, useAgenda, useLocalDay } from './TodayView';
+import { obsidianSummary, useObsidianStatus } from './ObsidianSync';
+import type { ActionCtx } from './runActions';
 import { createPayload, draftFromEntity, draftMatchesEntity, newDraft, rebase, updatePatch } from './drafts';
 import type { Draft } from './drafts';
 import * as memory from './draftMemory';
@@ -22,13 +25,19 @@ export interface ForestAppProps {
 type Mode = 'narrow' | 'medium' | 'wide';
 
 interface Nav {
-  /** 'home' | 'review' | 'inbox' | 课题 ID */
+  /** 'home' | 'today' | 'review' | 'inbox' | 课题 ID */
   scope: string;
   selectedId: string | null;
   editorKey: string | null;
   dataOpen: boolean;
   tab: TabKey;
+  /** “今天”工作台的课题筛选 */
+  agendaProject: string | null;
+  /** 从工作台“继续”进入的实验：打开后定位到下一步（一次性） */
+  focusNext: string | null;
 }
+
+const SPECIAL_SCOPES = new Set(['home', 'today', 'review', 'inbox']);
 
 interface Toast {
   id: number;
@@ -36,7 +45,12 @@ interface Toast {
   tone: 'ok' | 'warn' | 'danger';
 }
 
-const HOME: Nav = { scope: 'home', selectedId: null, editorKey: null, dataOpen: false, tab: 'all' };
+const HOME: Nav = { scope: 'home', selectedId: null, editorKey: null, dataOpen: false, tab: 'all', agendaProject: null, focusNext: null };
+
+function restoreNav(s: string): Nav {
+  const saved = memory.getNav<Partial<Nav>>(s);
+  return saved ? { ...HOME, ...saved } : HOME;
+}
 
 function modeFor(width: number): Mode {
   if (width >= 1080) return 'wide';
@@ -81,7 +95,7 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
   }, []);
 
   /* ── 导航 ── */
-  const [nav, setNav] = useState<Nav>(() => memory.getNav<Nav>(sessKey) ?? HOME);
+  const [nav, setNav] = useState<Nav>(() => restoreNav(sessKey));
   const [query, setQuery] = useState('');
   const [showArchivedProjects, setShowArchivedProjects] = useState(false);
   const [showArchivedChildren, setShowArchivedChildren] = useState(false);
@@ -101,7 +115,16 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
   const draftsRef = useMemo(() => ({ get current() { return memory.getDrafts(sessRef.current); } }), []);
   const putDraft = useCallback((d: Draft, s: string = sessRef.current) => memory.putDraft(s, d), []);
   const dropDraft = useCallback((key: string, s: string = sessRef.current) => memory.dropDraft(s, key), []);
-  const unsavedCount = useMemo(() => Object.values(drafts).filter(memory.hasUnsavedInput).length, [drafts]);
+  // 执行清单的步骤输入、“创建实验”请求同样保存在会话内存中，并计入未保存数量与 beforeunload 保护
+  const stepDrafts = memory.useSessionSteps(sessKey);
+  const runRequests = memory.useSessionRuns(sessKey);
+  const unsavedCount = useMemo(
+    () =>
+      Object.values(drafts).filter(memory.hasUnsavedInput).length +
+      Object.values(stepDrafts).filter(memory.stepHasUnsaved).length +
+      Object.values(runRequests).filter(memory.runHasUnsaved).length,
+    [drafts, stepDrafts, runRequests],
+  );
 
   /* ── 提示 ── */
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -119,7 +142,7 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
     // 宿主在挂载期间切换了会话：换到该会话自己的导航（草稿经订阅自动切换）
     if (lastSess.current !== sessKey) {
       lastSess.current = sessKey;
-      setNav(memory.getNav<Nav>(sessKey) ?? HOME);
+      setNav(restoreNav(sessKey));
       setQuery('');
     }
     memory.recoverSession(sessKey);
@@ -128,7 +151,7 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
   // 卸载期间（或上一个实例发起、在本实例挂载后才完成）的保存结果：草稿变化时取出并如实告知
   useEffect(() => {
     memory.takeNotices(sessKey).forEach((text) => notify(text, 'ok'));
-  }, [drafts, sessKey, notify]);
+  }, [drafts, stepDrafts, runRequests, sessKey, notify]);
 
   // 记住当前导航（正在编辑/查看的条目），供同会话再挂载时回到原处
   useEffect(() => {
@@ -138,6 +161,38 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
   /* ── 衍生数据 ── */
   const review = useMemo(() => entities.filter((e) => !isArchived(e) && provenanceOf(e).needsReview).sort(byUpdatedDesc), [entities]);
   const inbox = useMemo(() => entities.filter((e) => e.kind !== 'project' && !e.projectId && !isArchived(e)).sort(byUpdatedDesc), [entities]);
+
+  /* ── 今天：客户端本地日（跨午夜自动更新）与全局安排数量（真实计数） ── */
+  const today = useLocalDay();
+  const agendaAll = useAgenda(entities, today, null);
+
+  /* ── Obsidian 自动同步状态（只经受控 RPC 读取） ── */
+  const obsidian = useObsidianStatus(api);
+  const obsidianBadge = obsidianSummary(obsidian);
+
+  /** 未保存输入按条目汇总：步骤输入按实验，创建请求按 SOP */
+  const pendingInputs = useMemo(() => {
+    const out: { id: string; title: string; label: string; attention: boolean }[] = [];
+    const byRun = new Map<string, memory.StepDraft[]>();
+    for (const d of Object.values(stepDrafts)) {
+      if (!memory.stepHasUnsaved(d)) continue;
+      byRun.set(d.runId, [...(byRun.get(d.runId) ?? []), d]);
+    }
+    byRun.forEach((list, runId) =>
+      out.push({
+        id: runId,
+        title: byId.get(runId)?.title ?? runId,
+        label: `${list.length} 步未保存`,
+        attention: list.some((d) => d.phase !== 'editing'),
+      }),
+    );
+    for (const r of Object.values(runRequests)) {
+      if (!memory.runHasUnsaved(r)) continue;
+      out.push({ id: r.sopId, title: byId.get(r.sopId)?.title ?? r.sopId, label: r.phase === 'editing' ? '创建表单未提交' : r.phase === 'creating' ? '正在创建实验' : '创建实验待处理', attention: r.phase !== 'editing' });
+    }
+    return out;
+  }, [stepDrafts, runRequests, byId]);
+  const unsavedRuns = useMemo(() => new Set(pendingInputs.filter((p) => byId.get(p.id)?.kind === 'record').map((p) => p.id)), [pendingInputs, byId]);
   const results = useMemo(() => {
     const q = query.trim();
     if (!q) return [];
@@ -185,6 +240,40 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
     setQuery('');
     go({ scope, selectedId: null, editorKey: null, dataOpen: false, tab: 'all' });
   }, [go]);
+
+  /** 从工作台“继续”：打开实验并定位到下一步 */
+  const continueRun = useCallback((id: string) => go({ selectedId: id, editorKey: null, dataOpen: false, focusNext: id }), [go]);
+
+  /**
+   * 执行动作（逐步保存、创建实验）的上下文。动作把结果写回发起时的会话内存；
+   * 面板已卸载或已切到别的会话时，提示与导航留给该会话下次挂载。
+   */
+  const actions = useMemo<ActionCtx>(
+    () => ({
+      api,
+      applyEntity: (e) => {
+        if (mountedRef.current) store.applyEntity(e);
+      },
+      refresh: () => store.refresh(),
+      notify: (s, text, tone = 'ok') => {
+        if (mountedRef.current && sessRef.current === s) notify(text, tone);
+        else memory.pushNotice(s, text);
+      },
+      openCreated: (s, e) => {
+        const text = `已创建实验草稿「${e.title}」，并冻结了所用 SOP 版本`;
+        const patch = (n: Nav): Nav => ({ ...n, selectedId: e.id, editorKey: null, dataOpen: false, focusNext: null });
+        if (mountedRef.current && sessRef.current === s) {
+          navigated.current = true;
+          setNav(patch);
+          notify(text, 'ok');
+        } else {
+          memory.setNav(s, patch(restoreNav(s)));
+          memory.pushNotice(s, text);
+        }
+      },
+    }),
+    [api, store, notify],
+  );
 
   const startNew = useCallback(
     (kind: EntityKind, projectId: string | null) => {
@@ -252,14 +341,16 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
       if (!d || !d.id) return;
       try {
         const latest = await api.get(d.id);
-        const cur = live(s, key) ?? d;
+        const cur = live(s, key);
+        if (cur !== d) return;
         if (!latest) putDraft({ ...cur, phase: 'error', message: '这条内容在服务端已不存在，无法保存修改。请复制你的输入后放弃草稿。' }, s);
         else {
           if (mountedRef.current) store.applyEntity(latest);
           putDraft({ ...cur, phase: 'conflict', latest }, s);
         }
       } catch (err) {
-        const cur = live(s, key) ?? d;
+        const cur = live(s, key);
+        if (cur !== d) return;
         putDraft({ ...cur, phase: 'conflict', latest: null, message: `读取最新版本失败：${classifyError(err).message}` }, s);
       }
     },
@@ -274,17 +365,20 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
       const d = live(s, key);
       if (!d || d.phase === 'saving' || memory.isInflight(s, key)) return;
       const attemptedAt = new Date(Date.now() - 10_000).toISOString();
-      putDraft({ ...d, phase: 'saving', message: undefined, rebasedFrom: undefined, attemptedAt }, s);
+      const pending: Draft = { ...d, phase: 'saving', message: undefined, rebasedFrom: undefined, attemptedAt };
+      putDraft(pending, s);
       memory.markInflight(s, key, true);
       try {
         const saved =
           d.mode === 'create'
             ? await api.create(createPayload(d))
             : await api.update({ id: d.id as string, expectedRevision: (d.base as ForestEntity).revision, patch: updatePatch(d) });
+        if (live(s, key) !== pending) { store.applyEntity(saved); return; }
         afterSaved(s, key, saved, `已保存「${saved.title}」`);
       } catch (err) {
         const c = classifyError(err);
-        const cur = { ...(live(s, key) ?? d) };
+        const cur = live(s, key);
+        if (cur !== pending) return;
         if (c.kind === 'conflict' && d.mode === 'edit') {
           putDraft({ ...cur, phase: 'conflict', message: c.message, latest: null }, s);
           void loadLatest(key, s);
@@ -319,7 +413,8 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
           const since = d.attemptedAt ?? new Date(0).toISOString();
           const found = same.filter((e) => e.title.trim() === title && e.createdAt >= since);
           found.forEach((e) => store.applyEntity(e));
-          const cur = live(s, key) ?? d;
+          const cur = live(s, key);
+        if (cur !== d) return;
           putDraft(
             {
               ...cur,
@@ -331,7 +426,8 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
           );
         } else {
           const latest = await api.get(d.id as string);
-          const cur = live(s, key) ?? d;
+          const cur = live(s, key);
+        if (cur !== d) return;
           if (!latest) {
             putDraft({ ...cur, phase: 'error', message: '这条内容在服务端已不存在。' }, s);
             return;
@@ -347,7 +443,8 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
           }
         }
       } catch (err) {
-        putDraft({ ...(live(s, key) ?? d), message: `核对失败：${classifyError(err).message}。请稍后再试。` }, s);
+        if (live(s, key) !== d) return;
+        putDraft({ ...d, message: `核对失败：${classifyError(err).message}。请稍后再试。` }, s);
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -417,7 +514,7 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
 
   /* ── 视图组装 ── */
   const projectOf = (id: string) => byId.get(id) ?? null;
-  const scopeProject = nav.scope !== 'home' && nav.scope !== 'review' && nav.scope !== 'inbox' ? projectOf(nav.scope) : null;
+  const scopeProject = !SPECIAL_SCOPES.has(nav.scope) ? projectOf(nav.scope) : null;
 
   let scopeView: ReactElement;
   if (query.trim()) {
@@ -436,6 +533,23 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
         onSelect={open}
         onBack={() => setQuery('')}
         grouped
+      />
+    );
+  } else if (nav.scope === 'today') {
+    scopeView = (
+      <TodayView
+        entities={entities}
+        byId={byId}
+        today={today}
+        projectId={nav.agendaProject}
+        freshIds={store.freshIds}
+        selectedId={nav.selectedId}
+        unsavedRuns={unsavedRuns}
+        headingRef={scopeHeading}
+        onProject={(agendaProject) => setNav((n) => ({ ...n, agendaProject }))}
+        onOpen={open}
+        onContinue={continueRun}
+        onBack={() => openScope('home')}
       />
     );
   } else if (nav.scope === 'review') {
@@ -491,6 +605,11 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
         onNew={startNew}
         onEdit={startEdit}
         onBack={() => openScope('home')}
+        today={today}
+        onAgenda={(projectId) => {
+          setQuery('');
+          go({ scope: 'today', agendaProject: projectId, selectedId: null, editorKey: null, dataOpen: false });
+        }}
       />
     );
   } else if (nav.scope !== 'home' && store.phase === 'ready') {
@@ -524,6 +643,9 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
           const d = draftsRef.current[key];
           go({ editorKey: key, selectedId: d?.mode === 'edit' && d.kind !== 'project' ? d.id ?? null : null });
         }}
+        pendingInputs={pendingInputs}
+        today={today}
+        onContinue={continueRun}
       />
     );
   }
@@ -572,6 +694,10 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
         onOpen={open}
         onOpenProject={openProject}
         onClose={() => go({ selectedId: null })}
+        sessKey={sessKey}
+        actions={actions}
+        focusNextStep={nav.focusNext === selected.id}
+        onFocusedNextStep={() => setNav((n) => (n.focusNext ? { ...n, focusNext: null } : n))}
       />
     );
   } else if (nav.selectedId && !selected) {
@@ -595,7 +721,7 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
   }
 
   const dataView = nav.dataOpen ? (
-    <DataPanel api={api} entities={entities} headingRef={dataHeading} refresh={store.refresh} notify={notify} onClose={() => go({ dataOpen: false })} />
+    <DataPanel api={api} entities={entities} headingRef={dataHeading} refresh={store.refresh} notify={notify} obsidian={obsidian} onClose={() => go({ dataOpen: false })} />
   ) : null;
 
   /* ── 外壳 ── */
@@ -641,6 +767,9 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
         onNewProject={() => startNew('project', null)}
         onData={() => go({ dataOpen: !nav.dataOpen })}
         dataOpen={nav.dataOpen}
+        todayCount={agendaAll.today.length + agendaAll.overdue.length}
+        todayLate={agendaAll.overdue.length > 0}
+        obsidian={obsidianBadge}
       />
     );
     body =
@@ -706,13 +835,30 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
         {mode === 'narrow' && (
           <button
             type="button"
-            className={`fa-icon-btn${nav.dataOpen ? ' is-on' : ''}`}
+            className={`fa-icon-btn fa-today-btn${nav.scope === 'today' && !nav.dataOpen && !query.trim() ? ' is-on' : ''}`}
+            onClick={() => openScope('today')}
+            aria-label={`今天：${agendaAll.today.length} 项今天，${agendaAll.overdue.length} 项逾期`}
+            title="今天"
+          >
+            <Icon name="today" />
+            {agendaAll.today.length + agendaAll.overdue.length > 0 && (
+              <span className={`fa-today-btn__n${agendaAll.overdue.length ? ' is-late' : ''}`} aria-hidden="true">
+                {agendaAll.today.length + agendaAll.overdue.length}
+              </span>
+            )}
+          </button>
+        )}
+        {mode === 'narrow' && (
+          <button
+            type="button"
+            className={`fa-icon-btn fa-data-btn${nav.dataOpen ? ' is-on' : ''}`}
             onClick={() => go({ dataOpen: !nav.dataOpen })}
-            aria-label="数据导入导出"
+            aria-label={`同步与导出（Obsidian：${obsidianBadge.label}）`}
             aria-pressed={nav.dataOpen}
-            title="数据导入导出"
+            title={`同步与导出 · Obsidian：${obsidianBadge.label}`}
           >
             <Icon name="data" />
+            {obsidianBadge.tone !== 'off' && <span className={`fa-nav__obs is-${obsidianBadge.tone}`} aria-hidden="true" />}
           </button>
         )}
       </header>

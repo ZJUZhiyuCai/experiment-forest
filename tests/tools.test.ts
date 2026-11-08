@@ -19,7 +19,7 @@ function fixture() {
 
 test('model can create only a marked draft, never a completed or approved record', async () => {
   const { call, repo, tools } = fixture();
-  assert.deepEqual([...tools.keys()], ['forest_search', 'forest_read', 'forest_create_draft']);
+  assert.deepEqual([...tools.keys()], ['forest_context', 'forest_search', 'forest_read', 'forest_create_draft']);
   const draft = await call('forest_create_draft', {
     kind: 'sop', title: '待复核流程', content: '仅为草案', status: 'approved',
     data: { provenance: { source: 'human' } },

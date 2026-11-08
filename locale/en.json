@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "Experiment forest",
-    "description": "Manage research projects, experiments, notes, SOPs, samples, and plans in the Harness sidebar. Search source records and save AI drafts for review. Host persistence, separated by profile. For Harness 0.2.2-rc.1.",
+    "description": "Manage projects, experiments, SOPs and samples in Harness. Create runs from frozen methods, record steps and observations, and review daily work. Automatically mirror saved research to local Obsidian. AI reads linked context and creates drafts for review. For Harness 0.2.2-rc.1.",
     "detail": "README.md"
   }
 }

@@ -2931,6 +2931,1397 @@
   }
 }
 
+/* ═════════════════════════ 产品迭代：SOP 步骤 · 执行清单 · 今天 · Obsidian ═════════════════════════ */
+
+.forest-app .fa-h3 > .fa-icon {
+  align-self: center;
+  margin-right: 5px;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-h3__count {
+  margin-left: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fa-text-3);
+  font-variant-numeric: tabular-nums;
+}
+.forest-app .fa-req-tag,
+.forest-app .fa-opt-tag {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  margin-left: 8px;
+  padding: 0 6px;
+  border-radius: 5px;
+  font-size: 11px;
+  font-weight: 500;
+  vertical-align: 1px;
+  white-space: nowrap;
+}
+.forest-app .fa-req-tag {
+  background: var(--fa-accent-soft);
+  color: var(--fa-accent);
+}
+.forest-app .fa-opt-tag {
+  background: var(--fa-bg-sunken);
+  color: var(--fa-text-3);
+}
+
+/* ───────────── SOP 步骤编辑 ───────────── */
+
+.forest-app .fa-steps-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 18px;
+  border-top: 1px solid var(--fa-line);
+}
+.forest-app .fa-steps-edit__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.forest-app .fa-steps-edit__head .fa-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.forest-app .fa-steps-edit__intro {
+  margin-top: -4px;
+}
+.forest-app .fa-steps-edit.is-locked .fa-label {
+  color: var(--fa-text-3);
+}
+.forest-app .fa-steps-edit__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  counter-reset: none;
+}
+.forest-app .fa-step-card {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  gap: 10px;
+  padding: 12px 12px 8px;
+  border-radius: var(--fa-r-lg);
+  background: var(--fa-bg-raised);
+  box-shadow: var(--fa-shadow-sm);
+  transition: box-shadow 150ms var(--fa-ease);
+}
+.forest-app .fa-step-card:focus-within {
+  box-shadow: 0 0 0 1px var(--fa-accent-soft-2), var(--fa-shadow-md);
+}
+.forest-app .fa-step-card.has-error {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--fa-danger) 45%, transparent);
+}
+.forest-app .fa-step-card__num {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin-top: 4px;
+  border-radius: 50%;
+  background: var(--fa-bg-sunken);
+  color: var(--fa-text-2);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.forest-app .fa-step-card__main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.forest-app .fa-step-card__title {
+  font-weight: 500;
+}
+.forest-app .fa-step-card__inst {
+  resize: vertical;
+  min-height: 52px;
+  line-height: 1.55;
+}
+.forest-app .fa-step-card__tools {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px;
+  min-height: 30px;
+}
+.forest-app .fa-step-card__req {
+  font-size: 12.5px;
+  color: var(--fa-text-2);
+}
+.forest-app .fa-step-card__del .fa-btn--ghost {
+  height: 24px;
+  padding: 0 8px;
+  font-size: 12.5px;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-step-card__del .fa-confirm__q {
+  font-size: 12.5px;
+}
+.forest-app .fa-steps-edit__add {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  border-radius: var(--fa-r-lg);
+  border: 1px dashed var(--fa-line-strong);
+  color: var(--fa-text-2);
+  font-size: 13px;
+  transition: background-color 120ms var(--fa-ease), color 120ms var(--fa-ease), border-color 120ms var(--fa-ease);
+}
+.forest-app .fa-steps-edit__add:hover:not(:disabled) {
+  background: var(--fa-accent-soft);
+  border-color: var(--fa-accent-soft-2);
+  color: var(--fa-accent);
+}
+.forest-app .fa-steps-edit__add:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ───────────── SOP 步骤只读 ───────────── */
+
+.forest-app .fa-steps-view {
+  display: flex;
+  flex-direction: column;
+}
+.forest-app .fa-steps-view__item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  gap: 12px;
+  padding: 8px 0 12px;
+}
+/* 竖线把步骤串成一条路径 */
+.forest-app .fa-steps-view__item:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 11.5px;
+  top: 34px;
+  bottom: -2px;
+  width: 1px;
+  background: var(--fa-line-strong);
+}
+.forest-app .fa-steps-view__num {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--fa-bg-raised);
+  box-shadow: 0 0 0 1px var(--fa-line-strong);
+  color: var(--fa-text-2);
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.forest-app .fa-steps-view__title {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 24px;
+  color: var(--fa-text);
+}
+.forest-app .fa-steps-view__inst {
+  margin-top: 2px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--fa-text-2);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.forest-app .fa-steps-view.is-compact .fa-steps-view__item {
+  padding: 4px 0 8px;
+}
+.forest-app .fa-steps-view.is-compact .fa-steps-view__title {
+  font-size: 13px;
+}
+
+/* ───────────── 编辑器：实验执行说明 ───────────── */
+
+.forest-app .fa-run-editnote {
+  display: flex;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: var(--fa-r);
+  background: var(--fa-bg-sunken);
+  color: var(--fa-text-2);
+  font-size: 13px;
+  line-height: 1.6;
+}
+.forest-app .fa-run-editnote > .fa-icon {
+  flex: none;
+  margin-top: 3px;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-run-editnote__warn {
+  margin-top: 6px;
+  color: var(--fa-warn);
+}
+
+/* ───────────── 执行清单 ───────────── */
+
+.forest-app .fa-run {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border-radius: var(--fa-r-lg);
+  background: var(--fa-bg-raised);
+  box-shadow: var(--fa-shadow-sm);
+}
+.forest-app .fa-run__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.forest-app .fa-run__head .fa-h3 {
+  font-size: 14px;
+  color: var(--fa-text);
+}
+.forest-app .fa-run__count {
+  font-size: 12.5px;
+  color: var(--fa-text-3);
+  font-variant-numeric: tabular-nums;
+}
+.forest-app .fa-run__count b {
+  color: var(--fa-text);
+  font-weight: 600;
+}
+.forest-app .fa-run__bar {
+  display: flex;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--fa-bg-active);
+  overflow: hidden;
+}
+.forest-app .fa-run__bar-done {
+  background: var(--fa-accent);
+  transition: width 300ms var(--fa-ease);
+}
+.forest-app .fa-run__bar-skip {
+  background: repeating-linear-gradient(135deg, var(--fa-text-4) 0 3px, transparent 3px 6px);
+  transition: width 300ms var(--fa-ease);
+}
+.forest-app .fa-run__next {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  padding: 10px 12px;
+  border-radius: var(--fa-r);
+  background: var(--fa-accent-soft);
+  font-size: 13px;
+}
+.forest-app .fa-run__next-label {
+  flex: none;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--fa-accent);
+}
+.forest-app .fa-run__next-title {
+  flex: 1;
+  min-width: 0;
+  color: var(--fa-text);
+  font-weight: 500;
+}
+.forest-app .fa-run__next.is-clear {
+  background: var(--fa-bg-sunken);
+  color: var(--fa-text-2);
+  align-items: flex-start;
+  line-height: 1.55;
+}
+.forest-app .fa-run__next.is-clear > .fa-icon {
+  margin-top: 3px;
+  color: var(--fa-accent);
+}
+.forest-app .fa-run__unsaved {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--fa-warn);
+}
+.forest-app .fa-run__steps {
+  display: flex;
+  flex-direction: column;
+  margin: 0 -6px;
+}
+
+.forest-app .fa-runstep {
+  border-radius: var(--fa-r);
+  transition: background-color 150ms var(--fa-ease);
+}
+.forest-app .fa-runstep.is-open {
+  background: var(--fa-bg-sunken);
+}
+.forest-app .fa-runstep + .fa-runstep {
+  margin-top: 2px;
+}
+.forest-app .fa-runstep__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 42px;
+  padding: 7px 8px;
+  border-radius: var(--fa-r);
+  text-align: left;
+  color: var(--fa-text);
+  transition: background-color 120ms var(--fa-ease);
+}
+.forest-app .fa-runstep:not(.is-open) .fa-runstep__head:hover {
+  background: var(--fa-bg-hover);
+}
+.forest-app .fa-runstep__mark {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 11.5px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--fa-text-2);
+  box-shadow: inset 0 0 0 1.5px var(--fa-line-strong);
+  transition: background-color 200ms var(--fa-ease), box-shadow 200ms var(--fa-ease), color 200ms var(--fa-ease);
+}
+.forest-app .fa-runstep__mark.is-done {
+  background: var(--fa-accent);
+  color: var(--fa-accent-ink);
+  box-shadow: none;
+}
+.forest-app .fa-runstep__mark.is-skipped {
+  background: var(--fa-bg-active);
+  color: var(--fa-text-3);
+  box-shadow: inset 0 0 0 1.5px var(--fa-line);
+}
+.forest-app .fa-runstep.is-next .fa-runstep__mark {
+  color: var(--fa-accent);
+  box-shadow: inset 0 0 0 1.5px var(--fa-accent);
+}
+.forest-app .fa-runstep__title {
+  flex: 1;
+  min-width: 0;
+  font-size: 13.5px;
+  line-height: 1.45;
+}
+.forest-app .fa-runstep.is-done .fa-runstep__title {
+  color: var(--fa-text-2);
+}
+.forest-app .fa-runstep.is-skipped .fa-runstep__title {
+  color: var(--fa-text-3);
+  text-decoration: line-through;
+  text-decoration-color: var(--fa-text-4);
+}
+.forest-app .fa-runstep__state {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex: none;
+}
+.forest-app .fa-runstep__label {
+  font-size: 12px;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-runstep__label.is-done {
+  color: var(--fa-accent);
+}
+.forest-app .fa-runstep__body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 0 12px 12px 42px;
+}
+.forest-app .fa-runstep__inst {
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--fa-text-2);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.forest-app .fa-runstep__inst.is-empty {
+  color: var(--fa-text-4);
+}
+.forest-app .fa-runstep__form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.forest-app .fa-runstep__form:disabled {
+  opacity: 0.7;
+}
+.forest-app .fa-runstep__obs-label {
+  margin-top: 4px;
+}
+.forest-app .fa-runstep__obs {
+  resize: vertical;
+  line-height: 1.6;
+  background: var(--fa-bg-raised);
+}
+.forest-app .fa-runstep__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.forest-app .fa-seg--status .fa-seg__item.is-on.is-done {
+  color: var(--fa-accent);
+}
+.forest-app .fa-seg--status .fa-seg__item.is-on.is-skipped {
+  color: var(--fa-warn);
+}
+.forest-app .fa-stepcmp {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+.forest-app .fa-stepcmp > div {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 8px 10px;
+  border-radius: var(--fa-r-sm);
+  background: var(--fa-bg-raised);
+  box-shadow: 0 0 0 1px var(--fa-line);
+  font-size: 12.5px;
+}
+.forest-app .fa-stepcmp > div.is-mine {
+  box-shadow: 0 0 0 1px var(--fa-accent-soft-2);
+}
+.forest-app .fa-stepcmp__h {
+  font-size: 11.5px;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-stepcmp__obs {
+  color: var(--fa-text-2);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 140px;
+  overflow: auto;
+}
+
+/* ───────────── 冻结的 SOP 来源 ───────────── */
+
+.forest-app .fa-source {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: var(--fa-r-lg);
+  background: var(--fa-bg-sunken);
+}
+.forest-app .fa-source__head {
+  display: flex;
+  gap: 12px;
+}
+.forest-app .fa-source__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  color: var(--fa-k-sop);
+  background: color-mix(in srgb, var(--fa-k-sop) 12%, transparent);
+}
+.forest-app .fa-source__main {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.forest-app .fa-source__eyebrow {
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-source__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fa-text);
+  word-break: break-word;
+}
+.forest-app .fa-source__rev,
+.forest-app .fa-source__ver {
+  margin-left: 8px;
+  font-family: var(--fa-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-source__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 12.5px;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-source__flags {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.forest-app .fa-source__flags li,
+.forest-app .fa-startrun__warn li {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+.forest-app .fa-source__flags .fa-icon,
+.forest-app .fa-startrun__warn .fa-icon {
+  flex: none;
+  margin-top: 3px;
+}
+.forest-app .fa-source__flags .is-warn,
+.forest-app .fa-startrun__warn .is-warn {
+  color: var(--fa-warn);
+}
+.forest-app .fa-source__flags .is-ai,
+.forest-app .fa-startrun__warn .is-ai {
+  color: var(--fa-ai);
+}
+.forest-app .fa-source__flags .is-quiet,
+.forest-app .fa-startrun__warn .is-info {
+  color: var(--fa-text-3);
+}
+.forest-app .fa-source__note {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--fa-text-2);
+}
+.forest-app .fa-source__current {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--fa-line);
+  font-size: 12.5px;
+  color: var(--fa-text-2);
+}
+.forest-app .fa-source__body > summary {
+  cursor: pointer;
+  font-size: 12.5px;
+  color: var(--fa-text-3);
+  list-style-position: inside;
+}
+.forest-app .fa-source__body > summary:hover {
+  color: var(--fa-text);
+}
+.forest-app .fa-source__body[open] > summary {
+  margin-bottom: 10px;
+}
+.forest-app .fa-source__text {
+  margin-top: 8px;
+  padding: 12px 14px;
+  border-radius: var(--fa-r);
+  background: var(--fa-bg-raised);
+  font-size: 13px;
+}
+
+.forest-app .fa-legacy-sop {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: -10px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-legacy-sop .fa-icon {
+  flex: none;
+  margin-top: 3px;
+  color: var(--fa-warn);
+}
+.forest-app .fa-doc__body-h {
+  margin-bottom: 10px;
+}
+
+/* ───────────── SOP：创建实验草稿 ───────────── */
+
+.forest-app .fa-startrun__cta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: var(--fa-r-lg);
+  background: var(--fa-bg-sunken);
+}
+.forest-app .fa-startrun__form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border-radius: var(--fa-r-lg);
+  background: var(--fa-bg-raised);
+  box-shadow: var(--fa-shadow-md);
+  animation: forest-rise 220ms var(--fa-ease);
+}
+.forest-app .fa-startrun__form .fa-fieldset {
+  gap: 12px;
+}
+.forest-app .fa-startrun__freeze {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-startrun__freeze b {
+  font-family: var(--fa-mono);
+  font-weight: 600;
+  color: var(--fa-text);
+}
+.forest-app .fa-startrun__warn {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px 12px;
+  border-radius: var(--fa-r);
+  background: var(--fa-bg-sunken);
+}
+.forest-app .fa-startrun__row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+}
+.forest-app .fa-startrun__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.forest-app .fa-startrun__actions code,
+.forest-app .fa-startrun__form code {
+  font-family: var(--fa-mono);
+  font-size: 11.5px;
+}
+.forest-app .fa-runs-from {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+.forest-app .fa-runs-from__h {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fa-text-3);
+  padding: 0 10px;
+}
+.forest-app .fa-mini__dir.is-older {
+  color: var(--fa-warn);
+}
+
+/* ───────────── 今天（工作台） ───────────── */
+
+.forest-app .fa-today__head {
+  align-items: flex-end;
+}
+.forest-app .fa-today__date {
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--fa-accent);
+  margin-bottom: 2px;
+}
+.forest-app .fa-today__filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 4px 0 10px;
+  border-radius: var(--fa-r-sm);
+  background: var(--fa-bg-sunken);
+  color: var(--fa-text-3);
+  max-width: 100%;
+}
+.forest-app .fa-today__filter select {
+  min-width: 0;
+  max-width: 220px;
+  height: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--fa-text);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.forest-app .fa-today__filter:focus-within {
+  outline: 2px solid var(--fa-focus);
+  outline-offset: 1px;
+}
+.forest-app .fa-today__filter select:focus {
+  outline: none;
+}
+.forest-app .fa-today__foot {
+  text-align: center;
+  padding-top: 4px;
+}
+.forest-app .fa-agenda--overdue .fa-h3,
+.forest-app .fa-agenda--overdue .fa-h3 > .fa-icon {
+  color: var(--fa-danger);
+}
+.forest-app .fa-agenda--today .fa-h3 > .fa-icon {
+  color: var(--fa-accent);
+}
+.forest-app .fa-agenda--review .fa-h3 > .fa-icon {
+  color: var(--fa-ai);
+}
+.forest-app .fa-agenda__empty {
+  padding: 4px 2px;
+  font-size: 13px;
+}
+.forest-app .fa-agenda__list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.forest-app .fa-agenda__row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: var(--fa-r);
+  transition: background-color 120ms var(--fa-ease);
+}
+.forest-app .fa-agenda__row:hover {
+  background: var(--fa-bg-hover);
+}
+.forest-app .fa-agenda__row.is-selected {
+  background: var(--fa-accent-soft);
+}
+.forest-app .fa-agenda__main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  text-align: left;
+  color: var(--fa-text);
+}
+.forest-app .fa-agenda__main .fa-row__icon {
+  margin-top: 1px;
+}
+.forest-app .fa-agenda__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.forest-app .fa-agenda__title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  word-break: break-word;
+}
+.forest-app .fa-agenda__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  font-size: 12px;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-agenda__when {
+  font-variant-numeric: tabular-nums;
+  color: var(--fa-text-2);
+}
+.forest-app .fa-agenda__when.is-late {
+  color: var(--fa-danger);
+  font-weight: 500;
+}
+.forest-app .fa-agenda__when.is-today {
+  color: var(--fa-accent);
+  font-weight: 500;
+}
+.forest-app .fa-agenda__progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--fa-text-2);
+  min-width: 0;
+}
+.forest-app .fa-agenda__progress > span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.forest-app .fa-agenda__bar {
+  display: flex;
+  flex: none;
+  width: 56px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--fa-bg-active);
+  overflow: hidden;
+}
+.forest-app .fa-agenda__bar .is-done {
+  background: var(--fa-accent);
+}
+.forest-app .fa-agenda__bar .is-skip {
+  background: var(--fa-text-4);
+}
+.forest-app .fa-agenda__side {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  flex: none;
+  max-width: 45%;
+}
+.forest-app .fa-agenda__go {
+  flex: none;
+  margin-right: 8px;
+  color: var(--fa-accent);
+}
+
+/* 林地顶部摘要 */
+.forest-app .fa-todaycard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  border-radius: var(--fa-r-lg);
+  background:
+    radial-gradient(120% 140% at 0% 0%, var(--fa-accent-soft) 0%, transparent 60%),
+    var(--fa-bg-raised);
+  box-shadow: var(--fa-shadow-sm);
+}
+.forest-app .fa-todaycard__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.forest-app .fa-todaycard__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--fa-accent-soft-2);
+  color: var(--fa-accent);
+}
+.forest-app .fa-todaycard__text {
+  flex: 1;
+  min-width: 0;
+}
+.forest-app .fa-todaycard__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fa-text);
+}
+.forest-app .fa-todaycard__sub {
+  font-size: 12.5px;
+  color: var(--fa-text-3);
+  font-variant-numeric: tabular-nums;
+}
+.forest-app .fa-todaycard__sub .is-late,
+.forest-app .fa-todaycard__late {
+  color: var(--fa-danger);
+}
+.forest-app .fa-todaycard__list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin: 0 -6px;
+}
+.forest-app .fa-todaycard__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 32px;
+  padding: 4px 8px;
+  border-radius: var(--fa-r-sm);
+  color: var(--fa-text);
+  font-size: 13px;
+  text-align: left;
+}
+.forest-app .fa-todaycard__item:hover {
+  background: var(--fa-bg-hover);
+}
+.forest-app .fa-todaycard__item .fa-icon {
+  color: var(--fa-text-3);
+}
+.forest-app .fa-todaycard__item-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.forest-app .fa-todaycard__late {
+  flex: none;
+  font-size: 11.5px;
+  font-weight: 500;
+}
+.forest-app .fa-todaycard__pr {
+  flex: none;
+  font-size: 12px;
+  color: var(--fa-text-3);
+  font-variant-numeric: tabular-nums;
+}
+.forest-app .fa-todaycard__more {
+  padding: 4px 8px;
+  font-size: 12.5px;
+}
+
+/* 课题页：本课题的安排 */
+.forest-app .fa-agenda-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 14px;
+  border-radius: var(--fa-r);
+  background: var(--fa-bg-sunken);
+  color: var(--fa-text-2);
+  font-size: 13px;
+  text-align: left;
+  transition: background-color 120ms var(--fa-ease);
+}
+.forest-app .fa-agenda-link:hover {
+  background: var(--fa-bg-active);
+}
+.forest-app .fa-agenda-link > .fa-icon {
+  color: var(--fa-accent);
+}
+.forest-app .fa-agenda-link__text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  font-variant-numeric: tabular-nums;
+}
+.forest-app .fa-agenda-link__text .is-late {
+  color: var(--fa-danger);
+}
+.forest-app .fa-agenda-link__go {
+  flex: none;
+  color: var(--fa-accent);
+  font-weight: 500;
+}
+
+/* 顶栏（窄屏）：今天 / 同步 */
+.forest-app .fa-today-btn,
+.forest-app .fa-data-btn {
+  position: relative;
+}
+.forest-app .fa-today-btn__n {
+  position: absolute;
+  top: -2px;
+  right: -3px;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 4px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--fa-accent-ink);
+  background: var(--fa-accent);
+  box-shadow: 0 0 0 2px var(--fa-bg);
+  font-variant-numeric: tabular-nums;
+}
+.forest-app .fa-today-btn__n.is-late {
+  background: var(--fa-danger);
+  color: #fff;
+}
+.forest-app .fa-nav__obs {
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--fa-text-4);
+}
+.forest-app .fa-data-btn .fa-nav__obs {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  box-shadow: 0 0 0 2px var(--fa-bg);
+}
+.forest-app .fa-nav__obs.is-ok {
+  background: var(--fa-accent);
+}
+.forest-app .fa-nav__obs.is-busy {
+  background: var(--fa-info);
+  animation: forest-blink 1.4s ease-in-out infinite;
+}
+.forest-app .fa-nav__obs.is-warn {
+  background: var(--fa-warn);
+}
+.forest-app .fa-nav__obs.is-bad {
+  background: var(--fa-danger);
+}
+.forest-app .fa-nav__count.is-accent.is-late {
+  background: var(--fa-danger);
+}
+
+/* ───────────── Obsidian 自动同步 ───────────── */
+
+.forest-app .fa-obsidian {
+  gap: 14px;
+  padding: 18px;
+  border-radius: var(--fa-r-lg);
+  background: var(--fa-bg-raised);
+  box-shadow: var(--fa-shadow-sm);
+}
+.forest-app .fa-obsidian__head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.forest-app .fa-obsidian__icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  color: #7c5cdb;
+  background: rgba(124, 92, 219, 0.1);
+}
+.forest-app .fa-obsidian__titles {
+  flex: 1;
+  min-width: 0;
+}
+.forest-app .fa-obsidian__titles .fa-h3 {
+  font-size: 14px;
+  color: var(--fa-text);
+}
+.forest-app .fa-obs-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--fa-bg-sunken);
+  color: var(--fa-text-2);
+}
+.forest-app .fa-obs-state__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--fa-text-4);
+}
+.forest-app .fa-obs-state.is-ok {
+  background: var(--fa-accent-soft);
+  color: var(--fa-accent);
+}
+.forest-app .fa-obs-state.is-ok .fa-obs-state__dot {
+  background: var(--fa-accent);
+}
+.forest-app .fa-obs-state.is-busy {
+  background: var(--fa-info-soft);
+  color: var(--fa-info);
+}
+.forest-app .fa-obs-state.is-busy .fa-obs-state__dot {
+  background: var(--fa-info);
+  animation: forest-blink 1.4s ease-in-out infinite;
+}
+.forest-app .fa-obs-state.is-warn {
+  background: var(--fa-warn-soft);
+  color: var(--fa-warn);
+}
+.forest-app .fa-obs-state.is-warn .fa-obs-state__dot {
+  background: var(--fa-warn);
+}
+.forest-app .fa-obs-state.is-bad {
+  background: var(--fa-danger-soft);
+  color: var(--fa-danger);
+}
+.forest-app .fa-obs-state.is-bad .fa-obs-state__dot {
+  background: var(--fa-danger);
+}
+.forest-app .fa-obsidian__oneway {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--fa-r);
+  background: var(--fa-bg-sunken);
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--fa-text-2);
+}
+.forest-app .fa-obsidian__oneway .fa-icon {
+  flex: none;
+  margin-top: 3px;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-obsidian__oneway strong {
+  color: var(--fa-text);
+  font-weight: 600;
+}
+.forest-app .fa-obsidian__conn,
+.forest-app .fa-obsidian__pick {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.forest-app .fa-obsidian__conn .fa-kv dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+.forest-app .fa-obsidian__path,
+.forest-app .fa-vault__path {
+  flex-basis: 100%;
+  font-family: var(--fa-mono);
+  font-size: 11.5px;
+  color: var(--fa-text-4);
+  word-break: break-all;
+}
+.forest-app .fa-obsidian__folder {
+  margin: 0 3px;
+  padding: 1px 6px;
+  border-radius: 5px;
+  background: var(--fa-bg-sunken);
+  font-family: var(--fa-mono);
+  font-size: 11.5px;
+  color: var(--fa-text-2);
+}
+.forest-app .fa-obs-line {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--fa-text-2);
+}
+.forest-app .fa-obs-line.is-ok {
+  color: var(--fa-accent);
+}
+.forest-app .fa-obs-line.is-busy {
+  color: var(--fa-info);
+}
+.forest-app .fa-obs-line.is-warn {
+  color: var(--fa-warn);
+}
+.forest-app .fa-obs-line.is-bad {
+  color: var(--fa-danger);
+  align-items: flex-start;
+}
+.forest-app .fa-obs-line.is-bad .fa-icon {
+  margin-top: 3px;
+}
+.forest-app .fa-obsidian__conflicts {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border-radius: var(--fa-r);
+  background: var(--fa-warn-soft);
+}
+.forest-app .fa-obsidian__conflicts-h {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fa-warn);
+}
+.forest-app .fa-obsidian__conflicts-h .fa-icon {
+  flex: none;
+  margin-top: 3px;
+}
+.forest-app .fa-obsidian__conflicts ul,
+.forest-app .fa-obsidian__stale ul {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 180px;
+  overflow: auto;
+}
+.forest-app .fa-obsidian__conflicts li {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+}
+.forest-app .fa-obsidian__conflicts li .is-mono,
+.forest-app .fa-obsidian__stale li {
+  font-family: var(--fa-mono);
+  font-size: 11.5px;
+  color: var(--fa-text-2);
+  word-break: break-all;
+}
+.forest-app .fa-obsidian__stale > summary {
+  cursor: pointer;
+  font-size: 12.5px;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-obsidian__stale[open] > summary {
+  margin-bottom: 6px;
+}
+.forest-app .fa-obsidian__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.forest-app .fa-vaults {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.forest-app .fa-vaults > legend {
+  margin-bottom: 6px;
+}
+.forest-app .fa-vault {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--fa-r);
+  box-shadow: 0 0 0 1px var(--fa-line);
+  cursor: pointer;
+  transition: box-shadow 120ms var(--fa-ease), background-color 120ms var(--fa-ease);
+}
+.forest-app .fa-vault:hover {
+  background: var(--fa-bg-hover);
+}
+.forest-app .fa-vault.is-on {
+  background: var(--fa-accent-soft);
+  box-shadow: 0 0 0 1.5px var(--fa-accent);
+}
+.forest-app .fa-vault input {
+  margin-top: 3px;
+  accent-color: var(--fa-accent);
+  flex: none;
+}
+.forest-app .fa-vault__main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.forest-app .fa-vault__name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--fa-text);
+}
+.forest-app .fa-vault__name .fa-quiet-tag,
+.forest-app .fa-obsidian__conn .fa-quiet-tag {
+  height: 18px;
+  font-size: 11px;
+}
+
+/* ───────────── forest_context 预览 ───────────── */
+
+.forest-app .fa-ctxprev__btn {
+  align-self: flex-start;
+  font-size: 12.5px;
+}
+.forest-app .fa-ctxprev {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: var(--fa-r);
+  background: var(--fa-ai-soft);
+  font-size: 12.5px;
+}
+.forest-app .fa-ctxprev__line {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  color: var(--fa-text-2);
+}
+.forest-app .fa-ctxprev__tag {
+  padding: 0 6px;
+  border-radius: 5px;
+  background: var(--fa-bg-raised);
+  font-size: 11.5px;
+  color: var(--fa-text-2);
+}
+.forest-app .fa-ctxprev__warn {
+  color: var(--fa-warn);
+  line-height: 1.55;
+}
+
+@keyframes forest-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@container forest (max-width: 520px) {
+  .forest-app .fa-runstep__body {
+    padding-left: 12px;
+  }
+  .forest-app .fa-run {
+    padding: 14px 12px;
+  }
+  .forest-app .fa-agenda__main {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr);
+  }
+  .forest-app .fa-agenda__side {
+    grid-column: 2;
+    max-width: none;
+    justify-content: flex-start;
+    padding-left: 0;
+  }
+  .forest-app .fa-agenda__row {
+    display: block;
+  }
+  .forest-app .fa-agenda__go {
+    margin: -4px 0 10px 54px;
+  }
+  .forest-app .fa-step-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .forest-app .fa-step-card__num {
+    display: none;
+  }
+  .forest-app .fa-obsidian {
+    padding: 14px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .forest-app *,
   .forest-app *::before,

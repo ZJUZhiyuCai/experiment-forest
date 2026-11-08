@@ -1,4 +1,6 @@
 import type { EntityKind, EntityPatch, ForestEntity, Json, JsonObject } from '../shared/model';
+import { WORKFLOW_FORMAT, WORKFLOW_KEY, getSopWorkflow } from '../shared/workflow';
+import type { SopStep } from '../shared/workflow';
 import {
   DEFAULT_STATUS,
   FIELDS,
@@ -51,6 +53,45 @@ export interface Draft {
    * 只对基线是待核对的宿主 AI 草稿生效；保存时把 provenance.reviewStatus 写为 'reviewed'（保留 source 等字段）。
    */
   markReviewed?: boolean;
+  /**
+   * SOP 的结构化步骤（data.forestWorkflow.steps）。步骤 ID 一经生成不随改名/排序变化。
+   * initialSteps 是打开编辑器时的值：未改动时不写回 data，原样保留服务端子树。
+   */
+  steps?: SopStep[];
+  initialSteps?: SopStep[];
+  /** 基线里已有无法识别的 forestWorkflow（例如其它版本）：不可编辑、原样保留 */
+  stepsLocked?: boolean;
+}
+
+/* ───────────────────────── SOP 步骤 ───────────────────────── */
+
+export const MAX_SOP_STEPS = 100;
+export const STEP_LIMITS = { title: 300, instruction: 4000 } as const;
+
+/** 稳定步骤 ID：符合服务端 ID 规则（字母数字开头，仅含 A–Z a–z 0–9 _ . : -） */
+export function newStepId(): string {
+  const c = (globalThis as { crypto?: Crypto }).crypto;
+  if (c && typeof c.randomUUID === 'function') return `step-${c.randomUUID()}`;
+  return `step-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+export function sameSteps(a: SopStep[], b: SopStep[]): boolean {
+  return (
+    a.length === b.length &&
+    a.every((s, i) => s.id === b[i].id && s.title === b[i].title && s.instruction === b[i].instruction && s.required === b[i].required)
+  );
+}
+
+function cloneSteps(steps: readonly SopStep[]): SopStep[] {
+  return steps.map((s) => ({ id: s.id, title: s.title, instruction: s.instruction, required: s.required }));
+}
+
+/** 从基线读取可编辑步骤；若已有 forestWorkflow 但不是可识别的 SOP 步骤，则锁定以免覆盖 */
+function stepsFromEntity(e: ForestEntity): { steps: SopStep[]; locked: boolean } {
+  if (e.kind !== 'sop') return { steps: [], locked: false };
+  const wf = getSopWorkflow(e);
+  if (wf) return { steps: cloneSteps(wf.steps), locked: false };
+  return { steps: [], locked: Object.hasOwn(e.data, WORKFLOW_KEY) };
 }
 
 /** 基线是否为待人工核对的宿主 AI 草稿 */
@@ -90,10 +131,12 @@ export function newDraft(kind: EntityKind, projectId: string | null): Draft {
     initialFields: { ...fields },
     initialRefs: { ...refs },
     phase: 'editing',
+    ...(kind === 'sop' ? { steps: [], initialSteps: [] } : {}),
   };
 }
 
 export function draftFromEntity(e: ForestEntity): Draft {
+  const wf = stepsFromEntity(e);
   const fields: Record<string, string> = {};
   const refs: Record<string, string[]> = {};
   for (const f of FIELDS[e.kind]) {
@@ -116,6 +159,7 @@ export function draftFromEntity(e: ForestEntity): Draft {
     initialFields: { ...fields },
     initialRefs: Object.fromEntries(Object.entries(refs).map(([k, v]) => [k, v.slice()])),
     phase: 'editing',
+    ...(e.kind === 'sop' ? { steps: cloneSteps(wf.steps), initialSteps: cloneSteps(wf.steps), stepsLocked: wf.locked } : {}),
   };
 }
 
@@ -149,6 +193,7 @@ export function isDirty(d: Draft): boolean {
   for (const k of Object.keys(d.fields)) if ((d.fields[k] ?? '') !== (d.initialFields[k] ?? '')) return true;
   for (const k of Object.keys(d.refs)) if (!sameList(d.refs[k] ?? [], d.initialRefs[k] ?? [])) return true;
   if (d.markReviewed && baseNeedsReview(d)) return true;
+  if (d.kind === 'sop' && !d.stepsLocked && !sameSteps(d.steps ?? [], d.initialSteps ?? [])) return true;
   return false;
 }
 
@@ -183,6 +228,16 @@ export function validate(d: Draft, archivedProjectIds: Set<string>): DraftErrors
   if (locked.indexOf(d.status) !== -1 && d.status !== d.base?.status) {
     errors.status = `这是待人工核对的 AI 草稿：要设为“${statusOption(d.kind, d.status).label}”，请先勾选“保存时记录为已人工核对”`;
   }
+  if (d.kind === 'sop' && !d.stepsLocked) {
+    const steps = d.steps ?? [];
+    if (steps.length > MAX_SOP_STEPS) errors.steps = `步骤最多 ${MAX_SOP_STEPS} 个（当前 ${steps.length}）`;
+    if (new Set(steps.map((s) => s.id)).size !== steps.length) errors.steps = '步骤 ID 重复，请删除重复的步骤后再保存';
+    steps.forEach((s, i) => {
+      if (!s.title.trim()) errors[`step-title:${s.id}`] = `第 ${i + 1} 步需要一个标题`;
+      else if (s.title.length > STEP_LIMITS.title) errors[`step-title:${s.id}`] = `第 ${i + 1} 步标题最多 ${STEP_LIMITS.title} 字`;
+      if (s.instruction.length > STEP_LIMITS.instruction) errors[`step-instruction:${s.id}`] = `第 ${i + 1} 步说明最多 ${STEP_LIMITS.instruction} 字`;
+    });
+  }
   return errors;
 }
 
@@ -205,6 +260,19 @@ function buildData(d: Draft): { data: JsonObject; changed: boolean } {
       // 清空：编辑时写 null（无论服务端 data 是合并还是替换，都能表达“已清空”）；新建时直接不写
       else if (d.base) data[f.key] = null;
       else delete data[f.key];
+    }
+  }
+  // SOP 步骤：只有改动时才写回整个 SOP 工作流（format/version/type/steps）；未改动则原样保留基线子树
+  if (d.kind === 'sop' && !d.stepsLocked) {
+    const next = d.steps ?? [];
+    if (!sameSteps(next, d.initialSteps ?? [])) {
+      changed = true;
+      data[WORKFLOW_KEY] = {
+        format: WORKFLOW_FORMAT,
+        version: 1,
+        type: 'sop',
+        steps: next.map((s) => ({ id: s.id, title: s.title, instruction: s.instruction, required: s.required })),
+      };
     }
   }
   // 用户明确勾选了核对：只改 provenance.reviewStatus，source 与其它字段原样保留
@@ -277,6 +345,15 @@ export function compareRows(d: Draft, latest: ForestEntity, projectTitle: (id: s
       push(f.label, fieldString(b.data, f), fieldString(latest.data, f), (d.fields[f.key] ?? '').trim());
     }
   }
+  if (d.kind === 'sop' && !d.stepsLocked) {
+    const sumSteps = (steps: SopStep[]) => (steps.length ? `${steps.length} 步：${steps.map((s) => s.title || '（无标题）').join(' / ').slice(0, 80)}` : '（无结构化步骤）');
+    const latestSteps = getSopWorkflow(latest)?.steps ?? [];
+    const baseSteps = d.initialSteps ?? [];
+    const mine = d.steps ?? [];
+    if (!sameSteps(baseSteps, latestSteps) || !sameSteps(mine, baseSteps)) {
+      rows.push({ label: '步骤', base: sumSteps(baseSteps), latest: sumSteps(latestSteps), mine: sumSteps(mine) });
+    }
+  }
   const review = (e: ForestEntity) => (provenanceOf(e).isAi ? (provenanceOf(e).needsReview ? '待核对' : '已核对') : '');
   push('AI 审阅', review(b), review(latest), d.markReviewed && baseNeedsReview(d) ? '已核对（保存时记录）' : review(b));
   // 注意：正文这里只是供人阅读的摘要（长度 + 前 60 字），不能作为“是否一致”的依据；一致性判定见 draftMatchesEntity
@@ -330,6 +407,9 @@ export function draftMatchesEntity(d: Draft, e: ForestEntity): boolean {
 export function rebase(d: Draft, latest: ForestEntity): Draft {
   const b = d.base as ForestEntity;
   const fromLatest = draftFromEntity(latest);
+  if (d.kind === 'sop' && fromLatest.stepsLocked && !sameSteps(d.steps ?? [], d.initialSteps ?? [])) {
+    return { ...d, phase: 'conflict', latest, message: '最新 SOP 的步骤格式无法识别，不能合并。你的步骤输入已保留，请复制留存，或明确放弃后载入最新版本。' };
+  }
   const pick = <T,>(mine: T, base: T, lat: T, eq: (x: T, y: T) => boolean): T => (eq(mine, base) ? lat : mine);
   const eqS = (x: string, y: string) => x === y;
   const fields: Record<string, string> = {};
@@ -346,6 +426,12 @@ export function rebase(d: Draft, latest: ForestEntity): Draft {
     tags: pick(d.tags, b.tags, latest.tags, sameList),
     fields,
     refs,
+    // SOP 步骤：用户改过就保留用户的整组步骤，否则采用最新版本；基线步骤同步换成最新
+    ...(d.kind === 'sop'
+      ? fromLatest.stepsLocked
+        ? { steps: fromLatest.steps, initialSteps: fromLatest.initialSteps, stepsLocked: true }
+        : { steps: pick(d.steps ?? [], d.initialSteps ?? [], fromLatest.steps ?? [], sameSteps), initialSteps: fromLatest.initialSteps, stepsLocked: false }
+      : {}),
     phase: 'editing',
     rebasedFrom: b.revision,
     // 最新版本若仍待核对，保留用户已勾选的核对意图；若已被他人核对，则无需再写
