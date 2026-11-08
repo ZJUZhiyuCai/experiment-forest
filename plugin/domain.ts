@@ -1,3 +1,4 @@
+import {getExperimentPage,type PageApi} from '../shared/page';
 import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { ENTITY_KINDS, type CreateEntity, type EntityFilter, type ForestApi, type ForestEntity, type ForestExport, type ForestSnapshot, type ForestState, type ImportPreview, type ImportResult, type UpdateEntity } from '../shared/model.js';
@@ -23,7 +24,7 @@ export const stateSchema = z.unknown().transform((value, ctx): ForestState => {
 const clone = <T>(value: T): T => structuredClone(value);
 
 /** Serial domain transactions shared by UI RPCs and model tools. */
-export class ForestRepository implements Omit<ForestApi, 'obsidianStatus' | 'configureObsidian' | 'syncObsidian'> {
+export class ForestRepository implements Omit<ForestApi, keyof PageApi | 'obsidianStatus' | 'configureObsidian' | 'syncObsidian'> {
   private state: ForestState | undefined;
   private queue: Promise<unknown> = Promise.resolve();
   private closing = false;
@@ -72,6 +73,21 @@ export class ForestRepository implements Omit<ForestApi, 'obsidianStatus' | 'con
     return this.enqueue(state => clone({ revision: state.revision, entities: state.entities }));
   }
 
+  /** Internal adaptive-page transaction. Not exposed as a generic RPC or model tool. */
+  mutatePage<T>(id: string, work: (entity: ForestEntity) => { entity: ForestEntity; result: T; changed?: boolean }, signal?:AbortSignal): Promise<T> {
+    return this.enqueue(async state => {
+      signal?.throwIfAborted();
+      const before = state.entities.find(e => e.id === id);
+      if (!before || before.kind !== 'record') throw new ForestError('not-found', '实验页不存在');
+      if (before.status === 'archived') throw new ForestError('invalid', '已归档实验页不能修改');
+      const change = work(clone(before));
+      if (change.changed === false) return clone(change.result);
+      const entity = validateEntity(change.entity);
+      const next = clone(state); next.entities = next.entities.map(e => e.id === id ? entity : e);
+      await this.commit(state, next,signal); return clone(change.result);
+    });
+  }
+
   list(filter: EntityFilter = {}): Promise<ForestEntity[]> {
     return this.enqueue(state => {
       const f = object(filter, '筛选条件');
@@ -95,7 +111,7 @@ export class ForestRepository implements Omit<ForestApi, 'obsidianStatus' | 'con
     });
   }
 
-  create(input: CreateEntity, signal?: AbortSignal): Promise<ForestEntity> {
+  create(input: CreateEntity, signal?: AbortSignal, pageInternal = false): Promise<ForestEntity> {
     // Capture caller input now, not after a queued operation has allowed it to mutate.
     let captured: unknown;
     try { captured = clone(input); } catch { return Promise.reject(new ForestError('invalid', '记录输入无效')); }
@@ -108,6 +124,7 @@ export class ForestRepository implements Omit<ForestApi, 'obsidianStatus' | 'con
         ...i, id: randomUUID(), kind, content: i.content ?? '', status: i.status ?? DEFAULT_STATUS[kind],
         tags: i.tags ?? [], data: i.data ?? {}, revision: 1, createdAt: now, updatedAt: now,
       });
+      if (entity.data.forestPage && !pageInternal) throw new ForestError('invalid', '请使用新建实验页入口');
       if (getRunWorkflow(entity)) throw new ForestError('invalid', '运行记录须通过从 SOP 创建操作建立');
       this.requireReviewedCompletion(entity);
       this.requireActiveProject(entity, state);
@@ -236,6 +253,11 @@ export class ForestRepository implements Omit<ForestApi, 'obsidianStatus' | 'con
     }
   }
   private protectWorkflowAndOrigin(previous: ForestEntity, next: ForestEntity): void {
+    if(next.status==='completed' && getExperimentPage(next)?.blocks.some(b=>b.pendingReview)) throw new ForestError('invalid','AI 整理内容尚待人工核对，不能将实验标记为完成');
+    if (JSON.stringify(previous.data.forestPage) !== JSON.stringify(next.data.forestPage)) {
+      throw new ForestError('invalid', '实验页、原件及 AI 提案须通过专用页面操作修改');
+    }
+    if (previous.data.forestPage && next.content !== previous.content) throw new ForestError('invalid', '请在实验页编辑正文');
     const oldRun = getRunWorkflow(previous);
     const newRun = getRunWorkflow(next);
     const opaque = previous.data[WORKFLOW_KEY];

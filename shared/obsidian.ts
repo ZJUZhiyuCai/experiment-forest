@@ -1,4 +1,5 @@
 import { ENTITY_KINDS, type EntityKind, type ForestEntity, type ForestSnapshot, type Json } from './model';
+import {getExperimentPage,PAGE_KEY,type PageMaterial,type PageBlockInput} from './page';
 import { getRunWorkflow, getSopWorkflow } from './workflow';
 
 export interface ObsidianMirrorFile { path: string; content: string }
@@ -77,10 +78,47 @@ function metadata(entity: ForestEntity, byId: Map<string, ForestEntity>, rootFol
     // Obsidian tags have a narrower alphabet than Forest tags. Never change original labels.
     tags: ['experiment-forest', ...entity.tags.filter(tag => /^[\p{L}\p{M}\p{N}_/-]+$/u.test(tag) && /[^\d/]/u.test(tag) && !tag.startsWith('/') && !tag.endsWith('/') && !tag.includes('//'))],
     forest_tags: entity.tags, created: entity.createdAt, updated: entity.updatedAt,
-    source, review_status: review, needs_review: source === 'deepseek-harness' && review !== 'reviewed',
+    source, review_status: review, needs_review: (source === 'deepseek-harness' && review !== 'reviewed') || !!getExperimentPage(entity)?.blocks.some(b=>b.pendingReview),
+    experiment_date: typeof entity.data.date==='string'?entity.data.date:null,
   };
 }
-function entityNote(entity: ForestEntity, refs: Relation[], backlinks: ForestEntity[], byId: Map<string, ForestEntity>, rootFolder?: string): string {
+export function materialMirrorPath(material:PageMaterial):string {
+  const known:Record<string,string>={'image/png':'png','image/jpeg':'jpg','image/gif':'gif','image/webp':'webp','video/mp4':'mp4','video/webm':'webm','text/plain':'txt','text/csv':'csv','application/pdf':'pdf'};
+  const ext=known[material.mime]??(material.name.match(/\.([a-zA-Z0-9]{1,12})$/)?.[1]?.toLowerCase()||'bin');
+  return `materials/${basename(material.id)}.${ext}`;
+}
+export type MaterialIssues=ReadonlyMap<string,string>;
+function pageBody(entity:ForestEntity,rootFolder:string|undefined,issues:MaterialIssues):string[] {
+  const page=getExperimentPage(entity)!;
+  const lines:string[]=[];
+  for(const block of page.blocks) {
+    if(block.pendingReview)lines.push('> 待人工核对 · AI 整理内容，数值、单位、时间和归属尚未确认。','');
+    if(block.type==='heading')lines.push(`### ${text(block.text)}`,'');
+    else if(block.type==='text')lines.push(reading(block.text),'');
+    else if(block.type==='table') {
+      const cell=(v:string)=>reading(v).replace(/  \n/g,'<br>');
+      lines.push(`| ${block.columns.map(c=>cell(c.label)).join(' | ')} |`,`| ${block.columns.map(()=>'---').join(' | ')} |`,
+        ...block.rows.map(r=>`| ${block.columns.map(c=>cell(r.cells[c.id]??'')).join(' | ')} |`),'');
+      if(block.note)lines.push(reading(block.note),'');
+    } else {
+      const material=page.materials.find(m=>m.id===block.materialId);
+      if(!material)lines.push('> 材料未登记，不能显示。','');
+      else if(issues.has(material.id))lines.push(`> ${text(material.name)}：${text(issues.get(material.id)!)}`,'');
+      else {
+        const target=`${rootFolder?`${rootFolder}/`:''}${materialMirrorPath(material)}`;
+        const embed=/^(image\/(png|jpeg|gif|webp)|video\/(mp4|webm|quicktime))$/.test(material.mime);
+        lines.push(`${embed?'!':''}[[${target}]]`,text(material.name),'');
+      }
+      if(block.caption)lines.push(reading(block.caption),'');
+    }
+    if(block.sources.length)lines.push(`来源：${block.sources.map(s=>s.snapshotId?`原始快照 ${text(s.snapshotId)}`:`材料 ${text(s.materialId!)}`).join('；')}`,'');
+  }
+  if(!page.blocks.length)lines.push('（正文为空）','');
+  lines.push('<details><summary>原始输入与来源快照</summary>','',fence(JSON.stringify(page.snapshots,null,2),'json'),'','</details>','');
+  if(page.materials.length)lines.push('### 原始材料','',...page.materials.map(m=>issues.has(m.id)?`- ${text(m.name)}：${text(issues.get(m.id)!)}`:`- [[${rootFolder?`${rootFolder}/`:''}${materialMirrorPath(m)}]] ${text(m.name)} · ${m.bytes} bytes · SHA-256 ${m.sha256}`),'');
+  return lines;
+}
+function entityNote(entity: ForestEntity, refs: Relation[], backlinks: ForestEntity[], byId: Map<string, ForestEntity>, rootFolder?: string, issues:MaterialIssues=new Map()): string {
   // JSON frontmatter is explicitly supported by Obsidian; it prevents YAML injection.
   const lines = ['---', JSON.stringify(metadata(entity, byId, rootFolder), null, 2), '---', '', `# ${text(entity.title)}`, '',
     'Harness 已保存资料的单向阅读镜像。请在 Harness 修改实验；在其他笔记中链接此页并整理心得。', '',
@@ -116,11 +154,12 @@ function entityNote(entity: ForestEntity, refs: Relation[], backlinks: ForestEnt
     lines.push('', '## 方法步骤', '');
     sop.steps.forEach((step, index) => lines.push(`### ${index + 1}. ${text(step.title)}${step.required ? '（必需）' : ''}`, '', reading(step.instruction), ''));
   }
-  lines.push('', '## 正文', '', entity.content ? reading(entity.content) : '（正文为空）', '',
-    '<details><summary>查看完整原文（字面文本）</summary>', '', fence(entity.content), '', '</details>', '',
+  const page=getExperimentPage(entity);
+  lines.push('', '## 正文', '', ...(page?pageBody(entity,rootFolder,issues):[entity.content ? reading(entity.content) : '（正文为空）','',
+    '<details><summary>查看完整原文（字面文本）</summary>', '', fence(entity.content), '', '</details>', '']),
     '## 结构化资料（完整原值）', '',
     '包括原始科学字段、来源、执行步骤及历史 SOP 快照；当前 SOP 链接不替代历史快照。未提供的字段不补写。', '',
-    fence(JSON.stringify(entity.data, null, 2), 'json'), '',
+    fence(JSON.stringify(page?Object.fromEntries(Object.entries(entity.data).filter(([key])=>key!==PAGE_KEY)):entity.data, null, 2), 'json'), '',
     '## 原始记录元数据', '',
     fence(JSON.stringify({ ...entity, content: undefined, data: undefined }, null, 2), 'json'), '');
   return lines.join('\n');
@@ -132,7 +171,7 @@ function entityNote(entity: ForestEntity, refs: Relation[], backlinks: ForestEnt
  * This function has no clock, filesystem, network or HTML execution. Workflow parsing reuses
  * the project's schema; no extra runtime dependency is introduced.
  */
-export function createObsidianMirror(snapshot: ForestSnapshot, mirroredAt?: string, rootFolder?: string): ObsidianMirror {
+export function createObsidianMirror(snapshot: ForestSnapshot, mirroredAt?: string, rootFolder?: string, materialIssues:MaterialIssues=new Map()): ObsidianMirror {
   if (rootFolder !== undefined && !/^[A-Za-z0-9][A-Za-z0-9 _-]{0,120}$/.test(rootFolder)) throw new Error('Obsidian mirror: invalid root folder');
   if (!Number.isSafeInteger(snapshot.revision) || snapshot.revision < 0) throw new Error('Obsidian mirror: invalid snapshot revision');
   if (mirroredAt !== undefined && (!/^\d{4}-\d{2}-\d{2}T/.test(mirroredAt) || !Number.isFinite(Date.parse(mirroredAt)))) throw new Error('Obsidian mirror: invalid mirror time');
@@ -182,6 +221,6 @@ export function createObsidianMirror(snapshot: ForestSnapshot, mirroredAt?: stri
     views: [view('全部资料'), view('未归档', 'note.status != "archived"'), view('待核对', 'note.needs_review == true && note.status != "archived"'),
       ...ENTITY_KINDS.map(kind => view(LABEL[kind], `note.type == "${kind}"`))],
   }, null, 2)}\n` });
-  for (const entity of entities) files.push({ path: `entities/${basename(entity.id)}.md`, content: entityNote(entity, outgoing.get(entity.id)!, incoming.get(entity.id) ?? [], byId, rootFolder) });
+  for (const entity of entities) files.push({ path: `entities/${basename(entity.id)}.md`, content: entityNote(entity, outgoing.get(entity.id)!, incoming.get(entity.id) ?? [], byId, rootFolder, materialIssues) });
   return { files, fileCount: files.length, entityCount: entities.length };
 }

@@ -169,7 +169,7 @@ export function DataPanel({
             <h2 id={`${uid}-h`} ref={headingRef} tabIndex={-1} className="fa-page-title">
               同步与导出
             </h2>
-            <p className="fa-page-sub">自动同步到 Obsidian 阅读整理；备份全部数据，或从旧版实验小森林迁移。</p>
+            <p className="fa-page-sub">自动同步到 Obsidian 阅读整理；备份记录，或从旧版实验小森林迁移。</p>
           </div>
         </header>
 
@@ -194,7 +194,7 @@ export function DataPanel({
         <section className="fa-card fa-block">
           <div className="fa-block__text">
             <h3 className="fa-block__title">导出</h3>
-            <p className="fa-help">从服务端导出完整数据（包括已归档条目与导入记录），保存为 JSON 文件，用于备份或迁移。日常在 Obsidian 中阅读不需要导出，用上面的自动同步即可。</p>
+            <p className="fa-help">JSON 包含记录、已归档条目和附件引用，不包含照片、视频等文件原件。完整备份还需保留 Harness 数据目录中的附件与材料登记信息。日常在 Obsidian 阅读使用上面的自动同步即可。</p>
           </div>
           <button type="button" className="fa-btn" onClick={() => void doExport()} disabled={exporting}>
             {exporting ? <Spinner label="正在导出…" /> : (<><Icon name="download" />导出 JSON</>)}

@@ -1,3 +1,4 @@
+import type { PageApi } from './page';
 /** JSON-only contract shared by the Harness host and the browser client. */
 import type { CreateRunInput, UpdateRunStepInput, ForestContextInput, ForestContext } from './workflow';
 import type { ConfigureObsidianInput, ObsidianStatus } from './obsidian-contract';
@@ -93,7 +94,7 @@ export interface ImportResult {
   revision: number;
   warnings: string[];
 }
-export interface ForestApi {
+export interface ForestApi extends PageApi {
   list(filter?: EntityFilter): Promise<ForestEntity[]>;
   get(id: string): Promise<ForestEntity | null>;
   snapshot(): Promise<ForestSnapshot>;

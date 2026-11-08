@@ -1,6 +1,7 @@
 import { useId, useMemo, useState } from 'react';
 import type { KeyboardEvent, RefObject } from 'react';
 import type { EntityKind, ForestApi, ForestEntity } from '../shared/model';
+import { getExperimentPage } from '../shared/page';
 import { Icon, KIND_ICON } from './icons';
 import type { IconName } from './icons';
 import {
@@ -64,6 +65,8 @@ export function ScopeNav({
   todayCount,
   todayLate,
   obsidian,
+  onNewPage,
+  creatingPage,
 }: {
   entities: ForestEntity[];
   scope: string;
@@ -71,6 +74,9 @@ export function ScopeNav({
   inboxCount: number;
   onScope: (scope: string) => void;
   onNewProject: () => void;
+  /** 新建实验页（在课题内时归入该课题）；宿主没有页面接口时不提供 */
+  onNewPage?: () => void;
+  creatingPage?: boolean;
   onData: () => void;
   dataOpen: boolean;
   /** 今天 + 逾期的真实数量 */
@@ -97,6 +103,12 @@ export function ScopeNav({
   );
   return (
     <nav className="fa-nav" aria-label="实验小森林导航">
+      {onNewPage && (
+        <button type="button" className="fa-nav__new" onClick={onNewPage} disabled={creatingPage} title="新建一页实验：文字、表格、照片、视频先放进来">
+          <Icon name="plus" size={14} />
+          <span>{creatingPage ? '正在新建…' : '新建实验页'}</span>
+        </button>
+      )}
       <ul className="fa-nav__group">
         {item('home', '林地', 'forest')}
         {item('today', '今天', 'today', todayCount, todayLate ? 'late' : false)}
@@ -167,7 +179,11 @@ export function Grove({
   pendingInputs,
   today,
   onContinue,
+  onNewPage,
+  creatingPage,
 }: {
+  onNewPage?: () => void;
+  creatingPage?: boolean;
   entities: ForestEntity[];
   freshIds: Set<string>;
   drafts: Draft[];
@@ -198,6 +214,9 @@ export function Grove({
   const recordCount = entities.filter((e) => e.kind === 'record' && !isArchived(e)).length;
 
   const unsavedTotal = drafts.length + pendingInputs.length;
+  const pages = entities.filter((e) => e.kind === 'record' && !isArchived(e) && getExperimentPage(e)).sort(byUpdatedDesc);
+  const allPages = pages.length;
+  const recentPages = pages.slice(0, 6);
 
   if (entities.length === 0 && drafts.length === 0) {
     return (
@@ -206,24 +225,48 @@ export function Grove({
           <h2 id={`${uid}-h`} ref={headingRef} tabIndex={-1} className="fa-sr">
             林地
           </h2>
-          <EmptyState
-            title="从一个研究问题开始"
-            actions={
-              <>
-                <button type="button" className="fa-btn fa-btn--primary" onClick={() => onNew('project', null)}>
-                  <Icon name="plus" />
-                  新建课题
-                </button>
-                <button type="button" className="fa-btn" onClick={onData}>
-                  <Icon name="upload" />
-                  导入旧版数据
-                </button>
-              </>
-            }
-          >
-            <p>课题是你想回答的一个问题。实验记录、计划、SOP、样本和笔记都可以归在它下面。</p>
-            <p className="fa-help">也可以在 DeepSeek 对话里请它用 forest_create_draft 起草记录、笔记或 SOP——它们会作为待人工核对的草稿出现在这里。</p>
-          </EmptyState>
+          {onNewPage ? (
+            <EmptyState
+              title="先放进来，再长成一页"
+              actions={
+                <>
+                  <button type="button" className="fa-btn fa-btn--primary" onClick={onNewPage} disabled={creatingPage}>
+                    <Icon name="plus" />
+                    {creatingPage ? '正在新建…' : '新建实验页'}
+                  </button>
+                  <button type="button" className="fa-btn" onClick={() => onNew('project', null)}>
+                    新建课题
+                  </button>
+                  <button type="button" className="fa-btn fa-btn--ghost" onClick={onData}>
+                    <Icon name="upload" />
+                    导入旧版数据
+                  </button>
+                </>
+              }
+            >
+              <p>一次实验就是一页。粘贴文字或表格，拖入照片、视频和文件；结构不用事先设计，以后可以请模型提议怎么理。</p>
+              <p className="fa-help">课题是可选的：想把几次实验归在一个研究问题下时再建。</p>
+            </EmptyState>
+          ) : (
+            <EmptyState
+              title="从一个研究问题开始"
+              actions={
+                <>
+                  <button type="button" className="fa-btn fa-btn--primary" onClick={() => onNew('project', null)}>
+                    <Icon name="plus" />
+                    新建课题
+                  </button>
+                  <button type="button" className="fa-btn" onClick={onData}>
+                    <Icon name="upload" />
+                    导入旧版数据
+                  </button>
+                </>
+              }
+            >
+              <p>课题是你想回答的一个问题。实验记录、计划、SOP、样本和笔记都可以归在它下面。</p>
+              <p className="fa-help">也可以在 DeepSeek 对话里请它用 forest_create_draft 起草记录、笔记或 SOP——它们会作为待人工核对的草稿出现在这里。</p>
+            </EmptyState>
+          )}
         </div>
       </section>
     );
@@ -242,10 +285,22 @@ export function Grove({
               {review.length > 0 ? ` · ${review.length} 条待核对` : ''}
             </p>
           </div>
-          <button type="button" className="fa-btn fa-btn--primary" onClick={() => onNew('project', null)}>
-            <Icon name="plus" />
-            新建课题
-          </button>
+          {onNewPage ? (
+            <span className="fa-page-head__acts">
+              <button type="button" className="fa-btn fa-btn--ghost" onClick={() => onNew('project', null)}>
+                新建课题
+              </button>
+              <button type="button" className="fa-btn fa-btn--primary" onClick={onNewPage} disabled={creatingPage}>
+                <Icon name="plus" />
+                {creatingPage ? '正在新建…' : '新建实验页'}
+              </button>
+            </span>
+          ) : (
+            <button type="button" className="fa-btn fa-btn--primary" onClick={() => onNew('project', null)}>
+              <Icon name="plus" />
+              新建课题
+            </button>
+          )}
         </header>
 
         {freshAi.length > 0 && (
@@ -255,6 +310,28 @@ export function Grove({
         )}
 
         <TodayCard entities={entities} today={today} onToday={() => onScope('today')} onOpen={onOpen} onContinue={onContinue} />
+
+        {recentPages.length > 0 && (
+          <section className="fa-section" aria-label="最近的实验页">
+            <div className="fa-section__head">
+              <h3 className="fa-h3">
+                最近的实验页 <span className="fa-count">{allPages}</span>
+              </h3>
+            </div>
+            <ul className="fa-list fa-surface">
+              {recentPages.map((e) => (
+                <EntityRow
+                  key={e.id}
+                  entity={e}
+                  selected={false}
+                  fresh={freshIds.has(e.id)}
+                  projectTitle={e.projectId ? entities.find((p) => p.id === e.projectId)?.title : '未归入课题'}
+                  onSelect={onOpen}
+                />
+              ))}
+            </ul>
+          </section>
+        )}
 
         {unsavedTotal > 0 && (
           <section className="fa-section" aria-label="未保存的输入">
@@ -422,7 +499,10 @@ export function ProjectView({
   onBack,
   today,
   onAgenda,
+  pageMode = false,
 }: {
+  /** 宿主提供页面接口：新建记录即新建实验页 */
+  pageMode?: boolean;
   today: string;
   /** 打开按本课题筛选的“今天”工作台 */
   onAgenda: (projectId: string) => void;
@@ -498,6 +578,7 @@ export function ProjectView({
   };
 
   const newKind: EntityKind = tab === 'all' ? 'record' : tab;
+  const shortOf = (k: EntityKind) => (k === 'record' && pageMode ? '实验页' : KIND[k].short);
 
   return (
     <section className="fa-pane fa-project" aria-labelledby={`${uid}-h`}>
@@ -595,7 +676,7 @@ export function ProjectView({
           {!projArchived && (
             <button type="button" className="fa-btn fa-btn--primary fa-btn--sm" onClick={() => onNew(newKind, project.id)}>
               <Icon name="plus" />
-              新建{KIND[newKind].short}
+              新建{shortOf(newKind)}
             </button>
           )}
         </div>
@@ -609,9 +690,9 @@ export function ProjectView({
           {!projArchived && (
             <div className="fa-quickadd" role="group" aria-label="在本课题下新建">
               {CHILD_KINDS.filter((k) => k !== newKind).map((k) => (
-                <button key={k} type="button" className="fa-quickadd__btn" onClick={() => onNew(k, project.id)} title={`新建${KIND[k].label}`}>
+                <button key={k} type="button" className="fa-quickadd__btn" onClick={() => onNew(k, project.id)} title={`新建${k === 'record' && pageMode ? '实验页' : KIND[k].label}`}>
                   <Icon name="plus" size={12} />
-                  {KIND[k].short}
+                  {shortOf(k)}
                 </button>
               ))}
             </div>
@@ -633,7 +714,7 @@ export function ProjectView({
                   <>
                     <button type="button" className="fa-btn fa-btn--primary" onClick={() => onNew('record', project.id)}>
                       <Icon name="plus" />
-                      记录第一次实验
+                      {pageMode ? '新建第一页实验' : '记录第一次实验'}
                     </button>
                     <button type="button" className="fa-btn" onClick={() => onNew('plan', project.id)}>
                       写一个计划

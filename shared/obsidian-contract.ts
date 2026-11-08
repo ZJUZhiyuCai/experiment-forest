@@ -13,5 +13,7 @@ export interface ObsidianStatus {
   stale: string[];
   lastSyncedRevision: number | null;
   lastSyncedAt: string | null;
+  materials?: { total: number; mirrored: number; issues: { materialId: string; recordId: string; name: string;
+    state: 'missing' | 'conflict' | 'error'; message: string }[] };
 }
 export interface ConfigureObsidianInput { vaultId: string | null }

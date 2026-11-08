@@ -6,7 +6,7 @@ import { ForestError } from './migration';
 export interface MirrorResult {
   status: 'synced' | 'conflict'; written: number; unchanged: number;
   conflicts: { path: string; reason: string }[]; stale: string[];
-  entityCount: number; snapshotRevision: number; mirroredAt: string;
+  entityCount: number; snapshotRevision: number; mirroredAt: string; materials?:ObsidianStatus['materials'];
 }
 export interface MirrorPort { sync(snapshot: ForestSnapshot): Promise<MirrorResult>; close(): Promise<void> }
 export interface ObsidianControllerOptions {
@@ -29,6 +29,7 @@ export class ObsidianController {
   private lastError: string | null = null;
   private conflicts: ObsidianStatus['conflicts'] = [];
   private stale: string[] = [];
+  private materials:ObsidianStatus['materials'];
   private lastSyncedRevision: number | null = null;
   private lastSyncedAt: string | null = null;
   constructor(private readonly options: ObsidianControllerOptions) {}
@@ -52,7 +53,7 @@ export class ObsidianController {
   private view(vaults: ObsidianVault[]): ObsidianStatus {
     return structuredClone({ enabled: this.vaultId !== null, vaultId: this.vaultId, folder: this.options.folder, vaults,
       state: this.state, lastError: this.lastError, conflicts: this.conflicts, stale: this.stale,
-      lastSyncedRevision: this.lastSyncedRevision, lastSyncedAt: this.lastSyncedAt });
+      lastSyncedRevision: this.lastSyncedRevision, lastSyncedAt: this.lastSyncedAt,materials:this.materials });
   }
   async status(): Promise<ObsidianStatus> {
     try { return this.view(await this.options.discover()); } catch (error) {
@@ -72,7 +73,7 @@ export class ObsidianController {
       await this.mirror?.close(); this.mirror = null; this.mirrorPath = null;
       this.vaultId = vaultId;
       this.state = vaultId ? 'idle' : 'disabled'; this.lastError = null; this.conflicts = []; this.stale = [];
-      this.lastSyncedAt = null; this.lastSyncedRevision = null;
+      this.lastSyncedAt = null; this.lastSyncedRevision = null;this.materials=undefined;
       if (vaultId) {
         await this.syncSnapshot(this.acceptSnapshot(await this.options.snapshot()));
       }
@@ -118,7 +119,7 @@ export class ObsidianController {
         this.mirror = this.options.createMirror(vault, this.options.folder); this.mirrorPath = vault.path;
       }
       const result = await this.mirror.sync(snapshot);
-      this.state = result.status; this.conflicts = result.conflicts; this.stale = result.stale;
+      this.materials=result.materials; this.state = result.status; this.conflicts = result.conflicts; this.stale = result.stale;
       if (result.status === 'synced') { this.lastSyncedRevision = result.snapshotRevision; this.lastSyncedAt = result.mirroredAt; }
     } catch (error) { this.state = 'error'; this.lastError = this.message(error); }
   }

@@ -39,6 +39,7 @@ function actionContext(repo: ForestRepository, overrides: Partial<ForestApi> = {
     create: input => repo.create(input), update: input => repo.update(input), archive: input => repo.archive(input),
     createRun: input => repo.createRun(input), updateRunStep: input => repo.updateRunStep(input), context: input => repo.context(input),
     export: () => repo.export(), previewImport: input => repo.previewImport(input), import: input => repo.import(input),
+    createPage:unused,getPage:unused,savePage:unused,decideProposal:unused,confirmPageBlock:unused,beginMaterial:unused,appendMaterial:unused,finishMaterial:unused,cancelMaterial:unused,readMaterial:unused,
     obsidianStatus: unused, configureObsidian: unused, syncObsidian: unused, ...overrides,
   };
   const ctx: ActionCtx = { api, applyEntity: entity => { applied.push(entity); }, refresh: async () => true,

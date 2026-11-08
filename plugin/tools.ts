@@ -1,3 +1,6 @@
+import { createPageTools } from './page-tools';
+import type { PageRepository } from './pages';
+import type { MaterialRepository } from './materials';
 import type { Context } from '@deepseek-ai/cordis';
 import { defineTool, type ToolDefinition, type ValueSchemaSpec } from '@deepseek-ai/dsh-tools';
 import type { ForestRepository } from './domain.ts';
@@ -43,7 +46,7 @@ const contextOutput = { type: 'object', additionalProperties: false, properties:
 } } as const satisfies ValueSchemaSpec;
 
 /** Registered tools use Harness's ordinary validation, policy and dispatch pipeline. */
-export function createForestTools(repository: ForestRepository): ToolDefinition[] {
+export function createForestTools(repository: ForestRepository, pages?:PageRepository, materials?:MaterialRepository, ctx?:Context): ToolDefinition[] {
   return [
     defineTool({
       name: 'forest_context',
@@ -134,9 +137,10 @@ export function createForestTools(repository: ForestRepository): ToolDefinition[
       },
       presentCall: args => ({ card: 'generic', title: `保存 AI 草稿：${args.title}`, kind: 'edit' }),
     }),
+    ...(pages && materials ? createPageTools(pages,materials,ctx) : []),
   ];
 }
 
-export function registerForestTools(ctx: Context, repository: ForestRepository): void {
-  for (const definition of createForestTools(repository)) ctx.tools.register(definition);
+export function registerForestTools(ctx: Context, repository: ForestRepository, pages?:PageRepository, materials?:MaterialRepository): void {
+  for (const definition of createForestTools(repository,pages,materials,ctx)) ctx.tools.register(definition);
 }

@@ -16,10 +16,20 @@ import { createPayload, draftFromEntity, draftMatchesEntity, newDraft, rebase, u
 import type { Draft } from './drafts';
 import * as memory from './draftMemory';
 import { byUpdatedDesc, classifyError, formatTime, isArchived, matchesQuery, provenanceOf } from './forest-model';
+import { getExperimentPage } from '../shared/page';
+import type { OrganizePage } from './material-transfer';
+import { ExperimentPageView } from './ExperimentPage';
+import { seedPage, supportsPages, useUnsavedPages } from './pageStore';
+import { beginPageCreation, clearPageCreation } from './pageCreation';
 
 export interface ForestAppProps {
   api: ForestApi;
   sessionId?: string;
+  /**
+   * 宿主提供的“理一理”入口：把只含目标页 ID 与整理要求的指令插入/发送到会话。
+   * 缺省时实验页诚实地降级为复制指令。
+   */
+  organizePage?: OrganizePage;
 }
 
 type Mode = 'narrow' | 'medium' | 'wide';
@@ -35,6 +45,12 @@ interface Nav {
   agendaProject: string | null;
   /** 从工作台“继续”进入的实验：打开后定位到下一步（一次性） */
   focusNext: string | null;
+  /** 旧记录被明确“以实验页打开” */
+  pageOpen?: string | null;
+  /** 实验页记录切到原详情（状态、归档、关联等原有功能） */
+  pageClassic?: string | null;
+  /** 宽工作台：实验页占满主区 */
+  focus?: boolean;
 }
 
 const SPECIAL_SCOPES = new Set(['home', 'today', 'review', 'inbox']);
@@ -62,7 +78,7 @@ function modeFor(width: number): Mode {
  * 实验小森林 · DeepSeek Harness 右侧栏插件入口。
  * 不挂载路由、不注入全局样式、不访问 localStorage；所有数据来自 props.api。
  */
-export function ForestApp({ api, sessionId }: ForestAppProps) {
+export function ForestApp({ api, sessionId, organizePage }: ForestAppProps) {
   const rootRef = useRef<HTMLDivElement>(null);
   const store = useForest(api, rootRef);
   const { entities, byId } = store;
@@ -97,6 +113,8 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
   /* ── 导航 ── */
   const [nav, setNav] = useState<Nav>(() => restoreNav(sessKey));
   const [query, setQuery] = useState('');
+  /** 中/窄布局：正在输入搜索词时，结果列表接管主区（不再被详情遮住）；打开某条结果后交还给详情 */
+  const [searchActive, setSearchActive] = useState(false);
   const [showArchivedProjects, setShowArchivedProjects] = useState(false);
   const [showArchivedChildren, setShowArchivedChildren] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -118,13 +136,17 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
   // 执行清单的步骤输入、“创建实验”请求同样保存在会话内存中，并计入未保存数量与 beforeunload 保护
   const stepDrafts = memory.useSessionSteps(sessKey);
   const runRequests = memory.useSessionRuns(sessKey);
+  // 实验页按页面 ID 存放（不按会话），正文由 Host 自动保存；这里只计入尚未被 Host 确认的部分
+  const unsavedPages = useUnsavedPages();
   const unsavedCount = useMemo(
     () =>
       Object.values(drafts).filter(memory.hasUnsavedInput).length +
       Object.values(stepDrafts).filter(memory.stepHasUnsaved).length +
-      Object.values(runRequests).filter(memory.runHasUnsaved).length,
-    [drafts, stepDrafts, runRequests],
+      Object.values(runRequests).filter(memory.runHasUnsaved).length +
+      unsavedPages.length,
+    [drafts, stepDrafts, runRequests, unsavedPages],
   );
+  const pagesOk = supportsPages(api);
 
   /* ── 提示 ── */
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -190,8 +212,9 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
       if (!memory.runHasUnsaved(r)) continue;
       out.push({ id: r.sopId, title: byId.get(r.sopId)?.title ?? r.sopId, label: r.phase === 'editing' ? '创建表单未提交' : r.phase === 'creating' ? '正在创建实验' : '创建实验待处理', attention: r.phase !== 'editing' });
     }
+    for (const p of unsavedPages) out.push({ id: p.id, title: byId.get(p.id)?.title || p.title, label: p.label, attention: p.attention });
     return out;
-  }, [stepDrafts, runRequests, byId]);
+  }, [stepDrafts, runRequests, byId, unsavedPages]);
   const unsavedRuns = useMemo(() => new Set(pendingInputs.filter((p) => byId.get(p.id)?.kind === 'record').map((p) => p.id)), [pendingInputs, byId]);
   const results = useMemo(() => {
     const q = query.trim();
@@ -226,11 +249,12 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
   const open = useCallback(
     (id: string) => {
       const e = byId.get(id);
+      setSearchActive(false);
       if (e && e.kind === 'project') {
         go({ scope: id, selectedId: null, editorKey: null, dataOpen: false, tab: 'all' });
         store.markSeen(id);
       } else {
-        go({ selectedId: id, editorKey: null, dataOpen: false });
+        go({ selectedId: id, editorKey: null, dataOpen: false, pageClassic: null, pageOpen: null });
       }
     },
     [byId, go, store],
@@ -275,17 +299,79 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
     [api, store, notify],
   );
 
+  /* ── 新建实验页：立即 createPage 拿到 ID，正文随后自动保存 ── */
+  const [creatingPage, setCreatingPage] = useState(false);
+  const openPage = useCallback(
+    (e: ForestEntity) => {
+      store.applyEntity(e);
+      setQuery('');
+      setSearchActive(false);
+      go({ selectedId: e.id, editorKey: null, dataOpen: false, pageClassic: null, pageOpen: null });
+    },
+    [store, go],
+  );
+  const createPage = useCallback(
+    async (projectId: string | null) => {
+      if (creatingPage) return;
+      setCreatingPage(true);
+      const session=sessKey;
+      const attempt=beginPageCreation(api,session,projectId),req=attempt.input;
+      const openResult=(entity:ForestEntity)=>{
+        if(mountedRef.current&&sessRef.current===session)openPage(entity);
+        else memory.setNav(session,{...restoreNav(session),selectedId:entity.id,editorKey:null,dataOpen:false,pageClassic:null,pageOpen:null});
+      };
+      try {
+        const view = await attempt.result;
+        clearPageCreation(session,req.requestId);
+        seedPage(api, view);
+        openResult(view.entity);
+      } catch (err) {
+        const c = classifyError(err);
+        if (c.kind === 'network' || c.kind === 'unknown') {
+          // 不盲目重建：按 creationRequestId 核对这一页是否其实已经建好
+          try {
+            const records = await api.list({ kind: 'record', includeArchived: true });
+            const found = records.find((e) => getExperimentPage(e)?.creationRequestId === req.requestId);
+            if (found) {
+              clearPageCreation(session,req.requestId);
+              openResult(found);
+              notify('核对结果：这一页其实已经建好了', 'ok');
+            } else notify(`新建结果不确定（${c.message}）。已核对：还没有建成。再点一次会沿用同一个请求号，不会重复建页。`, 'warn');
+          } catch {
+            notify(`新建结果不确定（${c.message}），核对也没有成功。稍后再点“新建实验页”，会沿用同一个请求号重试。`, 'danger');
+          }
+        } else {
+          clearPageCreation(session,req.requestId);
+          notify(`没有建成：${c.message}`, 'danger');
+        }
+      } finally {
+        if(mountedRef.current&&sessRef.current===session)setCreatingPage(false);
+      }
+    },
+    [api, creatingPage, openPage, notify, sessKey],
+  );
+
   const startNew = useCallback(
     (kind: EntityKind, projectId: string | null) => {
+      // 记录的主路径是自由编辑的实验页；宿主没有页面接口时退回原表单
+      if (kind === 'record' && pagesOk) {
+        void createPage(projectId);
+        return;
+      }
       const d = newDraft(kind, projectId);
       putDraft(d);
       go({ editorKey: d.key, dataOpen: false });
     },
-    [go, putDraft],
+    [go, putDraft, pagesOk, createPage],
   );
 
   const startEdit = useCallback(
     (e: ForestEntity) => {
+      // 实验页的正文由块生成，不走旧表单（旧表单会把整个 data 写回）
+      if (e.kind === 'record' && getExperimentPage(e)) {
+        go({ selectedId: e.id, editorKey: null, dataOpen: false, pageClassic: null });
+        return;
+      }
       const existing = draftsRef.current[e.id];
       // 有未保存输入的草稿原样恢复（保留其基线 revision，以便冲突检测）；没有改动且基线已过期的草稿换成最新版本
       if (!existing || (!memory.hasUnsavedInput(existing) && existing.base?.revision !== e.revision)) putDraft(draftFromEntity(e));
@@ -295,6 +381,8 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
   );
 
   const back = useCallback(() => {
+    // 搜索结果接管着中/窄布局时，先交还给刚才的详情
+    if (mode !== 'wide' && searchActive && query.trim() && (nav.selectedId || nav.editorKey || nav.dataOpen)) return setSearchActive(false);
     if (nav.dataOpen) return go({ dataOpen: false });
     if (nav.editorKey) {
       const d = draftsRef.current[nav.editorKey];
@@ -302,10 +390,10 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
       if (d && !memory.hasUnsavedInput(d)) dropDraft(d.key);
       return go({ editorKey: null, selectedId: d?.mode === 'edit' && d.kind !== 'project' ? d.id ?? null : nav.selectedId });
     }
-    if (nav.selectedId) return go({ selectedId: null });
+    if (nav.selectedId) return go({ selectedId: null, pageOpen: null, pageClassic: null, focus: false });
     if (query) return setQuery('');
     if (nav.scope !== 'home') return go({ scope: 'home', tab: 'all' });
-  }, [nav, go, query, draftsRef, dropDraft]);
+  }, [nav, go, query, draftsRef, dropDraft, mode, searchActive]);
 
   /* ── 保存流程 ── */
   const afterSaved = useCallback(
@@ -531,7 +619,7 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
         headingRef={scopeHeading}
         emptyText="没有找到匹配的条目"
         onSelect={open}
-        onBack={() => setQuery('')}
+        onBack={() => (mode !== 'wide' && (nav.selectedId || nav.editorKey) ? setSearchActive(false) : setQuery(''))}
         grouped
       />
     );
@@ -600,6 +688,7 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
         refresh={store.refresh}
         notify={notify}
         onTab={(tab) => go({ tab })}
+        pageMode={pagesOk}
         onToggleArchived={() => setShowArchivedChildren((v) => !v)}
         onSelect={open}
         onNew={startNew}
@@ -637,6 +726,8 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
         onOpenProject={openProject}
         onOpen={open}
         onNew={startNew}
+        onNewPage={pagesOk ? () => void createPage(null) : undefined}
+        creatingPage={creatingPage}
         onScope={openScope}
         onData={() => go({ dataOpen: true })}
         onOpenDraft={(key) => {
@@ -677,9 +768,36 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
         onOpen={open}
       />
     );
+  } else if (
+    selected &&
+    selected.kind === 'record' &&
+    (getExperimentPage(selected) || nav.pageOpen === selected.id) &&
+    nav.pageClassic !== selected.id
+  ) {
+    detailView = (
+      <ExperimentPageView
+        key={selected.id}
+        api={api}
+        entityId={selected.id}
+        entities={entities}
+        headingRef={detailHeading}
+        obsidian={obsidian}
+        organizePage={organizePage}
+        notify={notify}
+        applyEntity={store.applyEntity}
+        onClose={() => go({ selectedId: null, pageOpen: null, focus: false })}
+        onOpenProject={openProject}
+        onClassic={() => go({ pageClassic: selected.id })}
+        onOpenData={() => go({ dataOpen: true })}
+        focus={mode === 'wide' ? { on: !!nav.focus, toggle: () => go({ focus: !nav.focus }) } : undefined}
+      />
+    );
   } else if (selected && selected.kind !== 'project') {
+    const pageRecord = selected.kind === 'record' && !!getExperimentPage(selected);
     detailView = (
       <EntityDetail
+        pageMode={pageRecord}
+        onOpenPage={selected.kind === 'record' && pagesOk ? () => go({ pageOpen: selected.id, pageClassic: null }) : undefined}
         key={selected.id}
         entity={selected}
         api={api}
@@ -727,6 +845,10 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
   /* ── 外壳 ── */
   const loading = store.phase === 'loading';
   const failed = store.phase === 'error';
+  // 宽布局列表与详情并排，不存在遮挡；中/窄布局输入搜索词时由结果接管
+  const searchTakeover = mode !== 'wide' && searchActive && !!query.trim();
+  const detailIsPage = !!detailView && detailView.type === ExperimentPageView;
+  const pageFocus = mode === 'wide' && detailIsPage && !!nav.focus && !dataView;
 
   let body: ReactElement;
   if (loading) {
@@ -755,7 +877,7 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
       </div>
     );
   } else if (mode === 'narrow') {
-    body = <main className="fa-main">{dataView ?? detailView ?? scopeView}</main>;
+    body = <main className="fa-main">{searchTakeover ? scopeView : dataView ?? detailView ?? scopeView}</main>;
   } else {
     const navEl = (
       <ScopeNav
@@ -765,6 +887,8 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
         inboxCount={inbox.length}
         onScope={openScope}
         onNewProject={() => startNew('project', null)}
+        onNewPage={pagesOk ? () => void createPage(SPECIAL_SCOPES.has(nav.scope) ? null : nav.scope) : undefined}
+        creatingPage={creatingPage}
         onData={() => go({ dataOpen: !nav.dataOpen })}
         dataOpen={nav.dataOpen}
         todayCount={agendaAll.today.length + agendaAll.overdue.length}
@@ -776,14 +900,14 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
       mode === 'medium' ? (
         <>
           {navEl}
-          <main className="fa-main">{dataView ?? detailView ?? scopeView}</main>
+          <main className="fa-main">{searchTakeover ? scopeView : dataView ?? detailView ?? scopeView}</main>
         </>
       ) : (
         <>
           {navEl}
-          <main className={`fa-main${detailView && !dataView ? ' has-aside' : ''}`}>
+          <main className={`fa-main${detailView && !dataView ? ' has-aside' : ''}${pageFocus ? ' is-focus' : ''}`}>
             <div className="fa-col">{dataView ?? scopeView}</div>
-            {detailView && !dataView && <div className="fa-col fa-col--aside">{detailView}</div>}
+            {detailView && !dataView && <div className={`fa-col fa-col--aside${detailIsPage ? ' is-page' : ''}`}>{detailView}</div>}
           </main>
         </>
       );
@@ -810,13 +934,22 @@ export function ForestApp({ api, sessionId }: ForestAppProps) {
             placeholder="搜索"
             onChange={(e) => {
               setQuery(e.target.value);
+              setSearchActive(true);
               navigated.current = true;
+            }}
+            onFocus={() => {
+              if (query.trim()) setSearchActive(true);
             }}
           />
           {!query && (
             <kbd className="fa-kbd" aria-hidden="true">
               ⌘K
             </kbd>
+          )}
+          {query.trim() && (
+            <span className="fa-search__count" aria-live="polite">
+              {results.length >= 200 ? '200+' : results.length} 条
+            </span>
           )}
         </label>
         {unsavedCount > 0 && (

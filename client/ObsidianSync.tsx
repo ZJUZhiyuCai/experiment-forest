@@ -91,10 +91,14 @@ export function obsidianSummary(o: ObsidianState): { label: string; tone: Obsidi
   if (o.error && s) return { label: '状态过期', tone: 'warn' };
   if (!s) return o.error ? { label: '状态未知', tone: 'bad' } : { label: '读取中', tone: 'off' };
   if (!s.enabled || !s.vaultId || s.state === 'disabled') return { label: '未连接', tone: 'off' };
+  const m = s.materials;
   switch (s.state) {
     case 'syncing':
       return { label: '同步中', tone: 'busy' };
     case 'synced':
+      // 只要还有素材没镜像，就不说“已同步”
+      if (m && m.issues.length) return { label: `素材 ${m.mirrored}/${m.total}`, tone: 'warn' };
+      if (m && m.mirrored < m.total) return { label: `素材 ${m.mirrored}/${m.total}`, tone: 'busy' };
       return { label: '已同步', tone: 'ok' };
     case 'conflict':
       return { label: `冲突 ${s.conflicts.length}`, tone: 'warn' };
@@ -232,6 +236,8 @@ export function ObsidianSection({ api, obsidian }: { api: ForestApi; obsidian: O
 
               <StateLine status={status} />
 
+              <MaterialsLine status={status} />
+
               {status.conflicts.length > 0 && (
                 <div className="fa-obsidian__conflicts">
                   <p className="fa-obsidian__conflicts-h">
@@ -351,6 +357,38 @@ export function ObsidianSection({ api, obsidian }: { api: ForestApi; obsidian: O
   );
 }
 
+const MATERIAL_STATE: Record<'missing' | 'conflict' | 'error', string> = { missing: '文件缺失', conflict: '库里的副本被改动，已保留你的版本', error: '写入失败' };
+
+/** 实验页素材的镜像情况（宿主可选提供）；没有统计时如实说“未知”，不推断为已同步 */
+function MaterialsLine({ status }: { status: ObsidianStatus }) {
+  const m = status.materials;
+  if (!m) {
+    return <p className="fa-help">素材镜像：宿主没有提供统计，状态未知。正文同步不受影响。</p>;
+  }
+  if (m.total === 0) return null;
+  const all = m.mirrored >= m.total && m.issues.length === 0;
+  return (
+    <div className="fa-obsidian__mats">
+      <p className={`fa-obs-line ${all ? 'is-ok' : m.issues.length ? 'is-warn' : ''}`}>
+        <Icon name={all ? 'check' : 'file'} size={13} />
+        素材 {m.mirrored}/{m.total} 已镜像到库里{all ? '' : m.issues.length ? `，${m.issues.length} 个有问题` : '，其余等待下一次同步'}
+      </p>
+      {m.issues.length > 0 && (
+        <ul className="fa-obsidian__matlist">
+          {m.issues.map((i) => (
+            <li key={`${i.recordId}:${i.materialId}`}>
+              <span className="fa-obsidian__matname">{i.name}</span>
+              <span className="fa-chip fa-chip--warn">{MATERIAL_STATE[i.state]}</span>
+              <span className="fa-muted">{i.message}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="fa-help">原件以 Host 保存的哈希为准；库里的副本只用于阅读，在库里改动或移动不会回写。</p>
+    </div>
+  );
+}
+
 function StateLine({ status }: { status: ObsidianStatus }) {
   switch (status.state) {
     case 'syncing':
@@ -364,7 +402,8 @@ function StateLine({ status }: { status: ObsidianStatus }) {
       return (
         <p className="fa-obs-line is-ok">
           <Icon name="check" size={13} />
-          已同步{status.lastSyncedRevision !== null ? `到数据修订 r${status.lastSyncedRevision}` : ''}。
+          {status.materials && (status.materials.mirrored < status.materials.total || status.materials.issues.length) ? '正文已同步' : '已同步'}
+          {status.lastSyncedRevision !== null ? `到数据修订 r${status.lastSyncedRevision}` : ''}。
         </p>
       );
     case 'conflict':

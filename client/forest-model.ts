@@ -390,11 +390,23 @@ function collectStrings(v: Json, out: string[], depth = 0): void {
   else if (typeof v === 'object') Object.values(v).forEach((x) => collectStrings(x, out, depth + 1));
 }
 
+/**
+ * 实验页结构（data.forestPage）不参与搜索与引用识别：已接受的正文由服务器投影到 content，
+ * 而页面里还有待定的 AI 提案、读取记录等不属于正文的内容，不应让条目因此被搜到。
+ */
+const PAGE_DATA_KEY = 'forestPage';
+function dataWithoutPage(data: JsonObject): JsonObject {
+  if (!Object.hasOwn(data, PAGE_DATA_KEY)) return data;
+  const rest = { ...data };
+  delete rest[PAGE_DATA_KEY];
+  return rest;
+}
+
 export function matchesQuery(e: ForestEntity, q: string): boolean {
   const needle = q.trim().toLowerCase();
   if (!needle) return true;
   const parts: string[] = [e.title, e.content, e.id, ...e.tags];
-  collectStrings(e.data, parts);
+  collectStrings(dataWithoutPage(e.data), parts);
   return needle
     .split(/\s+/)
     .every((token) => parts.some((p) => p.toLowerCase().indexOf(token) !== -1));
@@ -403,7 +415,7 @@ export function matchesQuery(e: ForestEntity, q: string): boolean {
 /** data 中出现的、恰好等于某个现有条目 ID 的字符串 = 显式引用 */
 export function referencedIds(e: ForestEntity, known: Map<string, ForestEntity>): string[] {
   const all: string[] = [];
-  collectStrings(e.data, all);
+  collectStrings(dataWithoutPage(e.data), all);
   const seen = new Set<string>();
   for (const s of all) if (s !== e.id && known.has(s)) seen.add(s);
   return Array.from(seen);

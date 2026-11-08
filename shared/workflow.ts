@@ -1,3 +1,4 @@
+import {getExperimentPage} from './page';
 /** Additive workflow v1 contract. Existing entities without this marker remain ordinary records. */
 import { z } from 'zod';
 import type { EntityKind, ForestEntity, ForestSnapshot, JsonObject } from './model';
@@ -134,7 +135,7 @@ export function runProgress(entity: ForestEntity): RunProgress {
 }
 export function needsHumanReview(entity: Pick<ForestEntity, 'data'>): boolean {
   const p = entity.data.provenance;
-  return !!p && typeof p === 'object' && !Array.isArray(p) && p.source === 'deepseek-harness' && p.reviewStatus !== 'reviewed';
+  return !!getExperimentPage(entity)?.blocks.some(b=>b.pendingReview) || (!!p && typeof p === 'object' && !Array.isArray(p) && p.source === 'deepseek-harness' && p.reviewStatus !== 'reviewed');
 }
 /** Stored full ISO legacy dates retain their written calendar date; no timezone is guessed. */
 function calendarPart(value: unknown): string | null {

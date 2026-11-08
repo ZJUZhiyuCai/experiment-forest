@@ -8,6 +8,9 @@ import { TypertRemoteService, RemoteError } from '@deepseek-ai/dsh-typert-protoc
 import type {} from '@deepseek-ai/dsh-typert-registry';
 import type { CreateEntity, EntityFilter, ForestApi, UpdateEntity, CreateRunInput, UpdateRunStepInput, ForestContextInput, ConfigureObsidianInput } from '../shared/model';
 import { ForestRepository, ForestError, stateSchema, createInitialState } from './domain';
+import { PageRepository } from './pages';
+import { MaterialRepository, materialRegistrySchema } from './materials';
+import type { PageApi } from '../shared/page';
 import { descriptors, PACKAGE_NAME, SERVICE_NAME } from './remote';
 import { registerForestTools } from './tools';
 import { ObsidianController } from './obsidian-controller';
@@ -24,15 +27,30 @@ export function forestObsidianDomain(profileName: string) {
     global: { schema: z.object({ vaultId: z.string().min(1).max(256).nullable() }).strict(), initial: { vaultId: null as string | null } }, tables: {} });
 }
 
+export function forestMaterialsDomain(profileName:string) {
+  const suffix=createHash('sha256').update(profileName).digest('hex').slice(0,32);
+  return defineDomain({name:`forest_materials_${suffix}`,version:1,global:{schema:materialRegistrySchema,initial:{entries:[]}},tables:{}});
+}
+
 /** Expose only domain operations; no filesystem path, provider secret, or arbitrary command entry. */
 export class ExperimentForestService extends TypertRemoteService implements ForestApi {
-  constructor(ctx: Context, private readonly repository: ForestRepository, private readonly obsidian: ObsidianController) { super(ctx, SERVICE_NAME); }
+  constructor(ctx: Context, private readonly repository: ForestRepository, private readonly obsidian: ObsidianController, private readonly pages:PageRepository, private readonly materials:MaterialRepository) { super(ctx, SERVICE_NAME); }
   private async call<T>(work: () => Promise<T>): Promise<T> {
     try { return await work(); } catch (error) {
       if (error instanceof ForestError) throw new RemoteError('experimentForest/failure', error.message, { code: error.code });
       throw error;
     }
   }
+  createPage(input:Parameters<PageApi['createPage']>[0]) {return this.call(()=>this.pages.createPage(input));}
+  getPage(id:string) {return this.call(()=>this.pages.getPage(id));}
+  savePage(input:Parameters<PageApi['savePage']>[0]) {return this.call(()=>this.pages.savePage(input));}
+  decideProposal(input:Parameters<PageApi['decideProposal']>[0]) {return this.call(()=>this.pages.decideProposal(input));}
+  confirmPageBlock(input:Parameters<PageApi['confirmPageBlock']>[0]) {return this.call(()=>this.pages.confirmPageBlock(input));}
+  beginMaterial(input:Parameters<PageApi['beginMaterial']>[0]) {return this.call(()=>this.materials.beginMaterial(input));}
+  appendMaterial(input:Parameters<PageApi['appendMaterial']>[0]) {return this.call(()=>this.materials.appendMaterial(input));}
+  finishMaterial(input:Parameters<PageApi['finishMaterial']>[0]) {return this.call(()=>this.materials.finishMaterial(input));}
+  cancelMaterial(input:Parameters<PageApi['cancelMaterial']>[0]) {return this.call(()=>this.materials.cancelMaterial(input));}
+  readMaterial(input:Parameters<PageApi['readMaterial']>[0]) {return this.call(()=>this.materials.readMaterial(input));}
   list(filter?: EntityFilter) { return this.call(() => this.repository.list(filter)); }
   get(id: string) { return this.call(() => this.repository.get(id)); }
   snapshot() { return this.call(() => this.repository.snapshot()); }
@@ -51,22 +69,26 @@ export class ExperimentForestService extends TypertRemoteService implements Fore
 }
 declare module '@deepseek-ai/cordis' { interface Context { experimentForest: ExperimentForestService } }
 export const name = 'experiment-forest';
-export const inject = ['profileContext', 'storageDomain', 'typert', 'tools'];
+export const inject = ['profileContext', 'storageDomain', 'typert', 'tools', 'attachments'];
 export async function apply(ctx: Context): Promise<void> {
   const domain = await ctx.storageDomain.open(forestDomain(ctx.profileContext.name));
   const configDomain = await ctx.storageDomain.open(forestObsidianDomain(ctx.profileContext.name)).catch(async error => { await domain.close(); throw error; });
+  const materialDomain=await ctx.storageDomain.open(forestMaterialsDomain(ctx.profileContext.name)).catch(async error=>{await configDomain.close();await domain.close();throw error;});
   let repository!: ForestRepository;
+  let materials!:MaterialRepository;
   const obsidian = new ObsidianController({ folder: obsidianMirrorFolder(`${ctx.profileContext.dir}\0${ctx.profileContext.name}`),
     readConfig: async () => structuredClone(configDomain.global.get()), writeConfig: config => configDomain.global.set(config),
-    discover: discoverObsidianVaults, createMirror: (vault, folderName) => new ObsidianMirrorSync({ vaultPath: vault.path, folderName }),
+    discover: discoverObsidianVaults, createMirror: (vault, folderName) => new ObsidianMirrorSync({ vaultPath: vault.path, folderName, readMaterial:(id,materialId)=>materials.original(id,materialId) }),
     snapshot: () => repository.snapshot() });
   repository = new ForestRepository({ read: async () => structuredClone(domain.global.get()), write: state => domain.global.set(state) }, snapshot => obsidian.onCommit(snapshot));
-  ctx.effect(() => async () => { await repository.close(); await obsidian.close(); await configDomain.close(); await domain.close(); });
+  const pages=new PageRepository(repository);
+  materials=new MaterialRepository(pages,ctx.attachments,{read:async()=>structuredClone(materialDomain.global.get()),write:state=>materialDomain.global.set(state)});
+  ctx.effect(() => async () => { await materials.close(); await repository.close(); await obsidian.close(); await materialDomain.close(); await configDomain.close(); await domain.close(); });
   // Fail plugin activation if authoritative persisted data is invalid.
   await repository.snapshot();
   await obsidian.start();
-  new ExperimentForestService(ctx, repository, obsidian);
+  new ExperimentForestService(ctx, repository, obsidian, pages, materials);
   ctx.effect(() => ctx.typert.register({ package: PACKAGE_NAME, face: 'host', schemas: [],
     model: { services: [], events: [], objects: [] }, invocations: descriptors }));
-  registerForestTools(ctx, repository);
+  registerForestTools(ctx, repository, pages, materials);
 }

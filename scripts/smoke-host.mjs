@@ -12,6 +12,7 @@ import RemoteAccess from '@deepseek-ai/dsh-api-remote-access';
 import Gateway from '@deepseek-ai/dsh-api-gateway';
 import SystemPrompt from '@deepseek-ai/dsh-system-prompt';
 import Tools from '@deepseek-ai/dsh-tools';
+import LocalAttachments from '@deepseek-ai/dsh-attachment-local';
 import { Peer } from '@deepseek-ai/dsh-client-connection';
 import * as forest from '../lib/index.js';
 
@@ -20,6 +21,7 @@ const contexts = [];
 async function boot(profileName = 'forest-smoke') {
   const ctx = new Context(); contexts.push(ctx);
   ctx.provide('profileContext', { name: profileName, dir: join(root, 'profiles', profileName) });
+  await ctx.plugin(LocalAttachments,{dshHome:join(root,'harness')});
   await ctx.plugin(Storage);
   await ctx.plugin(JsonStorage, { root });
   await ctx.plugin(StorageDomain, { backend: 'json' });
@@ -39,6 +41,11 @@ try {
   assert.deepEqual(await first.rpc('snapshot'), { revision: 0, entities: [] });
   const guest = new Peer(first.ctx, { principal: { kind: 'test-guest', guest: 'forest-smoke' } });
   const guestCalls = {
+    createPage:{input:{requestId:'denied'}},getPage:{id:'denied'},
+    savePage:{input:{id:'denied',expectedRevision:0,requestId:'denied',title:'denied',experimentDate:null,blocks:[]}},
+    decideProposal:{input:{id:'denied',proposalId:'denied',requestId:'denied',operationIds:['denied'],decision:'accept'}},
+    confirmPageBlock:{input:{id:'denied',expectedRevision:0,blockId:'denied'}},beginMaterial:{input:{id:'denied',requestId:'denied',name:'denied',mime:'text/plain',bytes:1}},
+    appendMaterial:{input:{uploadId:'denied',offset:0,data:'YQ=='}},finishMaterial:{input:{uploadId:'denied'}},cancelMaterial:{input:{uploadId:'denied'}},readMaterial:{input:{id:'denied',materialId:'denied',offset:0}},
     list: { filter: {} }, get: { id: 'denied' }, snapshot: {}, create: { input: { kind: 'note', title: 'denied' } },
     update: { input: { id: 'denied', expectedRevision: 0, patch: { title: 'denied' } } }, archive: { input: { id: 'denied', expectedRevision: 0 } },
     export: {}, previewImport: { input: { data: {} } }, import: { input: { data: {}, expectedRevision: 0 } },
@@ -70,8 +77,18 @@ try {
   assert.equal(obsidian.enabled, false);
   await assert.rejects(first.rpc('configureObsidian', { input: { vaultId: 'unregistered-forest-smoke-vault' } }), /登记列表/);
   assert.equal((await first.rpc('syncObsidian')).state, 'disabled');
+  const page=await first.rpc('createPage',{input:{requestId:'smoke-page',title:'混合实验页'}});
+  const savedPage=await first.rpc('savePage',{input:{id:page.entity.id,expectedRevision:page.entity.revision,requestId:'smoke-save',title:'混合实验页',experimentDate:null,blocks:[{id:'body',type:'text',text:'软件合成测试正文'}]}});
+  const bytes=Buffer.alloc(300000,97);
+  const upload=await first.rpc('beginMaterial',{input:{id:page.entity.id,requestId:'smoke-upload',name:'raw.txt',mime:'text/plain',bytes:bytes.length}});
+  for(let offset=0;offset<bytes.length;offset+=upload.chunkBytes)await first.rpc('appendMaterial',{input:{uploadId:upload.uploadId,offset,data:bytes.subarray(offset,offset+upload.chunkBytes).toString('base64')}});
+  const withMaterial=await first.rpc('finishMaterial',{input:{uploadId:upload.uploadId}});
+  const materialId=withMaterial.page.materials[0].id;
+  const firstChunk=await first.rpc('readMaterial',{input:{id:page.entity.id,materialId,offset:0}});
+  assert.equal(Buffer.from(firstChunk.data,'base64').length,upload.chunkBytes);
+  assert.equal(withMaterial.entity.content.includes('软件合成测试正文'),true);
   const committedRevision = (await first.rpc('snapshot')).revision;
-  assert.deepEqual(first.ctx.tools.schemas().map(tool => tool.name).sort(), ['forest_context', 'forest_create_draft', 'forest_read', 'forest_search']);
+  assert.deepEqual(first.ctx.tools.schemas().map(tool => tool.name).sort(), ['forest_context', 'forest_create_draft', 'forest_page_material_image', 'forest_page_material_text', 'forest_page_propose', 'forest_page_read', 'forest_read', 'forest_search']);
   await first.fiber.dispose();
   assert.equal(first.ctx.get('experimentForest'), undefined);
   assert.equal(first.ctx.tools.schemas().length, 0);
@@ -81,6 +98,8 @@ try {
   assert.equal((await second.rpc('get', { id: record.id })).title.length, 280);
   assert.equal((await second.rpc('snapshot')).revision, committedRevision);
   assert.equal((await second.rpc('get', { id: run.id })).data.forestWorkflow.steps[0].status, 'done');
+  const restored=await second.rpc('finishMaterial',{input:{uploadId:upload.uploadId}});assert.equal(restored.page.materials.length,1);
+  assert.equal((await second.rpc('readMaterial',{input:{id:page.entity.id,materialId,offset:upload.chunkBytes}})).total,bytes.length);
   await second.fiber.dispose();
   const separate = await boot('forest-other-profile');
   assert.notEqual((await separate.rpc('obsidianStatus')).folder, obsidian.folder);

@@ -2,6 +2,7 @@
 import { z } from 'zod';
 import type { InvocationDescriptor, RemoteResult, TypertRemoteContribution } from '@deepseek-ai/dsh-typert-protocol';
 import type { ForestApi } from '../shared/model';
+import {pageSchema,createPageSchema,savePageSchema,decideProposalSchema,beginMaterialSchema,materialChunkSchema,materialReadSchema} from '../shared/page';
 import { contextInputSchema, contextSchema, createRunInputSchema, updateRunStepInputSchema } from '../shared/workflow';
 
 export const PACKAGE_NAME = 'dsh-experiment-forest';
@@ -33,7 +34,10 @@ const obsidianStatus = z.object({ enabled: z.boolean(), vaultId: z.string().null
   vaults: z.array(z.object({ id: z.string(), name: z.string(), path: z.string(), open: z.boolean() })),
   state: z.enum(['disabled', 'idle', 'syncing', 'synced', 'conflict', 'error']), lastError: z.string().nullable(),
   conflicts: z.array(z.object({ path: z.string(), reason: z.string() })), stale: z.array(z.string()),
-  lastSyncedRevision: revision.nullable(), lastSyncedAt: z.string().nullable() });
+  lastSyncedRevision: revision.nullable(), lastSyncedAt: z.string().nullable(),
+  materials:z.object({total:revision,mirrored:revision,issues:z.array(z.object({materialId:z.string(),recordId:z.string(),name:z.string(),state:z.enum(['missing','conflict','error']),message:z.string()}))}).optional() });
+const pageView=z.object({entity,page:pageSchema});
+const uploadInput=z.object({uploadId:z.string().min(1).max(128)}).strict();
 function descriptor(method: keyof ForestApi, parameters: [string, z.ZodType, boolean?][], result: z.ZodType): InvocationDescriptor {
   return { id: `${PACKAGE_NAME}#${SERVICE_NAME}/${method}`, service: SERVICE_NAME, namespace: SERVICE_NAME, method,
     invocation: { kind: 'direct' }, parameters: parameters.map(([name, schema, optional]) => ({ name, wire: name, source: 'json',
@@ -41,6 +45,13 @@ function descriptor(method: keyof ForestApi, parameters: [string, z.ZodType, boo
     result: { mode: 'strict', typeSymbol: `${PACKAGE_NAME}#${method}.result`, create: () => result } };
 }
 export const descriptors: readonly InvocationDescriptor[] = [
+  descriptor('createPage',[['input',createPageSchema]],pageView), descriptor('getPage',[['id',z.string().min(1).max(128)]],pageView),
+  descriptor('savePage',[['input',savePageSchema]],pageView),descriptor('decideProposal',[['input',decideProposalSchema]],pageView),
+  descriptor('confirmPageBlock',[['input',archive.extend({blockId:z.string().min(1).max(128)})]],pageView),
+  descriptor('beginMaterial',[['input',beginMaterialSchema]],z.object({uploadId:z.string(),received:revision,chunkBytes:revision})),
+  descriptor('appendMaterial',[['input',materialChunkSchema]],z.object({received:revision})),
+  descriptor('finishMaterial',[['input',uploadInput]],pageView),descriptor('cancelMaterial',[['input',uploadInput]],z.void()),
+  descriptor('readMaterial',[['input',materialReadSchema]],z.object({data:z.string(),nextOffset:revision,total:revision,name:z.string(),mime:z.string()})),
   descriptor('list', [['filter', filter, true]], z.array(entity)), descriptor('get', [['id', z.string().min(1).max(128)]], entity.nullable()),
   descriptor('snapshot', [], snapshot), descriptor('create', [['input', input]], entity),
   descriptor('update', [['input', archive.extend({ patch })]], entity), descriptor('archive', [['input', archive]], entity),

@@ -5,6 +5,7 @@ import type {} from '@deepseek-ai/dsh-api-gateway/client';
 import type {} from '@deepseek-ai/dsh-client-ui-sidebar-right/client';
 import type {} from '@deepseek-ai/dsh-client-ui-renderer/client';
 import contribution, { PACKAGE_NAME } from '../plugin/remote';
+import { createOrganizeBridge } from './organize-bridge';
 import { createHostApi } from './host-api';
 import { ForestApp } from './ForestApp';
 import css from './forest.css?inline';
@@ -21,7 +22,7 @@ export async function apply(ctx: Context): Promise<() => Promise<void>> {
     child.effect(() => child.sidebarRightTabs.register({ id: PACKAGE_NAME, kind: 'experiment-forest', title: () => '实验森林',
       guide: [{ id: 'open', order: 60, title: () => '实验森林', description: () => '项目、实验记录与研究资料' }] }));
     child.slots.inject('sidebar.right.pane.tab', () => child.slots.register({ name: 'sidebar.right.pane.tab', key: PACKAGE_NAME,
-      inject: (sessionId: SessionId) => ({ api: createHostApi(child.remote.experimentForest), sessionId }) }, ForestApp));
+      inject: (sessionId: SessionId) => ({ api: createHostApi(child.remote.experimentForest), sessionId,organizePage:createOrganizeBridge(child,sessionId) }) }, ForestApp));
   });
   try { await ui; } catch (error) { await ui.dispose(); await unmount(); throw error; }
   return async () => { await ui.dispose(); await unmount(); };

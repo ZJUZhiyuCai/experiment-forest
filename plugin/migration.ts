@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto';
 import { ENTITY_KINDS, type EntityKind, type ForestEntity, type ForestState, type ImportArchive, type Json, type JsonObject } from '../shared/model.js';
+import { PAGE_KEY, pageSchema } from '../shared/page';
 import { getRunWorkflow, hasWorkflowMarker, workflowSchema, WORKFLOW_KEY } from '../shared/workflow.js';
 
 export class ForestError extends Error {
@@ -123,6 +124,7 @@ export function validateEntity(value: unknown): ForestEntity {
   if (!Array.isArray(e.tags) || e.tags.length > 30) throw new ForestError('invalid', '标签须为数组，最多 30 项');
   const tags = [...new Set(e.tags.map(tag => text(tag, '标签', 80).trim()))];
   const data = jsonObject(e.data);
+  if (data[PAGE_KEY] !== undefined && (kind !== 'record' || !pageSchema.safeParse(data[PAGE_KEY]).success)) throw new ForestError('invalid', '实验页结构或记录类型无效');
   if (hasWorkflowMarker(data[WORKFLOW_KEY])) {
     const parsed = workflowSchema.safeParse(data[WORKFLOW_KEY]);
     if (!parsed.success) throw new ForestError('invalid', `工作流结构无效：${parsed.error.issues[0]?.message ?? '未知错误'}`);

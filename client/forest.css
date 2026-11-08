@@ -4350,3 +4350,1875 @@
     border: 1px solid CanvasText;
   }
 }
+
+/* ═════════════════════════ 自适应实验页 ═════════════════════════
+   正文优先：一栏阅读宽度、发丝线分隔、安静的灰；只有“待核”“待定提案”“AI 来源”用紫色，
+   只有失败与冲突用暖色。所有令牌沿用上方的浅色 / 深色两套。 */
+
+/* ───────────── 入口：导航与林地 ───────────── */
+
+.forest-app .fa-nav__new {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 32px;
+  margin-bottom: 8px;
+  padding: 0 10px;
+  border-radius: var(--fa-r-sm);
+  background: var(--fa-bg-raised);
+  box-shadow: var(--fa-shadow-sm);
+  color: var(--fa-text);
+  font-size: 13.5px;
+  font-weight: 500;
+  transition: box-shadow 150ms var(--fa-ease), transform 120ms var(--fa-ease);
+}
+.forest-app .fa-nav__new .fa-icon {
+  color: var(--fa-accent);
+}
+.forest-app .fa-nav__new:hover:not(:disabled) {
+  box-shadow: var(--fa-shadow-md);
+}
+.forest-app .fa-nav__new:active:not(:disabled) {
+  transform: scale(0.985);
+}
+.forest-app .fa-nav__new:disabled {
+  opacity: 0.6;
+}
+.forest-app .fa-page-head__acts {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.forest-app .fa-search__count {
+  flex: none;
+  font-size: 11.5px;
+  color: var(--fa-text-3);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* 宽工作台：实验页更宽；“展开为整页”时隐藏左侧列表 */
+.forest-app .fa-col--aside.is-page {
+  flex: 1.7 1 0;
+}
+.forest-app .fa-main.is-focus > .fa-col:first-child {
+  display: none;
+}
+.forest-app .fa-main.is-focus > .fa-col--aside {
+  border-left: 0;
+}
+
+/* ───────────── 页面骨架 ───────────── */
+
+.forest-app .fa-xp {
+  position: relative;
+}
+.forest-app .fa-xp__head {
+  gap: 8px;
+}
+.forest-app .fa-xp__body {
+  gap: 14px;
+  padding-bottom: 28px;
+}
+.forest-app .fa-xp__body > * {
+  max-width: 780px;
+}
+.forest-app .fa-xp__doc {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* 保存状态：与顶栏的数据刷新、Obsidian 状态分开 */
+.forest-app .fa-savebadge {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 26px;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--fa-text-3);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  transition: background-color 150ms var(--fa-ease), color 150ms var(--fa-ease);
+}
+.forest-app button.fa-savebadge:hover {
+  background: var(--fa-bg-hover);
+  color: var(--fa-text);
+}
+.forest-app .fa-savebadge__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--fa-text-4);
+}
+.forest-app .fa-savebadge.is-ok .fa-savebadge__dot {
+  background: var(--fa-accent);
+  box-shadow: 0 0 0 3px var(--fa-accent-soft);
+}
+.forest-app .fa-savebadge.is-idle .fa-savebadge__dot {
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--fa-text-3);
+}
+.forest-app .fa-savebadge.is-busy .fa-savebadge__dot {
+  animation: forest-pulse 1.2s var(--fa-ease) infinite;
+  background: var(--fa-text-3);
+}
+.forest-app .fa-savebadge.is-warn {
+  color: var(--fa-warn);
+  background: var(--fa-warn-soft);
+}
+.forest-app .fa-savebadge.is-warn .fa-savebadge__dot {
+  background: var(--fa-warn);
+}
+.forest-app .fa-savebadge.is-bad {
+  color: var(--fa-danger);
+  background: var(--fa-danger-soft);
+}
+.forest-app .fa-savebadge.is-bad .fa-savebadge__dot {
+  background: var(--fa-danger);
+}
+.forest-app .fa-savebadge__extra {
+  color: var(--fa-text-3);
+}
+
+/* 小型分段控件（成页 / 原样） */
+.forest-app .fa-xseg {
+  flex: none;
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 8px;
+  background: var(--fa-bg-active);
+}
+.forest-app .fa-xseg__btn {
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 6px;
+  font-size: 12.5px;
+  color: var(--fa-text-3);
+  white-space: nowrap;
+  transition: background-color 150ms var(--fa-ease), color 150ms var(--fa-ease), box-shadow 150ms var(--fa-ease);
+}
+.forest-app .fa-xseg__btn:hover {
+  color: var(--fa-text);
+}
+.forest-app .fa-xseg__btn.is-on {
+  background: var(--fa-bg-raised);
+  color: var(--fa-text);
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 0 0 0.5px rgba(0, 0, 0, 0.06);
+}
+.forest-app .fa-xseg--mini .fa-xseg__btn {
+  height: 22px;
+  font-size: 12px;
+}
+
+/* ───────────── 标题与属性 ───────────── */
+
+.forest-app .fa-xp__title {
+  width: 100%;
+  margin: 6px 0 2px;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--fa-text);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+.forest-app .fa-xp__title::placeholder {
+  color: var(--fa-text-4);
+}
+.forest-app .fa-xp__props {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 20px;
+  font-size: 13px;
+}
+.forest-app .fa-xp__props > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+}
+.forest-app .fa-xp__props dt {
+  color: var(--fa-text-3);
+  font-size: 12.5px;
+}
+.forest-app .fa-xp__props dd {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.forest-app .fa-xp__props .is-quiet dd {
+  font-size: 12px;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-xp__project {
+  height: 26px;
+  font-size: 13px;
+  color: var(--fa-text);
+}
+.forest-app .fa-xp__project-val {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.forest-app .fa-datefield {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.forest-app .fa-datefield__empty {
+  color: var(--fa-text-4);
+  margin-right: 2px;
+}
+.forest-app .fa-datefield__q {
+  height: 24px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--fa-text-2);
+  box-shadow: inset 0 0 0 1px var(--fa-line-strong);
+  transition: background-color 120ms var(--fa-ease);
+}
+.forest-app .fa-datefield__q:hover:not(:disabled) {
+  background: var(--fa-bg-hover);
+  color: var(--fa-text);
+}
+.forest-app .fa-datefield__val {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  height: 26px;
+  padding: 0 6px;
+  border-radius: var(--fa-r-xs);
+}
+.forest-app .fa-datefield__val:hover {
+  background: var(--fa-bg-hover);
+}
+.forest-app .fa-datefield__input {
+  height: 26px;
+  padding: 0 6px;
+  border: 0;
+  border-radius: var(--fa-r-xs);
+  background: var(--fa-bg-sunken);
+  color: var(--fa-text);
+  font-family: var(--fa-mono);
+  font-size: 12.5px;
+}
+
+/* 页面状态条：只来自真实数据的计数 */
+.forest-app .fa-xp__strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--fa-line);
+}
+.forest-app .fa-pagechip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--fa-text-3);
+  background: var(--fa-bg-sunken);
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.forest-app button.fa-pagechip:hover {
+  color: var(--fa-text);
+  background: var(--fa-bg-active);
+}
+.forest-app .fa-pagechip.is-ai {
+  color: var(--fa-ai);
+  background: var(--fa-ai-soft);
+  font-weight: 500;
+}
+.forest-app .fa-pagechip.is-warn {
+  color: var(--fa-warn);
+  background: var(--fa-warn-soft);
+}
+.forest-app .fa-pagechip.is-bad {
+  color: var(--fa-danger);
+  background: var(--fa-danger-soft);
+}
+
+.forest-app .fa-xp__legacy {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-xp__legacy .fa-icon {
+  margin-top: 3px;
+  color: var(--fa-accent);
+}
+.forest-app .fa-xp__notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 10px 8px 12px;
+  border-radius: var(--fa-r);
+  font-size: 13px;
+  line-height: 1.55;
+  animation: forest-rise 200ms var(--fa-ease);
+}
+.forest-app .fa-xp__notice > span {
+  flex: 1;
+}
+.forest-app .fa-xp__notice > .fa-icon {
+  margin-top: 3px;
+}
+.forest-app .fa-xp__notice.is-ok {
+  background: var(--fa-accent-soft);
+}
+.forest-app .fa-xp__notice.is-ok > .fa-icon {
+  color: var(--fa-accent);
+}
+.forest-app .fa-xp__notice.is-warn {
+  background: var(--fa-warn-soft);
+  color: var(--fa-warn);
+}
+.forest-app .fa-xp__notice.is-danger {
+  background: var(--fa-danger-soft);
+  color: var(--fa-danger);
+}
+.forest-app .fa-clash {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  margin: 0 6px 0 2px;
+  font-weight: 500;
+}
+
+/* ───────────── 块 ───────────── */
+
+.forest-app .fa-xp__blocks {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 4px;
+}
+.forest-app .fa-blk {
+  position: relative;
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  align-items: start;
+  margin-left: -22px;
+  border-radius: var(--fa-r-sm);
+  scroll-margin: 80px;
+}
+.forest-app .fa-blk__gutter {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding-top: 5px;
+}
+.forest-app .fa-blk__handle {
+  width: 18px;
+  height: 22px;
+  border-radius: var(--fa-r-xs);
+  color: var(--fa-text-4);
+  font-size: 10px;
+  letter-spacing: -2px;
+  line-height: 22px;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 120ms var(--fa-ease), background-color 120ms var(--fa-ease);
+}
+.forest-app .fa-blk:hover .fa-blk__handle,
+.forest-app .fa-blk:focus-within .fa-blk__handle,
+.forest-app .fa-blk__handle[aria-expanded='true'] {
+  opacity: 1;
+}
+.forest-app .fa-blk__handle:hover {
+  background: var(--fa-bg-hover);
+  color: var(--fa-text-2);
+}
+.forest-app .fa-blk__menu {
+  position: absolute;
+  z-index: 6;
+  top: 28px;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  padding: 4px;
+  border-radius: var(--fa-r);
+  background: var(--fa-bg-raised);
+  box-shadow: var(--fa-shadow-lg);
+  animation: forest-rise 140ms var(--fa-ease);
+}
+.forest-app .fa-blk__menu button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 30px;
+  padding: 0 8px;
+  border-radius: var(--fa-r-xs);
+  font-size: 13px;
+  color: var(--fa-text);
+}
+.forest-app .fa-blk__menu button:hover:not(:disabled),
+.forest-app .fa-blk__menu button:focus-visible {
+  background: var(--fa-bg-hover);
+  outline: none;
+}
+.forest-app .fa-blk__menu button:disabled {
+  color: var(--fa-text-4);
+}
+.forest-app .fa-blk__menu button.is-danger {
+  color: var(--fa-danger);
+}
+.forest-app .fa-blk__menu kbd {
+  margin-left: auto;
+  font-family: var(--fa-font);
+  font-size: 11px;
+  color: var(--fa-text-4);
+}
+.forest-app .fa-blk__menu-note {
+  max-width: 220px;
+  padding: 4px 8px 6px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-blk__body {
+  min-width: 0;
+  padding: 2px 0;
+  border-radius: var(--fa-r-sm);
+}
+
+/* AI 来源与待核：左侧一条淡紫细线；待核时多一层浅底 */
+.forest-app .fa-blk.is-ai .fa-blk__body {
+  padding-left: 12px;
+  box-shadow: inset 2px 0 0 color-mix(in srgb, var(--fa-ai) 35%, transparent);
+}
+.forest-app .fa-blk.is-pending .fa-blk__body {
+  padding: 6px 8px 6px 12px;
+  background: var(--fa-ai-soft);
+  box-shadow: inset 2px 0 0 var(--fa-ai);
+}
+.forest-app .fa-blk.is-flash .fa-blk__body {
+  animation: fa-flash 1.6s var(--fa-ease);
+}
+@keyframes fa-flash {
+  0%,
+  35% {
+    background: var(--fa-accent-soft-2);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+.forest-app .fa-blk__text,
+.forest-app .fa-blk__heading,
+.forest-app .fa-blk__caption {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 3px 2px;
+  border: 0;
+  outline: 0;
+  resize: none;
+  overflow: hidden;
+  background: transparent;
+  color: var(--fa-text);
+  font: inherit;
+}
+.forest-app .fa-blk__text {
+  font-size: 15px;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.forest-app .fa-blk__heading {
+  margin-top: 14px;
+  font-size: 19px;
+  font-weight: 650;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+}
+.forest-app .fa-blk:first-child .fa-blk__heading {
+  margin-top: 4px;
+}
+.forest-app .fa-blk__text::placeholder,
+.forest-app .fa-blk__heading::placeholder,
+.forest-app .fa-blk__caption::placeholder {
+  color: transparent;
+}
+.forest-app .fa-blk__text:focus::placeholder,
+.forest-app .fa-blk__heading:focus::placeholder,
+.forest-app .fa-blk__caption:focus::placeholder,
+.forest-app .fa-blk__heading:placeholder-shown::placeholder {
+  color: var(--fa-text-4);
+}
+.forest-app .fa-blk__media {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 0;
+}
+.forest-app .fa-blk__caption {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--fa-text-2);
+  text-align: center;
+}
+.forest-app .fa-blk__caption:placeholder-shown::placeholder {
+  color: var(--fa-text-4);
+}
+.forest-app .fa-blk__foot {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 2px 2px 6px;
+  font-size: 12px;
+}
+.forest-app .fa-blk__pending {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--fa-ai);
+  background: color-mix(in srgb, var(--fa-ai) 14%, transparent);
+}
+.forest-app .fa-blk__confirm {
+  height: 24px;
+  padding: 0 9px;
+  font-size: 12px;
+  color: var(--fa-ai);
+}
+.forest-app .fa-blk__confirmed {
+  color: var(--fa-text-3);
+}
+.forest-app .fa-blk__dirty {
+  color: var(--fa-text-4);
+}
+.forest-app .fa-blk.is-unsaved:not(.is-ai) .fa-blk__body {
+  box-shadow: inset 2px 0 0 transparent;
+}
+
+/* 依据标签 */
+.forest-app .fa-srcs {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-width: 0;
+}
+.forest-app .fa-srcs__label {
+  color: var(--fa-text-4);
+  font-size: 11.5px;
+}
+.forest-app .fa-src {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: var(--fa-r-xs);
+  font-size: 11.5px;
+  color: var(--fa-text-3);
+  background: var(--fa-bg-sunken);
+  overflow: hidden;
+  white-space: nowrap;
+  transition: background-color 120ms var(--fa-ease), color 120ms var(--fa-ease);
+}
+.forest-app .fa-src:hover {
+  color: var(--fa-text);
+  background: var(--fa-bg-active);
+}
+.forest-app .fa-src__text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.forest-app .fa-src__quote {
+  color: var(--fa-text-4);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ───────────── 表格 ───────────── */
+
+.forest-app .fa-tbl {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 0;
+}
+.forest-app .fa-tbl__scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  border-radius: var(--fa-r-sm);
+  box-shadow: 0 0 0 1px var(--fa-line);
+  scrollbar-width: thin;
+}
+.forest-app .fa-tbl table,
+.forest-app .fa-tbl__ro {
+  border-collapse: collapse;
+  min-width: 100%;
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.forest-app .fa-tbl th,
+.forest-app .fa-tbl td,
+.forest-app .fa-tbl__ro th,
+.forest-app .fa-tbl__ro td {
+  border-bottom: 1px solid var(--fa-line);
+  border-right: 1px solid var(--fa-line);
+  vertical-align: top;
+  text-align: left;
+}
+.forest-app .fa-tbl tr:last-child td,
+.forest-app .fa-tbl__ro tr:last-child td {
+  border-bottom: 0;
+}
+.forest-app .fa-tbl th {
+  background: var(--fa-bg-sunken);
+  font-weight: 500;
+}
+.forest-app .fa-tbl__ro th {
+  padding: 6px 10px;
+  background: var(--fa-bg-sunken);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.forest-app .fa-tbl__ro td {
+  padding: 6px 10px;
+  white-space: pre-wrap;
+}
+.forest-app .fa-tbl td.is-empty,
+.forest-app .fa-tbl__ro td.is-empty {
+  background-image: repeating-linear-gradient(135deg, transparent 0 6px, var(--fa-bg-hover) 6px 7px);
+}
+.forest-app .fa-tbl__rowh {
+  position: relative;
+  width: 34px;
+  min-width: 34px;
+  text-align: center !important;
+  color: var(--fa-text-4);
+  font-size: 11px;
+  background: var(--fa-bg-sunken);
+}
+.forest-app .fa-tbl__n {
+  display: inline-block;
+  padding-top: 7px;
+}
+.forest-app .fa-tbl__rowtools {
+  position: absolute;
+  z-index: 2;
+  top: 2px;
+  left: 2px;
+  display: none;
+  gap: 1px;
+  padding: 2px;
+  border-radius: var(--fa-r-xs);
+  background: var(--fa-bg-raised);
+  box-shadow: var(--fa-shadow-md);
+}
+.forest-app .fa-tbl tr:hover .fa-tbl__rowtools,
+.forest-app .fa-tbl__rowtools:focus-within {
+  display: inline-flex;
+}
+.forest-app .fa-tbl__rowtools button {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-tbl__rowtools button:hover:not(:disabled) {
+  background: var(--fa-bg-hover);
+  color: var(--fa-text);
+}
+.forest-app .fa-tbl__rowtools button:disabled {
+  opacity: 0.35;
+}
+.forest-app .fa-tbl__colh {
+  display: flex;
+  align-items: center;
+}
+.forest-app .fa-tbl__label,
+.forest-app .fa-tbl__cell {
+  display: block;
+  width: 100%;
+  min-width: 72px;
+  margin: 0;
+  padding: 6px 8px;
+  border: 0;
+  outline: 0;
+  resize: none;
+  overflow: hidden;
+  background: transparent;
+  color: var(--fa-text);
+  font: inherit;
+  line-height: 1.45;
+}
+.forest-app .fa-tbl__label {
+  font-weight: 500;
+}
+.forest-app .fa-tbl__cell:focus,
+.forest-app .fa-tbl__label:focus {
+  box-shadow: inset 0 0 0 2px var(--fa-focus);
+  background: var(--fa-bg);
+}
+.forest-app .fa-tbl__x {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-right: 4px;
+  border-radius: 4px;
+  color: var(--fa-text-4);
+  opacity: 0;
+}
+.forest-app .fa-tbl th:hover .fa-tbl__x,
+.forest-app .fa-tbl__x:focus-visible {
+  opacity: 1;
+}
+.forest-app .fa-tbl__x:hover {
+  background: var(--fa-danger-soft);
+  color: var(--fa-danger);
+}
+.forest-app .fa-tbl__add-col {
+  width: 30px;
+  text-align: center !important;
+  background: transparent !important;
+  border-right: 0 !important;
+}
+.forest-app .fa-tbl__foot {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+.forest-app .fa-tbl__rawbtn {
+  font-size: 12px;
+}
+.forest-app .fa-tbl__raw {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: var(--fa-r-sm);
+  background: var(--fa-bg-sunken);
+}
+.forest-app .fa-tbl__raw pre {
+  max-height: 240px;
+  overflow: auto;
+  font-family: var(--fa-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  tab-size: 12;
+  white-space: pre;
+}
+.forest-app .fa-tbl__note {
+  display: block;
+  width: 100%;
+  padding: 2px;
+  border: 0;
+  outline: 0;
+  resize: none;
+  overflow: hidden;
+  background: transparent;
+  color: var(--fa-text-3);
+  font: inherit;
+  font-size: 12.5px;
+}
+.forest-app .fa-tbl__note::placeholder {
+  color: transparent;
+}
+.forest-app .fa-tbl:hover .fa-tbl__note::placeholder,
+.forest-app .fa-tbl__note:focus::placeholder {
+  color: var(--fa-text-4);
+}
+
+/* 只读渲染（原样、提案对照） */
+.forest-app .fa-ro--heading {
+  font-size: 15px;
+  font-weight: 650;
+}
+.forest-app .fa-ro--text {
+  font-size: 13.5px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--fa-text);
+}
+.forest-app .fa-ro--table .fa-tbl__scroll {
+  max-height: 320px;
+  overflow: auto;
+}
+.forest-app .fa-ro__caption {
+  margin-top: 4px;
+  font-size: 12.5px;
+  color: var(--fa-text-2);
+  white-space: pre-wrap;
+}
+
+/* ───────────── 素材 ───────────── */
+
+.forest-app .fa-media {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.forest-app .fa-media__stage {
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+.forest-app .fa-media__img-btn {
+  display: block;
+  max-width: 100%;
+  border-radius: var(--fa-r);
+  overflow: hidden;
+  cursor: zoom-in;
+  box-shadow: 0 0 0 1px var(--fa-line);
+}
+.forest-app .fa-media__img {
+  display: block;
+  max-width: 100%;
+  max-height: 480px;
+  object-fit: contain;
+  background: var(--fa-bg-sunken);
+}
+.forest-app .fa-media.is-compact .fa-media__img {
+  max-height: 220px;
+}
+.forest-app .fa-media__video {
+  display: block;
+  width: 100%;
+  max-height: 460px;
+  border-radius: var(--fa-r);
+  background: #000;
+}
+.forest-app .fa-media__audio {
+  width: 100%;
+}
+.forest-app .fa-media__text {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--fa-r-sm);
+  background: var(--fa-bg-sunken);
+}
+.forest-app .fa-media__text pre {
+  max-height: 260px;
+  overflow: auto;
+  font-family: var(--fa-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.forest-app .fa-media__load {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 96px;
+  border-radius: var(--fa-r);
+  background: var(--fa-bg-sunken);
+  color: var(--fa-text-2);
+  font-size: 13px;
+  transition: background-color 150ms var(--fa-ease);
+}
+.forest-app .fa-media__load:hover:not(:disabled) {
+  background: var(--fa-bg-active);
+  color: var(--fa-text);
+}
+.forest-app .fa-media.is-compact .fa-media__load {
+  min-height: 56px;
+}
+.forest-app .fa-media__fallback {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--fa-r);
+  background: var(--fa-bg-sunken);
+  color: var(--fa-text-2);
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+.forest-app .fa-media__fallback .fa-icon {
+  margin-top: 2px;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-media__fallback.is-error {
+  background: var(--fa-danger-soft);
+  color: var(--fa-danger);
+}
+.forest-app .fa-media__fallback.is-error .fa-icon {
+  color: var(--fa-danger);
+}
+.forest-app .fa-media__meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  font-size: 12px;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-media__name {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--fa-text-2);
+  font-weight: 500;
+}
+.forest-app .fa-media__facts {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.forest-app .fa-media__dl {
+  margin-left: auto;
+  height: 24px;
+  font-size: 12px;
+}
+.forest-app .fa-media__warn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--fa-warn);
+}
+.forest-app .fa-lightbox {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 32px;
+  background: rgba(0, 0, 0, 0.82);
+  cursor: zoom-out;
+  animation: forest-rise 160ms var(--fa-ease);
+}
+.forest-app .fa-lightbox img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 6px;
+}
+.forest-app .fa-lightbox__x {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* ───────────── AI 提案 ───────────── */
+
+.forest-app .fa-props-tray {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.forest-app .fa-props-tray__done {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-size: 12.5px;
+}
+.forest-app .fa-prop {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: var(--fa-r-lg);
+  background: var(--fa-bg-raised);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--fa-ai) 22%, transparent), var(--fa-shadow-sm);
+}
+.forest-app .fa-prop.is-fresh {
+  animation: forest-rise 260ms var(--fa-ease);
+  box-shadow: 0 0 0 1.5px color-mix(in srgb, var(--fa-ai) 45%, transparent), var(--fa-shadow-md);
+}
+.forest-app .fa-prop__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.forest-app .fa-prop__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--fa-ai);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.forest-app .fa-prop__count {
+  font-size: 12px;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-prop__claim {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.forest-app .fa-prop__claim p {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--fa-text-2);
+  white-space: pre-wrap;
+  font-style: italic;
+}
+.forest-app .fa-prop__tag {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 7px;
+  border-radius: 999px;
+  font-size: 11px;
+  color: var(--fa-text-3);
+  box-shadow: inset 0 0 0 1px var(--fa-line-strong);
+}
+.forest-app .fa-prop__ops {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.forest-app .fa-prop__foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--fa-line);
+}
+.forest-app .fa-prop__atomic {
+  margin-top: -4px;
+}
+
+/* 系统记录：用锁形图标与等宽数字，和“模型自述”的斜体明确区分 */
+.forest-app .fa-receipt {
+  border-radius: var(--fa-r-sm);
+  background: var(--fa-bg-sunken);
+}
+.forest-app .fa-receipt > summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 7px 10px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--fa-text-2);
+}
+.forest-app .fa-receipt > summary:hover {
+  color: var(--fa-text);
+}
+.forest-app .fa-receipt__title {
+  font-weight: 600;
+}
+.forest-app .fa-receipt__sum {
+  color: var(--fa-text-3);
+}
+.forest-app .fa-receipt__body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 12px 10px;
+}
+.forest-app .fa-receipt__when {
+  font-size: 12px;
+  color: var(--fa-text-3);
+  font-variant-numeric: tabular-nums;
+}
+.forest-app .fa-receipt__list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-top: 4px;
+}
+.forest-app .fa-receipt__list li {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  font-size: 12px;
+}
+.forest-app .fa-receipt__name {
+  color: var(--fa-text);
+  font-weight: 500;
+}
+.forest-app .fa-receipt__mode {
+  padding: 0 6px;
+  border-radius: 4px;
+  background: var(--fa-bg-raised);
+  color: var(--fa-text-2);
+}
+.forest-app .fa-receipt__mode.is-metadata-only {
+  color: var(--fa-text-3);
+}
+.forest-app .fa-receipt__fine {
+  font-size: 11.5px;
+}
+
+.forest-app .fa-op {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border-radius: var(--fa-r);
+  box-shadow: inset 0 0 0 1px var(--fa-line);
+}
+.forest-app .fa-op.is-accepted,
+.forest-app .fa-op.is-rejected {
+  opacity: 0.7;
+}
+.forest-app .fa-op.is-infer {
+  background: repeating-linear-gradient(135deg, transparent 0 10px, var(--fa-ai-soft) 10px 11px);
+}
+.forest-app .fa-op__head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  font-size: 13px;
+}
+.forest-app .fa-op__check {
+  accent-color: var(--fa-ai);
+  width: 15px;
+  height: 15px;
+}
+.forest-app .fa-op__what {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-weight: 500;
+  color: var(--fa-text);
+}
+.forest-app .fa-op__kind {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 20px;
+  padding: 0 7px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  color: var(--fa-text-2);
+  background: var(--fa-bg-sunken);
+}
+.forest-app .fa-op__kind.is-infer {
+  color: var(--fa-ai);
+  background: var(--fa-ai-soft);
+}
+.forest-app .fa-op__self {
+  font-size: 10px;
+  color: var(--fa-text-4);
+}
+.forest-app .fa-op__status {
+  font-size: 11.5px;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-op__status.is-accepted {
+  color: var(--fa-accent);
+}
+.forest-app .fa-op__toggle {
+  font-size: 12px;
+}
+.forest-app .fa-op__flags {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.forest-app .fa-op__flags li {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.forest-app .fa-op__flags .fa-icon {
+  flex: none;
+  margin-top: 2px;
+}
+.forest-app .fa-op__flags .is-warn {
+  color: var(--fa-warn);
+}
+.forest-app .fa-op__flags .is-ai {
+  color: var(--fa-ai);
+}
+.forest-app .fa-op__preview {
+  display: grid;
+  gap: 8px;
+}
+.forest-app .fa-op__preview.is-diff {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+.forest-app .fa-op__side {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 8px 10px;
+  border-radius: var(--fa-r-sm);
+}
+.forest-app .fa-op__side.is-now {
+  background: var(--fa-bg-sunken);
+}
+.forest-app .fa-op__side.is-now .fa-ro {
+  color: var(--fa-text-3);
+}
+.forest-app .fa-op__side.is-next {
+  background: var(--fa-ai-soft);
+}
+.forest-app .fa-op__side-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-op__side.is-next .fa-blk__text,
+.forest-app .fa-op__side.is-next .fa-blk__heading {
+  font-size: 13.5px;
+  margin-top: 0;
+}
+.forest-app .fa-op__side.is-next .fa-blk__text::placeholder {
+  color: var(--fa-text-4);
+}
+.forest-app .fa-op__foot {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.forest-app .fa-op__actions {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: auto;
+}
+.forest-app .fa-op__accept {
+  color: var(--fa-ai);
+}
+
+/* ───────────── 原样 ───────────── */
+
+.forest-app .fa-orig {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-top: 4px;
+}
+.forest-app .fa-orig__intro {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12.5px;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-orig__intro p {
+  flex: 1 1 260px;
+  line-height: 1.55;
+}
+.forest-app .fa-orig__empty {
+  padding: 24px 0;
+}
+.forest-app .fa-orig__days {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.forest-app .fa-orig__dayh {
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-orig__list {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.forest-app .fa-orig__list::before {
+  content: '';
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 44px;
+  width: 1px;
+  background: var(--fa-line);
+}
+.forest-app .fa-orig__item {
+  position: relative;
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr);
+  gap: 14px;
+  scroll-margin: 80px;
+}
+.forest-app .fa-orig__item::before {
+  content: '';
+  position: absolute;
+  top: 7px;
+  left: 41px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--fa-bg);
+  box-shadow: inset 0 0 0 1.5px var(--fa-text-4);
+}
+.forest-app .fa-orig__item.is-material::before {
+  border-radius: 2px;
+}
+.forest-app .fa-orig__time {
+  padding-top: 2px;
+  font-size: 11.5px;
+  color: var(--fa-text-3);
+  text-align: right;
+}
+.forest-app .fa-orig__card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 8px 12px 10px;
+  border-radius: var(--fa-r);
+  background: var(--fa-bg-sunken);
+}
+.forest-app .fa-orig__item.is-flash .fa-orig__card {
+  animation: fa-flash 1.8s var(--fa-ease);
+  box-shadow: 0 0 0 1.5px var(--fa-accent-soft-2);
+}
+.forest-app .fa-orig__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-orig__meta span {
+  font-weight: 400;
+}
+.forest-app .fa-orig__refs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  font-size: 11.5px;
+}
+.forest-app .fa-orig__refs .fa-src {
+  background: var(--fa-bg-raised);
+}
+.forest-app .fa-orig__receipts {
+  padding-top: 8px;
+  border-top: 1px solid var(--fa-line);
+}
+
+/* ───────────── 理一理 ───────────── */
+
+.forest-app .fa-organize-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--fa-ai) 92%, #fff), var(--fa-ai));
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12), inset 0 0 0 0.5px rgba(255, 255, 255, 0.2);
+  transition: filter 150ms var(--fa-ease), transform 120ms var(--fa-ease);
+}
+.forest-app .fa-organize-btn:hover:not(:disabled) {
+  filter: brightness(1.06);
+}
+.forest-app .fa-organize-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.forest-app .fa-organize-btn:disabled {
+  opacity: 0.4;
+}
+.forest-app .fa-organize-btn.is-on {
+  box-shadow: 0 0 0 3px var(--fa-ai-soft), 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+.forest-app .fa-organize {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 12px 14px;
+  border-radius: var(--fa-r-lg);
+  background: var(--fa-bg-raised);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--fa-ai) 25%, transparent), var(--fa-shadow-lg);
+  animation: forest-rise 180ms var(--fa-ease);
+}
+.forest-app .fa-organize__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.forest-app .fa-organize__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--fa-ai);
+}
+.forest-app .fa-organize__target {
+  font-size: 12px;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-organize__need {
+  resize: vertical;
+  min-height: 54px;
+}
+.forest-app .fa-organize__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.forest-app .fa-organize__chip {
+  height: 24px;
+  padding: 0 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: var(--fa-text-2);
+  background: var(--fa-bg-sunken);
+}
+.forest-app .fa-organize__chip:hover:not(:disabled) {
+  color: var(--fa-ai);
+  background: var(--fa-ai-soft);
+}
+.forest-app .fa-organize__peek > summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-organize__peek pre {
+  margin-top: 6px;
+  padding: 8px 10px;
+  border-radius: var(--fa-r-sm);
+  background: var(--fa-bg-sunken);
+  font-family: var(--fa-mono);
+  font-size: 11.5px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.forest-app .fa-organize__manual {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+.forest-app .fa-organize__manual textarea {
+  width: 100%;
+}
+.forest-app .fa-organize__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.forest-app .fa-organize__go {
+  color: #fff;
+  background: var(--fa-ai);
+}
+.forest-app .fa-organize__go:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--fa-ai) 88%, #000) !important;
+}
+.forest-app .fa-await {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: var(--fa-r);
+  background: var(--fa-ai-soft);
+  color: var(--fa-text-2);
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.forest-app .fa-await > span:not(.fa-await__pulse) {
+  flex: 1;
+}
+.forest-app .fa-await.is-arrived {
+  color: var(--fa-ai);
+  font-weight: 500;
+}
+.forest-app .fa-await__pulse {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--fa-ai);
+  animation: fa-breathe 1.8s ease-in-out infinite;
+}
+@keyframes fa-breathe {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ───────────── 托盘：底部安静的输入栏 ───────────── */
+
+.forest-app .fa-xp__tray {
+  flex: none;
+  position: relative;
+  z-index: 3;
+  padding: 8px var(--fa-pad-x) 10px;
+  border-top: 1px solid var(--fa-line);
+  background: var(--fa-bg-glass);
+  -webkit-backdrop-filter: saturate(180%) blur(18px);
+  backdrop-filter: saturate(180%) blur(18px);
+}
+.forest-app .fa-xp__tray > * {
+  max-width: 780px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.forest-app .fa-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px 6px 4px 10px;
+  border-radius: var(--fa-r-lg);
+  background: var(--fa-bg-raised);
+  box-shadow: var(--fa-shadow-sm);
+  transition: box-shadow 150ms var(--fa-ease);
+}
+.forest-app .fa-composer:focus-within {
+  box-shadow: 0 0 0 1px var(--fa-line-strong), 0 0 0 4px var(--fa-accent-soft);
+}
+.forest-app .fa-composer__input {
+  width: 100%;
+  min-height: 26px;
+  max-height: 160px;
+  padding: 4px 0;
+  border: 0;
+  outline: 0;
+  resize: none;
+  background: transparent;
+  color: var(--fa-text);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.forest-app .fa-composer__input::placeholder {
+  color: var(--fa-text-4);
+}
+.forest-app .fa-composer__bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.forest-app .fa-composer__tool {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: var(--fa-r-sm);
+  font-size: 12.5px;
+  color: var(--fa-text-3);
+  transition: background-color 120ms var(--fa-ease), color 120ms var(--fa-ease);
+}
+.forest-app .fa-composer__tool:hover:not(:disabled) {
+  background: var(--fa-bg-hover);
+  color: var(--fa-text);
+}
+.forest-app .fa-composer__tool:disabled {
+  opacity: 0.4;
+}
+.forest-app .fa-composer__tool.is-commit {
+  color: var(--fa-accent);
+  font-weight: 500;
+}
+.forest-app .fa-composer__glyph {
+  display: inline-grid;
+  place-items: center;
+  width: 14px;
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+/* 上传流水线 */
+.forest-app .fa-ups {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+.forest-app .fa-ups__target {
+  font-size: 11.5px;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-ups__list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 168px;
+  overflow-y: auto;
+}
+.forest-app .fa-up {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto auto auto;
+  align-items: center;
+  gap: 2px 8px;
+  padding: 4px 8px;
+  border-radius: var(--fa-r-sm);
+  background: var(--fa-bg-raised);
+  box-shadow: 0 0 0 1px var(--fa-line);
+  font-size: 12px;
+  color: var(--fa-text-2);
+}
+.forest-app .fa-up .fa-icon {
+  color: var(--fa-text-3);
+}
+.forest-app .fa-up.is-done .fa-icon {
+  color: var(--fa-accent);
+}
+.forest-app .fa-up.is-failed {
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--fa-danger) 35%, transparent);
+}
+.forest-app .fa-up.is-failed .fa-icon,
+.forest-app .fa-up.is-failed .fa-up__stage {
+  color: var(--fa-danger);
+}
+.forest-app .fa-up__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--fa-text);
+}
+.forest-app .fa-up__size,
+.forest-app .fa-up__stage {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-up__acts {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.forest-app .fa-up__bar {
+  grid-column: 2 / -1;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--fa-bg-active);
+  overflow: hidden;
+}
+.forest-app .fa-up__bar span {
+  display: block;
+  height: 100%;
+  background: var(--fa-accent);
+  transition: width 200ms linear;
+}
+.forest-app .fa-up__msg {
+  grid-column: 2 / -1;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--fa-text-3);
+}
+.forest-app .fa-up.is-failed .fa-up__msg {
+  color: var(--fa-danger);
+}
+
+/* 拖入：整页接住，明确写出目标页 */
+.forest-app .fa-xp__drop {
+  position: absolute;
+  z-index: 8;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: color-mix(in srgb, var(--fa-bg) 72%, transparent);
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+  pointer-events: none;
+  animation: forest-rise 140ms var(--fa-ease);
+}
+.forest-app .fa-xp__drop-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 26px 32px;
+  border-radius: var(--fa-r-lg);
+  border: 1.5px dashed var(--fa-accent);
+  background: var(--fa-bg-raised);
+  color: var(--fa-accent);
+  text-align: center;
+}
+.forest-app .fa-xp__drop-card p {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--fa-text);
+}
+.forest-app .fa-xp__drop-card span {
+  font-size: 12px;
+  color: var(--fa-text-3);
+}
+
+/* 空页 */
+.forest-app .fa-xp__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 40px 12px 28px;
+  text-align: center;
+}
+.forest-app .fa-xp__empty-art {
+  width: 56px;
+  height: 56px;
+  fill: none;
+  stroke: var(--fa-text-4);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+.forest-app .fa-xp__empty-art circle {
+  stroke: var(--fa-accent);
+  fill: var(--fa-bg);
+}
+.forest-app .fa-xp__empty-art circle + path {
+  stroke: var(--fa-accent);
+}
+.forest-app .fa-xp__empty-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+.forest-app .fa-xp__empty .fa-help {
+  max-width: 400px;
+}
+.forest-app .fa-xp__empty-acts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+.forest-app .fa-xp__undo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  align-self: flex-start;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--fa-bg-sunken);
+  font-size: 12.5px;
+  color: var(--fa-text-2);
+  animation: forest-rise 180ms var(--fa-ease);
+}
+
+/* Obsidian：素材镜像 */
+.forest-app .fa-obsidian__mats {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.forest-app .fa-obsidian__matlist {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.forest-app .fa-obsidian__matlist li {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  font-size: 12.5px;
+}
+.forest-app .fa-obsidian__matname {
+  font-weight: 500;
+}
+
+/* ───────────── 实验页：窄侧栏 ───────────── */
+
+@container forest (max-width: 520px) {
+  .forest-app .fa-xp__title {
+    font-size: 24px;
+  }
+  .forest-app .fa-blk {
+    margin-left: -14px;
+    grid-template-columns: 16px minmax(0, 1fr);
+  }
+  .forest-app .fa-blk__handle {
+    width: 14px;
+    opacity: 0.55;
+  }
+  .forest-app .fa-composer__lbl,
+  .forest-app .fa-savebadge__extra {
+    display: none;
+  }
+  .forest-app .fa-xp__props {
+    flex-direction: column;
+    gap: 0;
+  }
+  .forest-app .fa-up {
+    grid-template-columns: 16px minmax(0, 1fr) auto;
+  }
+  .forest-app .fa-up__size {
+    display: none;
+  }
+  .forest-app .fa-op__preview.is-diff {
+    grid-template-columns: 1fr;
+  }
+}
+
+@container forest (max-width: 400px) {
+  .forest-app .fa-xp__head .fa-crumbs {
+    display: none;
+  }
+  .forest-app .fa-orig__item {
+    grid-template-columns: 34px minmax(0, 1fr);
+    gap: 10px;
+  }
+  .forest-app .fa-orig__list::before {
+    left: 37px;
+  }
+  .forest-app .fa-orig__item::before {
+    left: 34px;
+  }
+}
+
+@media (hover: none) {
+  .forest-app .fa-blk__handle,
+  .forest-app .fa-tbl__x {
+    opacity: 0.6;
+  }
+}

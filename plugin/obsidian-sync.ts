@@ -4,15 +4,16 @@ import { createHash, randomUUID } from 'node:crypto';
 import { homedir } from 'node:os';
 import path from 'node:path';
 import type { ForestSnapshot } from '../shared/model';
-import type { ObsidianVault } from '../shared/obsidian-contract';
-import { createObsidianMirror } from '../shared/obsidian';
+import {getExperimentPage} from '../shared/page';
+import type { ObsidianStatus, ObsidianVault } from '../shared/obsidian-contract';
+import { createObsidianMirror,materialMirrorPath } from '../shared/obsidian';
 
 export interface ObsidianSyncResult {
   status: 'synced' | 'conflict'; written: number; unchanged: number;
   conflicts: { path: string; reason: string }[]; stale: string[];
-  entityCount: number; snapshotRevision: number; mirroredAt: string;
+  entityCount: number; snapshotRevision: number; mirroredAt: string; materials?:ObsidianStatus['materials'];
 }
-export interface ObsidianMirrorOptions { vaultPath: string; folderName: string }
+export interface ObsidianMirrorOptions { vaultPath: string; folderName: string; readMaterial?:(recordId:string,materialId:string)=>Promise<Buffer> }
 interface Manifest { owner: 'experiment-forest'; version: 1; folderName: string; revision: number; files: Record<string, string> }
 interface Journal {
   owner: 'experiment-forest'; version: 1; folderName: string;
@@ -26,7 +27,9 @@ const JOURNAL = '.experiment-forest-pending.json';
 // to customize views. Seed this exact generated view once; its existing manifest
 // entry proves ownership, but subsequent view bytes belong to Obsidian/user.
 const CUSTOMIZABLE_VIEW = 'Forest.base';
-const hash = (text: string) => createHash('sha256').update(text).digest('hex');
+type FileContent=string|Buffer;
+const same=(a:FileContent|null,b:FileContent|null)=>a===null||b===null?a===b:Buffer.from(a).equals(Buffer.from(b));
+const hash = (text: FileContent) => createHash('sha256').update(text).digest('hex');
 const missing = (error: unknown) => (error as NodeJS.ErrnoException)?.code === 'ENOENT';
 const plain = (value: unknown): value is Record<string, unknown> => !!value && typeof value === 'object' && !Array.isArray(value);
 
@@ -80,7 +83,9 @@ function safeRelative(relative: string): boolean {
   return !!relative && !relative.includes('\\') && !/[\u0000-\u001f]/.test(relative) && !path.isAbsolute(relative)
     && relative.split('/').every(part => !!part && part !== '.' && part !== '..' && !part.includes(':'));
 }
-async function fileContent(filename: string, allowedLinks = 1): Promise<string | null> {
+async function fileContent(filename:string,allowedLinks?:number):Promise<string|null>;
+async function fileContent(filename:string,allowedLinks:number,binary:boolean):Promise<FileContent|null>;
+async function fileContent(filename: string, allowedLinks = 1,binary=false): Promise<FileContent | null> {
   let stat;
   try { stat = await lstat(filename); } catch (error) { if (missing(error)) return null; throw error; }
   if (stat.isSymbolicLink() || !stat.isFile() || (allowedLinks && stat.nlink !== allowedLinks)) throw new Error('Target is not an ordinary unlinked file');
@@ -88,7 +93,8 @@ async function fileContent(filename: string, allowedLinks = 1): Promise<string |
   try {
     const opened = await handle.stat();
     if (opened.ino !== stat.ino || opened.dev !== stat.dev || (allowedLinks && opened.nlink !== allowedLinks)) throw new Error('Target changed while opening');
-    return await handle.readFile('utf8');
+    if(opened.size>64*1024*1024)throw new Error('Mirror file exceeds the supported bound');
+    return binary?await handle.readFile():await handle.readFile('utf8');
   } finally { await handle.close(); }
 }
 function parseManifest(raw: string, folderName: string): Manifest {
@@ -139,7 +145,7 @@ export class ObsidianMirrorSync {
   }
   private async moveExistingFile(filename: string, recovery: string): Promise<void> { await rename(filename, recovery); }
 
-  private async atomicWrite(filename: string, content: string, expected: string | null): Promise<void> {
+  private async atomicWrite(filename: string, content: FileContent, expected: FileContent | null): Promise<void> {
     const parent = path.dirname(filename);
     await safeDirectory(parent);
     const temporary = path.join(parent, `.ef-sync-${randomUUID()}.tmp`);
@@ -149,8 +155,8 @@ export class ObsidianMirrorSync {
     } catch (error) { await unlink(temporary).catch(() => undefined); throw error; }
     try {
       await safeDirectory(parent);
-      const current = await fileContent(filename, 0);
-      if (current !== expected) throw new Error('Target changed during synchronization');
+      const current = await fileContent(filename, 0,Buffer.isBuffer(content));
+      if (!same(current,expected)) throw new Error('Target changed during synchronization');
       if (expected === null) {
         await this.publishNewFile(temporary, filename);
       } else {
@@ -164,7 +170,7 @@ export class ObsidianMirrorSync {
         if (await fileContent(saved, 0) !== null) throw new Error('Recovery path is already occupied');
         await this.moveExistingFile(filename, saved);
         await this.syncDirectory(parent); await this.syncDirectory(recovery);
-        if (await fileContent(saved, 0) !== expected) {
+        if (!same(await fileContent(saved, 0,Buffer.isBuffer(content)),expected)) {
           // Restore only if the original path is still absent. Keep both copies
           // if an editor has already published another new inode there.
           await this.publishNewFile(saved, filename).catch(error => { if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error; });
@@ -218,15 +224,15 @@ export class ObsidianMirrorSync {
         if ((baseline.files[change.path] ?? null) !== change.oldHash) throw new Error('Pending change does not match its ownership baseline');
         const destination = path.join(this.root, ...change.path.split('/'));
         await safeDirectory(path.dirname(destination), true);
-        let current: string | null;
+        let current: FileContent | null;
         try {
-          current = await fileContent(destination, 0);
+          current = await fileContent(destination, 0,change.path.startsWith('materials/'));
           if (current === null && change.recovery !== null) {
             const saved = path.join(this.root, ...change.recovery.split('/'));
             await safeDirectory(path.dirname(saved));
             if (await fileContent(saved, 0) !== null) {
               await this.publishNewFile(saved, destination).catch(error => { if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error; });
-              current = await fileContent(destination, 0);
+              current = await fileContent(destination, 0,change.path.startsWith('materials/'));
             }
           }
         } catch { continue; }
@@ -249,7 +255,9 @@ export class ObsidianMirrorSync {
     return previousRaw;
   }
   private async perform(snapshot: ForestSnapshot): Promise<ObsidianSyncResult> {
-    const rendered = createObsidianMirror(snapshot, undefined, this.options.folderName);
+    let rendered = createObsidianMirror(snapshot, undefined, this.options.folderName);
+    const materials=snapshot.entities.flatMap(e=>(getExperimentPage(e)?.materials??[]).map(material=>({recordId:e.id,material,path:materialMirrorPath(material)})));
+    const materialIssues=new Map<string,string>();
     await safeDirectory(this.vault);
     await safeDirectory(path.join(this.vault, '.obsidian'));
     await safeDirectory(this.root, true);
@@ -269,36 +277,55 @@ export class ObsidianMirrorSync {
       ? { owner: 'experiment-forest', version: 1, folderName: this.options.folderName, revision: 0, files: {} }
       : parseManifest(previousRaw, this.options.folderName);
     if (snapshot.revision < previous.revision) throw new Error('Refusing to overwrite a newer Obsidian mirror with an older snapshot');
-    const desired = new Set(rendered.files.map(file => file.path));
+    const desired = new Set([...rendered.files.map(file => file.path),...materials.map(m=>m.path)]);
     const next: Manifest = { ...previous, revision: snapshot.revision, files: { ...previous.files } };
     const result: ObsidianSyncResult = { status: 'synced', written: 0, unchanged: 0, conflicts: [],
       stale: Object.keys(previous.files).filter(name => !desired.has(name)), entityCount: rendered.entityCount,
-      snapshotRevision: snapshot.revision, mirroredAt: new Date().toISOString() };
-    const planned: { path: string; destination: string; content: string; existing: string | null }[] = [];
-    for (const file of rendered.files) {
+      snapshotRevision: snapshot.revision, mirroredAt: new Date().toISOString(),materials:{total:materials.length,mirrored:0,issues:[]} };
+    const planned: { path: string; destination: string; content: FileContent; existing: FileContent | null }[] = [];
+    const planFile=async(file:{path:string;content:FileContent})=>{
       if (!safeRelative(file.path)) throw new Error('Unsafe generated mirror path');
       const destination = path.join(this.root, ...file.path.split('/'));
       await safeDirectory(path.dirname(destination), true);
-      let existing: string | null;
-      try { existing = await fileContent(destination, previous.files[file.path] && file.path !== CUSTOMIZABLE_VIEW ? 0 : 1); } catch {
-        result.conflicts.push({ path: file.path, reason: '目标不是普通文件、为符号链接或读取时发生变化；已保留' }); continue;
+      let existing: FileContent | null;
+      try { existing = await fileContent(destination, previous.files[file.path] && file.path !== CUSTOMIZABLE_VIEW ? 0 : 1,Buffer.isBuffer(file.content)); } catch {
+        result.conflicts.push({ path: file.path, reason: '目标不是普通文件、为符号链接或读取时发生变化；已保留' }); return;
       }
       const owned = previous.files[file.path];
-      if (owned && existing === null) { result.conflicts.push({ path: file.path, reason: '已管理文件缺失或被移动；不会自动重建' }); continue; }
+      if (owned && existing === null) { result.conflicts.push({ path: file.path, reason: '已管理文件缺失或被移动；不会自动重建' }); return; }
       if (owned && existing !== null && file.path === CUSTOMIZABLE_VIEW) {
         // Preserve both automatic formatting and intentional view changes. Keep
         // the original seed hash as ownership evidence rather than claiming we
         // generated the user's current view. Missing/unsafe/unowned files still
         // follow the same conflict rules as every other mirror target.
         result.unchanged++;
-        continue;
+        return;
       }
-      if (owned && existing !== null && hash(existing) !== owned) { result.conflicts.push({ path: file.path, reason: 'Obsidian 文件已被手工修改；未覆盖' }); continue; }
-      if (!owned && existing !== null) { result.conflicts.push({ path: file.path, reason: '同名文件不属于此镜像；未接管' }); continue; }
-      if (existing === file.content) result.unchanged++;
+      if (owned && existing !== null && hash(existing) !== owned) { result.conflicts.push({ path: file.path, reason: 'Obsidian 文件已被手工修改；未覆盖' }); return; }
+      if (!owned && existing !== null) { result.conflicts.push({ path: file.path, reason: '同名文件不属于此镜像；未接管' }); return; }
+      if (same(existing,file.content)) result.unchanged++;
       else planned.push({ path: file.path, destination, content: file.content, existing });
       next.files[file.path] = hash(file.content);
+     };
+    for(const item of materials) {
+      try {
+        if(!this.options.readMaterial)throw new Error('材料存储未连接');
+        const data=await this.options.readMaterial(item.recordId,item.material.id);
+        if(data.length!==item.material.bytes||hash(data)!==item.material.sha256)throw new Error('材料长度或校验值不符');
+        const conflicts=result.conflicts.length;
+        await planFile({path:item.path,content:data});
+        if(result.conflicts.length>conflicts)throw new Error(result.conflicts.at(-1)!.reason);
+        result.materials!.mirrored++;
+      }catch(error) {
+        const message=error instanceof Error?error.message:'材料同步失败';
+        materialIssues.set(item.material.id,message);
+        const conflict=result.conflicts.some(c=>c.path===item.path);
+        result.materials!.issues.push({materialId:item.material.id,recordId:item.recordId,name:item.material.name,state:conflict?'conflict':'missing',message});
+        if(!conflict)result.conflicts.push({path:item.path,reason:message});
+      }
     }
+    rendered=createObsidianMirror(snapshot,undefined,this.options.folderName,materialIssues);
+    for(const file of rendered.files)await planFile(file);
     const nextRaw = `${JSON.stringify(next, null, 2)}\n`;
     if (planned.length || nextRaw !== previousRaw) {
       const journal: Journal = { owner: 'experiment-forest', version: 1, folderName: this.options.folderName,

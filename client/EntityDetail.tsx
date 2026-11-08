@@ -2,6 +2,7 @@ import { useEffect, useId, useState } from 'react';
 import type { RefObject } from 'react';
 import type { ForestApi, ForestEntity, JsonObject } from '../shared/model';
 import { WORKFLOW_KEY, getRunWorkflow, getSopWorkflow, hasWorkflowMarker } from '../shared/workflow';
+import { PAGE_KEY } from '../shared/page';
 import { createMarkdownReport } from '../shared/report';
 import { Icon, KIND_ICON } from './icons';
 import { AiBadge, InlineConfirm, Notice, Paragraphs, Properties, StatusPill } from './bits';
@@ -54,6 +55,10 @@ export interface DetailProps {
   /** 从“今天”工作台“继续”进入：定位到下一步 */
   focusNextStep?: boolean;
   onFocusedNextStep?: () => void;
+  /** 这条记录已是实验页：正文由页面块生成，不走旧编辑表单 */
+  pageMode?: boolean;
+  /** 打开（或回到）实验页视图 */
+  onOpenPage?: () => void;
 }
 
 /** 生成并下载普通 Markdown 阅读报告（与 Obsidian 自动同步是独立用途） */
@@ -130,7 +135,8 @@ export function EntityDetail(props: DetailProps) {
   const siblings = entity.projectId ? entities.filter((e) => e.projectId === entity.projectId && e.id !== entity.id && !isArchived(e)) : [];
   const known = knownKeys(entity.kind);
   // 可识别的工作流已在清单 / 步骤中展示，不再作为“其他字段”重复；无法识别时照常原样展示
-  const extraKeys = Object.keys(entity.data).filter((k) => !known.has(k) && !(k === WORKFLOW_KEY && (runWf || sopWf)));
+  const pageMode = !!props.pageMode;
+  const extraKeys = Object.keys(entity.data).filter((k) => !known.has(k) && !(k === WORKFLOW_KEY && (runWf || sopWf)) && !(k === PAGE_KEY && pageMode));
   const reviewLocked = prov.needsReview ? lockedStatusesForReview(entity.kind) : [];
   const busy = action.kind === 'busy';
 
@@ -261,10 +267,26 @@ export function EntityDetail(props: DetailProps) {
           <span className="fa-crumbs__here">{KIND[entity.kind].label}</span>
         </nav>
         <span className="fa-spacer" />
-        <button type="button" className="fa-btn fa-btn--primary fa-btn--sm" onClick={() => onEdit(entity)} disabled={busy}>
-          <Icon name="edit" />
-          {hasDraft ? '继续编辑' : '编辑'}
-        </button>
+        {pageMode && props.onOpenPage ? (
+          <button type="button" className="fa-btn fa-btn--primary fa-btn--sm" onClick={props.onOpenPage}>
+            <Icon name="record" />
+            回到实验页
+          </button>
+        ) : (
+          <>
+            {props.onOpenPage && (
+              <button type="button" className="fa-btn fa-btn--ghost fa-btn--sm" onClick={props.onOpenPage} title="以自由编辑的实验页查看；第一次保存后才会转换结构">
+                以实验页打开
+              </button>
+            )}
+            {!pageMode && (
+              <button type="button" className="fa-btn fa-btn--primary fa-btn--sm" onClick={() => onEdit(entity)} disabled={busy}>
+                <Icon name="edit" />
+                {hasDraft ? '继续编辑' : '编辑'}
+              </button>
+            )}
+          </>
+        )}
       </header>
 
       <div className="fa-pane__body">
@@ -325,7 +347,10 @@ export function EntityDetail(props: DetailProps) {
                     </div>
                   ))}
               </dl>
-              {prov.needsReview && (
+              {prov.needsReview && pageMode && (
+                <p className="fa-help">这条记录已是实验页：AI 内容请在实验页里逐块核对。整条记录的核对标记在这里暂不修改，以免把页面结构作为普通字段整体写回。</p>
+              )}
+              {prov.needsReview && !pageMode && (
                 <div className="fa-review-gate">
                   <label className="fa-check">
                     <input
@@ -389,6 +414,7 @@ export function EntityDetail(props: DetailProps) {
 
           <section className="fa-doc__body" aria-label="正文">
             {runWf && <h3 className="fa-h3 fa-doc__body-h">记录正文</h3>}
+            {pageMode && <p className="fa-help">这是实验页生成的纯文本（供搜索与旧功能使用）。表格、素材、来源与核对状态请在实验页里查看和编辑。</p>}
             <Paragraphs text={entity.content} limit={1600} />
           </section>
 
