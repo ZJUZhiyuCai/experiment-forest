@@ -24,6 +24,9 @@ export function ReceiptPanel({ readIds, receipts, ctx, defaultOpen = false }: { 
           {truncated ? ' · 有截断' : ''}
           {unseen.length ? ` · ${unseen.length} 份素材未交给会话` : ''}
         </span>
+        <span className="fa-receipt__chev" aria-hidden="true">
+          <Icon name="down" size={12} />
+        </span>
       </summary>
       <div className="fa-receipt__body">
         {mine.length === 0 && (
@@ -162,31 +165,37 @@ function OpRow({
 
       {open && (
         <div className={`fa-op__preview${op.action === 'replace' && target ? ' is-diff' : ''}`}>
-          {op.action === 'replace' && target && (
-            <div className="fa-op__side is-now">
-              <span className="fa-op__side-label">现在</span>
-              <BlockReadOnly block={target} ctx={ctx} />
-            </div>
-          )}
-          <div className="fa-op__side is-next">
-            <span className="fa-op__side-label">
-              {pending ? (edit ? '提议 · 你改过' : '提议 · 可以直接修改') : '提议'}
-              {edit && pending && (
-                <button type="button" className="fa-link" onClick={() => ctrl.setReviewEdit(proposal.id,op.id, null)}>
-                  还原模型原文
-                </button>
-              )}
-            </span>
-            {pending ? (
-              <BlockFields
-                block={shown}
-                ctx={ctx}
-                disabled={ctx.busy}
-                onChange={(b) => ctrl.setReviewEdit(proposal.id,op.id, sameBlock(b, op.block) ? null : b)}
-              />
-            ) : (
-              <BlockReadOnly block={op.block} ctx={ctx} />
+          {/* 预览区本身是尺寸容器，内层网格按它的实际宽度决定左右对照还是上下对照 */}
+          <div className="fa-op__grid">
+            {op.action === 'replace' && target && (
+              <>
+                <div className="fa-op__side is-now">
+                  <span className="fa-op__side-label">现在</span>
+                  <BlockReadOnly block={target} ctx={ctx} />
+                </div>
+                <span className="fa-op__arrow" aria-hidden="true" />
+              </>
             )}
+            <div className="fa-op__side is-next">
+              <span className="fa-op__side-label">
+                {pending ? (edit ? '提议 · 你改过' : '提议 · 可以直接修改') : '提议'}
+                {edit && pending && (
+                  <button type="button" className="fa-link" onClick={() => ctrl.setReviewEdit(proposal.id,op.id, null)}>
+                    还原模型原文
+                  </button>
+                )}
+              </span>
+              {pending ? (
+                <BlockFields
+                  block={shown}
+                  ctx={ctx}
+                  disabled={ctx.busy}
+                  onChange={(b) => ctrl.setReviewEdit(proposal.id,op.id, sameBlock(b, op.block) ? null : b)}
+                />
+              ) : (
+                <BlockReadOnly block={op.block} ctx={ctx} />
+              )}
+            </div>
           </div>
         </div>
       )}

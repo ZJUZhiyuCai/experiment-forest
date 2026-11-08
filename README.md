@@ -6,11 +6,11 @@
 
 在 Harness 管理实验，在 Obsidian 阅读、关联和整理资料。
 
-[下载 v0.3.0](https://github.com/ZJUZhiyuCai/experiment-forest/releases/tag/v0.3.0) · [安装指南](部署指南.md) · [上手使用](👋给朋友的使用说明.md) · [Obsidian 联动](docs/OBSIDIAN.md) · [验证记录](docs/VERIFICATION.md)
+[下载 v0.3.1](https://github.com/ZJUZhiyuCai/experiment-forest/releases/tag/v0.3.1) · [安装指南](部署指南.md) · [上手使用](👋给朋友的使用说明.md) · [Obsidian 联动](docs/OBSIDIAN.md) · [验证记录](docs/VERIFICATION.md)
 
-![自由实验页：文字、表格、原件与同步状态](docs/images/adaptive-page.png)
+![实验页中的 AI 提案：并排核对原文与建议，逐项决定](docs/images/polish-review-light.png)
 
-*运行中的 0.3.0 界面；截图内为明确标注的软件验收样本。*
+*运行中的 0.3.1 界面，截图内为软件验收样本。[正文与表格](docs/images/polish-page.png) · [深色](docs/images/polish-review-dark.png) · [窄屏](docs/images/polish-narrow.png)*
 
 ## 一条完整的记录流程
 
@@ -53,12 +53,12 @@
 
 ## 安装
 
-当前版本 **0.3.0**，兼容已核验的 **DeepSeek Harness 0.2.2-rc.1**。CLI 和源码构建需要 **Node.js ≥ 24.9**。Harness 插件 API 仍在变化，暂不声明其他版本兼容。
+当前版本 **0.3.1**，兼容已核验的 **DeepSeek Harness 0.2.2-rc.1**。CLI 和源码构建需要 **Node.js ≥ 24.9**。Harness 插件 API 仍在变化，暂不声明其他版本兼容。
 
-从 [Release](https://github.com/ZJUZhiyuCai/experiment-forest/releases/tag/v0.3.0) 下载 `dsh-experiment-forest-0.3.0.tgz`。在已初始化的 web profile 中，退出 Host 后安装并重启：
+从 [Release](https://github.com/ZJUZhiyuCai/experiment-forest/releases/tag/v0.3.1) 下载 `dsh-experiment-forest-0.3.1.tgz`。在已初始化的 web profile 中，退出 Host 后安装并重启：
 
 ```sh
-dsh plugin --profile web add /absolute/path/dsh-experiment-forest-0.3.0.tgz
+dsh plugin --profile web add /absolute/path/dsh-experiment-forest-0.3.1.tgz
 dsh web
 ```
 
